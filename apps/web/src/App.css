@@ -137,7 +137,7 @@
 .cm-view-controls {
   position: absolute;
   left: 12px;
-  bottom: 12px;
+  top: 12px;
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -362,21 +362,55 @@
   border: 1px solid var(--border) !important;
   border-radius: 10px !important;
   overflow: hidden;
-  box-shadow: none !important;
+  box-shadow: 0 4px 14px var(--shadow) !important;
+  margin: 12px !important;
+  z-index: 6 !important;
 }
 .react-flow__controls-button {
   background: var(--bg-elev) !important;
   border-bottom: 1px solid var(--border) !important;
   fill: var(--text) !important;
 }
+.react-flow__controls-button:hover {
+  background: var(--bg-elev-2) !important;
+}
 .react-flow__minimap {
   border: 1px solid var(--border) !important;
   border-radius: 10px !important;
   overflow: hidden;
   background: var(--bg-elev) !important;
+  margin: 12px !important;
+  z-index: 5 !important;
 }
 .react-flow__edge.is-dimmed { opacity: var(--dim-opacity); }
 .react-flow__edge.is-hl path { stroke-width: 2.2 !important; }
+
+
+.cm-node.is-search-hit {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent), 0 8px 24px var(--shadow);
+}
+.cm-node.is-search-ctx:not(.is-search-hit):not(.is-selected) {
+  opacity: 0.72;
+}
+.cm-empty-search {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+.cm-empty-search h2 { margin: 0; font-size: 1.15rem; }
+.cm-empty-search p { margin: 0 0 8px; color: var(--muted); max-width: 360px; }
+.cm-home__summary-muted {
+  opacity: 0.75;
+  font-size: 0.8rem !important;
+}
 
 /* Home */
 .cm-home {
@@ -448,7 +482,7 @@
   }
   .cm-search { width: min(160px, 42vw); }
   .cm-stats { display: none; }
-  .cm-view-controls { bottom: 72px; }
+  .cm-view-controls { top: 72px; }
   .react-flow__minimap { display: none !important; }
   .cm-chip, .cm-btn { padding: 8px 12px; min-height: 36px; }
 }
@@ -470,6 +504,10 @@
   background: var(--bg-elev);
   font-size: 0.8rem;
   color: var(--muted);
+}
+.cm-home__summary-muted {
+  opacity: 0.75;
+  font-size: 0.78rem !important;
 }
 .cm-library-toolbar {
   display: flex;

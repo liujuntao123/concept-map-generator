@@ -23,12 +23,15 @@ export function neighborsOf(adj: Map<string, Set<string>>, id: string): Set<stri
   return new Set(adj.get(id) ?? []);
 }
 
+/**
+ * Search index: label / summary / tags / excerpt / chapter name.
+ * Intentionally excludes long `content` so shared book-title boilerplate cannot flood results.
+ */
 export function matchesQuery(n: MapNode, q: string): boolean {
   if (!q) return true;
   const hay = [
     n.label,
     n.summary,
-    n.content,
     n.source?.excerpt ?? '',
     n.source?.chapter ?? '',
     ...(n.tags ?? []),
@@ -38,7 +41,18 @@ export function matchesQuery(n: MapNode, q: string): boolean {
   return hay.includes(q);
 }
 
-/** Chapter focus: chapter node + all nodes connected by a path of length 1 that are concepts/etc under contains/related */
+/** True when content is empty or duplicates summary (no dedicated 详述 to show). */
+export function hasDistinctContent(n: MapNode): boolean {
+  const c = (n.content ?? '').trim();
+  if (!c) return false;
+  const s = (n.summary ?? '').trim();
+  if (c === s) return false;
+  // leftover template wrappers should never show
+  if (c.includes('属于《') && c.includes('正式正文')) return false;
+  return true;
+}
+
+/** Chapter focus: chapter node + 1-hop neighbors */
 export function chapterSubgraphIds(
   _graph: ConceptGraph,
   chapterId: string,
@@ -47,25 +61,42 @@ export function chapterSubgraphIds(
   const ids = new Set<string>([chapterId]);
   const direct = adj.get(chapterId) ?? new Set();
   for (const id of direct) ids.add(id);
-  // also include 2-hop concepts that are only connected via those neighbors for richer focus? keep 1-hop for clarity
-  // include edges between visible nodes only in canvas filter
   return ids;
+}
+
+function readCssVar(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
 }
 
 export function nodeTypeColor(type: NodeType | string): string {
   switch (type) {
     case 'chapter':
-      return '#5b8fd4';
+      return readCssVar('--chapter', '#5b8fd4');
     case 'concept':
-      return '#6fbf86';
+      return readCssVar('--concept', '#6fbf86');
     case 'claim':
-      return '#e0a86a';
+      return readCssVar('--claim', '#e0a86a');
     case 'person':
-      return '#c59bdb';
+      return readCssVar('--person', '#c59bdb');
     case 'work':
-      return '#6bb8c9';
+      return readCssVar('--work', '#6bb8c9');
     default:
-      return '#8b9bb4';
+      return readCssVar('--muted', '#8b9bb4');
+  }
+}
+
+export function edgeTypeColor(type: string): string {
+  switch (type) {
+    case 'contains':
+      return readCssVar('--chapter', '#5b8fd4');
+    case 'contrasts':
+      return readCssVar('--claim', '#e0a86a');
+    case 'cites':
+      return readCssVar('--work', '#6bb8c9');
+    default:
+      return readCssVar('--muted', '#6b7c93');
   }
 }
 
@@ -94,4 +125,27 @@ export function formatGeneratedAt(iso?: string): string {
   } catch {
     return iso;
   }
+}
+
+/** Tags that merely repeat the node type label (e.g. 章节 on a chapter). */
+export function dedupeTags(type: NodeType | string, tags: string[] | undefined): string[] {
+  const typeLabel: Record<string, string> = {
+    chapter: '章节',
+    concept: '概念',
+    claim: '主张',
+    person: '人物',
+    work: '著作',
+  };
+  const skip = new Set(
+    [type, typeLabel[type], String(type)].filter(Boolean).map((s) => s.toLowerCase()),
+  );
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of tags ?? []) {
+    const key = t.trim().toLowerCase();
+    if (!key || skip.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    out.push(t.trim());
+  }
+  return out;
 }

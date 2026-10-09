@@ -299,7 +299,7 @@ flowchart LR
 1. 进入 `/maps/:mapId` → 加载 JSON → 若无 position 则 dagre/ELK → 渲染。  
 2. 点击节点 → 选中态 + 打开 Drawer（展示 summary、citations、邻接表）。  
 3. MiniMap + Controls 开箱即用。  
-4. 深链 `/maps/:mapId/nodes/:nodeId` → fitView 到该节点并打开详情。
+4. 深链 `/maps/:mapId?node=:nodeId`（可选 `?type=` / `?focus=` / `?q=` / `?edge=`）→ fitView 到该节点并打开详情。
 
 中文：使用系统字体栈（`"PingFang SC", "Noto Sans SC", sans-serif`），节点内文本 `line-clamp`，避免撑破节点宽。
 

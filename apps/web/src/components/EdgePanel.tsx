@@ -10,9 +10,11 @@ interface Props {
 
 export default function EdgePanel({ edge, sourceNode, targetNode, onClose, onOpenNode }: Props) {
   const typeLabel = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
+  // E2: avoid double label when type label === edge.label (e.g. 包含 · 包含)
+  const showLabelPill = Boolean(edge.label && edge.label !== typeLabel);
   const desc =
     edge.description ||
-    `「${sourceNode?.label ?? edge.source}」与「${targetNode?.label ?? edge.target}」之间的「${edge.label}」关系。`;
+    `「${sourceNode?.label ?? edge.source}」与「${targetNode?.label ?? edge.target}」之间的「${edge.label || typeLabel}」关系。`;
 
   return (
     <aside className="cm-edge-panel" aria-label="关系说明" role="dialog">
@@ -20,7 +22,7 @@ export default function EdgePanel({ edge, sourceNode, targetNode, onClose, onOpe
         <div>
           <div className="cm-drawer__badges">
             <span className="cm-pill">{typeLabel}</span>
-            <span className="cm-pill">{edge.label}</span>
+            {showLabelPill ? <span className="cm-pill">{edge.label}</span> : null}
           </div>
           <h2>关系说明</h2>
         </div>

@@ -96,7 +96,7 @@ flowchart LR
 ```
 /                          # 地图列表（单书时可直接进画布）
 /maps/:mapId               # 概念地图画布
-/maps/:mapId/nodes/:nodeId # 深链到某节点（打开详情）
+/maps/:mapId?node=:nodeId   # 深链到某节点（打开详情）；另支持 ?type= ?focus= ?q= ?edge=
 /about                     # 产品说明（可选）
 ```
 

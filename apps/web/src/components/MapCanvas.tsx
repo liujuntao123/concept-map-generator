@@ -17,7 +17,13 @@ import '@xyflow/react/dist/style.css';
 
 import GraphNode from './GraphNode';
 import { layoutWithDagre } from '../lib/layout';
-import { chapterSubgraphIds, matchesQuery, neighborsOf, nodeTypeColor } from '../lib/graphUtils';
+import {
+  chapterSubgraphIds,
+  edgeTypeColor,
+  matchesQuery,
+  neighborsOf,
+  nodeTypeColor,
+} from '../lib/graphUtils';
 import type { ConceptGraph, MapEdge, MapNode, NodeType } from '../types/graph';
 
 const nodeTypes: NodeTypes = {
@@ -35,6 +41,12 @@ export interface MapCanvasHandle {
   focusSelected: () => void;
 }
 
+export interface VisibleStats {
+  hitCount: number;
+  visibleCount: number;
+  totalCount: number;
+}
+
 interface Props {
   graph: ConceptGraph;
   filter: TypeFilter;
@@ -45,6 +57,7 @@ interface Props {
   selectedId: string | null;
   selectedEdgeId: string | null;
   highlightPathIds?: string[] | null;
+  onVisibleStats?: (stats: VisibleStats) => void;
 }
 
 function MapCanvasInner(
@@ -58,10 +71,11 @@ function MapCanvasInner(
     selectedId,
     selectedEdgeId,
     highlightPathIds,
+    onVisibleStats,
   }: Props,
   ref: React.Ref<MapCanvasHandle>,
 ) {
-  const { fitView, setCenter, getNode } = useReactFlow();
+  const { fitView, setCenter, getNode, getZoom } = useReactFlow();
 
   const byId = useMemo(() => {
     const m = new Map<string, MapNode>();
@@ -89,14 +103,14 @@ function MapCanvasInner(
     return new Set(highlightPathIds);
   }, [highlightPathIds]);
 
-  const { initialNodes, initialEdges } = useMemo(() => {
+  const { initialNodes, initialEdges, hitIds, visibleIds } = useMemo(() => {
     const q = query.trim().toLowerCase();
     let focusIds: Set<string> | null = null;
     if (chapterFocusId) {
       focusIds = chapterSubgraphIds(graph, chapterFocusId, adj);
     }
 
-    const visible = new Set(
+    const hits = new Set(
       graph.nodes
         .filter((n) => (filter === 'all' ? true : n.type === filter))
         .filter((n) => (focusIds ? focusIds.has(n.id) : true))
@@ -104,15 +118,30 @@ function MapCanvasInner(
         .map((n) => n.id),
     );
 
-    // when searching, keep 1-hop context for matched nodes
+    const visible = new Set(hits);
+
+    // Keep selected node visible even if type filter would hide it (deep link)
+    if (selectedId && byId.has(selectedId)) {
+      if (!focusIds || focusIds.has(selectedId)) {
+        visible.add(selectedId);
+      }
+    }
+
+    // when searching, keep 1-hop context for matched nodes (mark separately)
+    const contextIds = new Set<string>();
     if (q) {
-      const extra = new Set<string>();
-      for (const id of visible) {
+      for (const id of hits) {
         for (const nb of adj.get(id) ?? []) {
-          if (!focusIds || focusIds.has(nb)) extra.add(nb);
+          if (filter !== 'all') {
+            const nbNode = byId.get(nb);
+            if (nbNode && nbNode.type !== filter && nb !== selectedId) continue;
+          }
+          if (!focusIds || focusIds.has(nb)) {
+            if (!hits.has(nb)) contextIds.add(nb);
+            visible.add(nb);
+          }
         }
       }
-      for (const id of extra) visible.add(id);
     }
 
     const rfNodes: Node[] = graph.nodes
@@ -120,8 +149,12 @@ function MapCanvasInner(
       .map((n) => {
         const isSel = n.id === selectedId;
         const isNb = neighborSet.has(n.id);
+        const isHit = Boolean(q && hits.has(n.id));
+        const isCtx = Boolean(q && contextIds.has(n.id));
         const dimmed = Boolean(
-          (selectedId && !isSel && !isNb) || (pathSet && !pathSet.has(n.id) && !isSel),
+          (selectedId && !isSel && !isNb && !isHit) ||
+            (pathSet && !pathSet.has(n.id) && !isSel) ||
+            (q && isCtx && !isSel),
         );
         return {
           id: n.id,
@@ -132,17 +165,12 @@ function MapCanvasInner(
             nodeType: n.type,
             dimmed,
             neighbor: Boolean(selectedId && isNb),
+            searchHit: isHit,
+            searchContext: isCtx,
           },
           selected: isSel,
         };
       });
-
-    const edgeColor = (t: string) => {
-      if (t === 'contains') return '#5b8fd4';
-      if (t === 'contrasts') return '#e0a86a';
-      if (t === 'cites') return '#6bb8c9';
-      return '#6b7c93';
-    };
 
     const rfEdges: Edge[] = graph.edges
       .filter((e) => visible.has(e.source) && visible.has(e.target))
@@ -167,7 +195,7 @@ function MapCanvasInner(
             .join(' '),
           markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
           style: {
-            stroke: selected ? 'var(--accent)' : edgeColor(String(e.type)),
+            stroke: selected ? 'var(--accent)' : edgeTypeColor(String(e.type)),
             strokeWidth: selected || touchesSel ? 2.2 : 1.2,
           },
           labelStyle: { fill: 'var(--muted)', fontSize: 10 },
@@ -179,7 +207,12 @@ function MapCanvasInner(
       });
 
     const laid = layoutWithDagre(rfNodes, rfEdges, 'TB');
-    return { initialNodes: laid, initialEdges: rfEdges };
+    return {
+      initialNodes: laid,
+      initialEdges: rfEdges,
+      hitIds: hits,
+      visibleIds: visible,
+    };
   }, [
     graph,
     filter,
@@ -190,6 +223,7 @@ function MapCanvasInner(
     selectedEdgeId,
     neighborSet,
     pathSet,
+    byId,
   ]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -200,6 +234,14 @@ function MapCanvasInner(
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
+  useEffect(() => {
+    onVisibleStats?.({
+      hitCount: hitIds.size,
+      visibleCount: visibleIds.size,
+      totalCount: graph.nodes.length,
+    });
+  }, [hitIds, visibleIds, graph.nodes.length, onVisibleStats]);
+
   useImperativeHandle(
     ref,
     () => ({
@@ -208,7 +250,7 @@ function MapCanvasInner(
       },
       focusSelected: () => {
         if (!selectedId) {
-          void fitView({ padding: 0.15, duration: 300 });
+          void fitView({ padding: 0.15, maxZoom: 0.9, duration: 300 });
           return;
         }
         const n = getNode(selectedId);
@@ -225,6 +267,16 @@ function MapCanvasInner(
     [fitView, getNode, selectedId, setCenter],
   );
 
+  // Initial readable zoom: fitView with maxZoom so nodes stay readable
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      void fitView({ padding: 0.18, maxZoom: 0.85, duration: 0 });
+    }, 60);
+    return () => window.clearTimeout(t);
+    // only on graph / filter / focus / query shape changes that relayout
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graph.mapId, filter, chapterFocusId, query, nodes.length]);
+
   // pan to selected when URL / external select changes
   useEffect(() => {
     if (!selectedId) return;
@@ -233,14 +285,15 @@ function MapCanvasInner(
       if (n) {
         const w = n.measured?.width ?? 180;
         const h = n.measured?.height ?? 56;
+        const z = Math.max(getZoom(), 0.9);
         void setCenter(n.position.x + w / 2, n.position.y + h / 2, {
-          zoom: 1.05,
+          zoom: Math.min(z, 1.15),
           duration: 350,
         });
       }
-    }, 80);
+    }, 100);
     return () => window.clearTimeout(t);
-  }, [selectedId, getNode, setCenter, nodes.length]);
+  }, [selectedId, getNode, setCenter, getZoom, nodes.length]);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -254,7 +307,6 @@ function MapCanvasInner(
     (_: React.MouseEvent, node: Node) => {
       const mn = byId.get(node.id);
       if (mn?.type === 'chapter') {
-        // parent handles via custom event pattern — call onSelect then dispatch
         onSelect(mn);
         window.dispatchEvent(
           new CustomEvent('cm-chapter-focus', { detail: { id: mn.id } }),
@@ -292,14 +344,16 @@ function MapCanvasInner(
       onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
       fitView
-      fitViewOptions={{ padding: 0.15 }}
+      fitViewOptions={{ padding: 0.18, maxZoom: 0.85 }}
       minZoom={0.12}
       maxZoom={2}
       proOptions={{ hideAttribution: true }}
     >
       <Background gap={22} size={1} color="var(--rf-bg-dot)" />
-      <Controls showInteractive={false} position="bottom-right" />
+      {/* Controls bottom-left — away from MiniMap bottom-right (M1) */}
+      <Controls showInteractive={false} position="bottom-left" />
       <MiniMap
+        position="bottom-right"
         nodeColor={(n) => nodeTypeColor((n.type as string) || 'concept')}
         maskColor="color-mix(in srgb, var(--bg) 70%, transparent)"
         pannable

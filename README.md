@@ -25,7 +25,7 @@
 | `/` | 图书 / 地图列表（搜索、排序） |
 | `/books/:id` | 图书详情（元数据、类型拆解、推荐路径） |
 | `/maps/:id/about` | 同上（别名） |
-| `/maps/:id` | 概念地图阅读器（`?node=` / `?type=`） |
+| `/maps/:id` | 概念地图阅读器（`?node=` / `?type=` / `?focus=` / `?q=` / `?edge=`） |
 
 ## 本地预览
 
@@ -57,7 +57,7 @@ npm run validate
 4. **写入**：放到 `content/maps/<mapId>/`，更新 `content/maps/index.json`
 5. **同步与校验**：`npm run sync-maps && npm run validate`
 6. **预览 / 部署**：`npm run build`，`npx wrangler pages deploy apps/web/dist --project-name concept-map-generator`
-7. **审校**：把概念节点 `reviewStatus` 从 `draft` 改为 `reviewed`，走 Git PR
+7. **审校（作者流水线）**：可选在 JSON 中维护 `reviewStatus`（`draft`/`reviewed`），走 Git PR；**读者 UI 禁止渲染**该字段徽章
 
 ## 技术栈
 

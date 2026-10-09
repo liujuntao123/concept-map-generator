@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatGeneratedAt, relatedFor } from '../lib/graphUtils';
+import { dedupeTags, formatGeneratedAt, hasDistinctContent, relatedFor } from '../lib/graphUtils';
 import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
@@ -30,6 +30,8 @@ export default function DetailDrawer({
   const typeLabel = NODE_TYPE_LABEL[node.type as NodeType] ?? node.type;
   const related = relatedFor(graph, node.id);
   const anchor = node.source.anchor || node.source.file;
+  const tags = dedupeTags(node.type, node.tags);
+  const showContent = hasDistinctContent(node);
 
   async function copyExcerpt() {
     try {
@@ -47,7 +49,7 @@ export default function DetailDrawer({
         <div>
           <div className="cm-drawer__badges">
             <span className={`cm-pill cm-pill--${node.type}`}>{typeLabel}</span>
-            {(node.tags ?? []).slice(0, 3).map((t) => (
+            {tags.slice(0, 3).map((t) => (
               <span key={t} className="cm-pill">
                 {t}
               </span>
@@ -65,10 +67,12 @@ export default function DetailDrawer({
         <p>{node.summary}</p>
       </section>
 
-      <section className="cm-drawer__section">
-        <h3>详述</h3>
-        <p className="cm-drawer__content">{node.content}</p>
-      </section>
+      {showContent ? (
+        <section className="cm-drawer__section">
+          <h3>详述</h3>
+          <p className="cm-drawer__content">{node.content}</p>
+        </section>
+      ) : null}
 
       <section className="cm-drawer__section">
         <h3>在书中定位</h3>
@@ -102,27 +106,33 @@ export default function DetailDrawer({
         <section className="cm-drawer__section">
           <h3>相关节点（{related.length}）</h3>
           <div className="cm-related-list">
-            {related.map(({ node: rn, edge, direction }) => (
-              <button
-                key={`${edge.id}-${rn.id}`}
-                type="button"
-                className="cm-related-item"
-                onClick={() => onSelectRelated(rn)}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="cm-related-item__meta">
-                    {EDGE_TYPE_LABEL[edge.type] ?? edge.type} · {edge.label}
-                    {direction === 'out' ? ' →' : ' ←'}
+            {related.map(({ node: rn, edge, direction }) => {
+              const edgeType = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
+              const edgeLabel =
+                edge.label && edge.label !== edgeType ? edge.label : null;
+              return (
+                <button
+                  key={`${edge.id}-${rn.id}`}
+                  type="button"
+                  className="cm-related-item"
+                  onClick={() => onSelectRelated(rn)}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="cm-related-item__meta">
+                      {edgeType}
+                      {edgeLabel ? ` · ${edgeLabel}` : ''}
+                      {direction === 'out' ? ' →' : ' ←'}
+                    </div>
+                    <div className="cm-related-item__label" title={rn.label}>
+                      {rn.label}
+                    </div>
                   </div>
-                  <div className="cm-related-item__label" title={rn.label}>
-                    {rn.label}
-                  </div>
-                </div>
-                <span className={`cm-pill cm-pill--${rn.type}`}>
-                  {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
-                </span>
-              </button>
-            ))}
+                  <span className={`cm-pill cm-pill--${rn.type}`}>
+                    {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
       ) : null}

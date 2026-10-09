@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedAt } from '../lib/graphUtils';
 import {
   EDGE_TYPE_LABEL,
@@ -23,12 +24,19 @@ export default function BookDetailPage() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch(`/maps/${bookId}/meta.json`);
-        if (!res.ok) throw new Error('无法加载图书详情');
-        const data = (await res.json()) as MapMeta;
-        if (!cancelled) setMeta(data);
+        const data = await fetchJson<MapMeta>(
+          `/maps/${bookId}/meta.json`,
+          '无法加载图书详情。请确认图书地址是否正确。',
+        );
+        if (!cancelled) {
+          setMeta(data);
+          setError(null);
+        }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : '加载失败');
+        if (!cancelled) {
+          setMeta(null);
+          setError(e instanceof Error ? e.message : '无法加载图书详情');
+        }
       }
     }
     void load();
@@ -107,8 +115,8 @@ export default function BookDetailPage() {
           </div>
           <div className="cm-book-detail__intro">
             <div className="cm-book-card__badges">
-              <span className={`cm-pill cm-pill--status-${status}`}>
-                {STATUS_LABEL[status]}
+              <span className={`cm-pill cm-pill--status-${status}`} title="发布状态">
+                发布状态：{STATUS_LABEL[status]}
               </span>
               {meta.version ? <span className="cm-pill">v{meta.version}</span> : null}
               {meta.schemaVersion ? (

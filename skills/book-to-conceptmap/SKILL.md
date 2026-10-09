@@ -53,7 +53,7 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
 
 **节点类型**
 
-| type | 含义 | reviewStatus 默认 |
+| type | 含义 | 说明 |
 |------|------|-------------------|
 | `chapter` | 辑、篇、导读 | `reviewed` |
 | `concept` | 核心概念、论题 | `draft` |
@@ -61,7 +61,7 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
 | `person` | 人物 | `draft` |
 | `work` | 著作 | `draft` |
 
-**节点字段**：`id`, `type`, `label`, `summary`, `content`, `source.{chapter,file,excerpt,anchor?}`, `tags?`, `reviewStatus`
+**节点字段**：`id`, `type`, `label`, `summary`, `content`, `source.{chapter,file,excerpt,anchor?}`, `tags?`；可选 `reviewStatus`（仅作者流水线，读者端禁止渲染）
 
 **边类型（规范化）**：`contains` / `related` / `contrasts` / `cites`  
 字段：`id`, `source`, `target`, `type`, `label`, `description?`
@@ -92,7 +92,7 @@ npm run validate
 ### 6. 人工审校（Git）
 
 - 本地预览 → 点开节点核对摘录
-- 将确认过的节点 `reviewStatus` 改为 `reviewed`
+- （可选）将确认过的节点 `reviewStatus` 改为 `reviewed`；读者 Web 不展示该字段
 - 以 PR 修改 JSON
 
 ## 相关路径

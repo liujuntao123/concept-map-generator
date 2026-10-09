@@ -7,6 +7,9 @@ export type GraphNodeData = {
   nodeType: NodeType;
   dimmed?: boolean;
   neighbor?: boolean;
+  /** Direct search hit (vs 1-hop context neighbor) */
+  searchHit?: boolean;
+  searchContext?: boolean;
 };
 
 function GraphNodeComponent({ data, selected }: NodeProps<Node<GraphNodeData>>) {
@@ -17,6 +20,8 @@ function GraphNodeComponent({ data, selected }: NodeProps<Node<GraphNodeData>>) 
     selected ? 'is-selected' : '',
     data.neighbor ? 'is-neighbor' : '',
     data.dimmed ? 'is-dimmed' : '',
+    data.searchHit ? 'is-search-hit' : '',
+    data.searchContext ? 'is-search-ctx' : '',
   ]
     .filter(Boolean)
     .join(' ');

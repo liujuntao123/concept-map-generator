@@ -1,6 +1,5 @@
 export type NodeType = 'chapter' | 'concept' | 'claim' | 'person' | 'work';
 export type EdgeType = 'related' | 'contains' | 'contrasts' | 'cites';
-export type ReviewStatus = 'draft' | 'reviewed';
 export type MapPublishStatus = 'draft' | 'published';
 
 export interface SourceRef {
@@ -19,7 +18,11 @@ export interface MapNode {
   content: string;
   source: SourceRef;
   tags?: string[];
-  reviewStatus?: ReviewStatus;
+  /**
+   * Author-pipeline only (draft/reviewed). Never render in the reader UI.
+   * Kept optional so legacy JSON still type-checks if present; do not surface.
+   */
+  // reviewStatus intentionally omitted from the reader model
 }
 
 export interface MapEdge {
@@ -55,11 +58,6 @@ export interface MapStats {
   works?: number;
 }
 
-export interface ReviewCounts {
-  draft: number;
-  reviewed: number;
-}
-
 export interface MapMeta {
   id: string;
   title: string;
@@ -83,7 +81,6 @@ export interface MapMeta {
     mediaId?: string;
   };
   stats?: MapStats;
-  review?: ReviewCounts;
   nodeTypeBreakdown?: Partial<Record<NodeType, number>>;
   edgeTypeBreakdown?: Record<string, number>;
   featuredPaths?: FeaturedPath[];
@@ -104,7 +101,6 @@ export interface MapIndexEntry {
   status?: MapPublishStatus;
   schemaVersion?: string;
   stats?: MapStats;
-  review?: ReviewCounts;
   path: string;
 }
 
@@ -128,7 +124,13 @@ export const EDGE_TYPE_LABEL: Record<string, string> = {
   cites: '引用',
 };
 
+/** 发布状态（与已移除的审校「待审/已审」无关） */
 export const STATUS_LABEL: Record<MapPublishStatus, string> = {
   draft: '草稿',
   published: '已发布',
+};
+
+export const STATUS_LABEL_WITH_PREFIX: Record<MapPublishStatus, string> = {
+  draft: '发布状态：草稿',
+  published: '发布状态：已发布',
 };

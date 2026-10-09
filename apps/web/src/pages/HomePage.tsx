@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedAt } from '../lib/graphUtils';
 import type { MapIndexEntry, MapsIndex } from '../types/graph';
 import { STATUS_LABEL } from '../types/graph';
@@ -13,7 +14,6 @@ function coverInitial(m: MapIndexEntry): string {
   return t.slice(0, 2);
 }
 
-
 export default function HomePage() {
   const [index, setIndex] = useState<MapsIndex | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +25,10 @@ export default function HomePage() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch('/maps/index.json');
-        if (!res.ok) throw new Error('无法加载图书目录');
-        const data = (await res.json()) as MapsIndex;
+        const data = await fetchJson<MapsIndex>(
+          '/maps/index.json',
+          '无法加载图书目录',
+        );
         if (!cancelled) setIndex(data);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : '加载失败');
@@ -59,7 +60,6 @@ export default function HomePage() {
       if (sort === 'nodes') {
         return (b.stats?.nodes ?? 0) - (a.stats?.nodes ?? 0);
       }
-      // recent
       const ta = a.generatedAt ? new Date(a.generatedAt).getTime() : 0;
       const tb = b.generatedAt ? new Date(b.generatedAt).getTime() : 0;
       return tb - ta;
@@ -82,6 +82,14 @@ export default function HomePage() {
       </div>
     );
   }
+
+  const qTrim = query.trim();
+  const summaryBooks = filtered.length;
+  const summaryNodes = filtered.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0);
+  const summaryEdges = filtered.reduce((s, m) => s + (m.stats?.edges ?? 0), 0);
+  const libraryBooks = index.maps.length;
+  const libraryNodes = index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0);
+  const libraryEdges = index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0);
 
   return (
     <div className="cm-shell">
@@ -111,13 +119,22 @@ export default function HomePage() {
             浏览已生成的概念地图。每本书来自 IMA 知识库拆解：章节、概念、主张、人物与著作相互关联，节点详情含原文摘录。
           </p>
           <div className="cm-home__summary">
-            <span>{index.maps.length} 本</span>
-            <span>
-              {index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0)} 节点
-            </span>
-            <span>
-              {index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0)} 关系
-            </span>
+            {qTrim ? (
+              <>
+                <span>
+                  匹配 {summaryBooks} 本 / {summaryNodes} 节点 / {summaryEdges} 关系
+                </span>
+                <span className="cm-home__summary-muted">
+                  全库 {libraryBooks} 本 / {libraryNodes} 节点 / {libraryEdges} 关系
+                </span>
+              </>
+            ) : (
+              <>
+                <span>{libraryBooks} 本</span>
+                <span>{libraryNodes} 节点</span>
+                <span>{libraryEdges} 关系</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -152,13 +169,13 @@ export default function HomePage() {
             <div className="cm-empty-books__icon" aria-hidden>
               📚
             </div>
-            <h2>{query.trim() ? '没有匹配的图书' : '还没有图书'}</h2>
+            <h2>{qTrim ? '没有匹配的图书' : '还没有图书'}</h2>
             <p>
-              {query.trim()
+              {qTrim
                 ? '试试其他关键词，或清空搜索查看全部。'
                 : '用 book-to-conceptmap skill 从 IMA 知识库生成第一本地图后，会出现在这里。'}
             </p>
-            {query.trim() ? (
+            {qTrim ? (
               <button type="button" className="cm-btn" onClick={() => setQuery('')}>
                 清空搜索
               </button>
@@ -179,8 +196,11 @@ export default function HomePage() {
                   </div>
                   <div className="cm-book-card__body">
                     <div className="cm-book-card__badges">
-                      <span className={`cm-pill cm-pill--status-${status}`}>
-                        {STATUS_LABEL[status]}
+                      <span
+                        className={`cm-pill cm-pill--status-${status}`}
+                        title="发布状态"
+                      >
+                        发布状态：{STATUS_LABEL[status]}
                       </span>
                       {m.version ? <span className="cm-pill">v{m.version}</span> : null}
                     </div>
