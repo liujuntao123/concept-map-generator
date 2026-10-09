@@ -72,10 +72,6 @@
   "coverText": "走出",
   "status": "published",
   "schemaVersion": "1.1",
-  "review": {
-    "draft": 42,
-    "reviewed": 28
-  },
   "nodeTypeBreakdown": {
     "chapter": 28,
     "claim": 2,

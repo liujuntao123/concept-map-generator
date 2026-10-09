@@ -388,9 +388,7 @@ def main() -> None:
             meta = json.loads(mp.read_text(encoding="utf-8"))
         meta["generatedAt"] = now
         meta["version"] = "1.1.1"
-        draft = sum(1 for n in graph["nodes"] if n.get("reviewStatus") == "draft")
-        reviewed = sum(1 for n in graph["nodes"] if n.get("reviewStatus") == "reviewed")
-        meta["review"] = {"draft": draft, "reviewed": reviewed}
+        meta.pop("review", None)
         mp.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     same = sum(1 for n in graph["nodes"] if n["summary"].strip() == n["content"].strip())

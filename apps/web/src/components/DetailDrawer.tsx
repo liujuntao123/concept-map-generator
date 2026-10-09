@@ -29,7 +29,6 @@ export default function DetailDrawer({
   const [copied, setCopied] = useState(false);
   const typeLabel = NODE_TYPE_LABEL[node.type as NodeType] ?? node.type;
   const related = relatedFor(graph, node.id);
-  const isDraft = node.reviewStatus === 'draft';
   const anchor = node.source.anchor || node.source.file;
 
   async function copyExcerpt() {
@@ -48,13 +47,6 @@ export default function DetailDrawer({
         <div>
           <div className="cm-drawer__badges">
             <span className={`cm-pill cm-pill--${node.type}`}>{typeLabel}</span>
-            {isDraft ? (
-              <span className="cm-pill cm-pill--draft" title="AI 生成草稿，待人工审校">
-                待审
-              </span>
-            ) : (
-              <span className="cm-pill cm-pill--reviewed">已审</span>
-            )}
             {(node.tags ?? []).slice(0, 3).map((t) => (
               <span key={t} className="cm-pill">
                 {t}

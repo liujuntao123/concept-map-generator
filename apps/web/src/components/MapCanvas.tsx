@@ -130,7 +130,6 @@ function MapCanvasInner(
           data: {
             label: n.label,
             nodeType: n.type,
-            reviewStatus: n.reviewStatus,
             dimmed,
             neighbor: Boolean(selectedId && isNb),
           },

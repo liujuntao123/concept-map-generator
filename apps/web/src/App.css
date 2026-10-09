@@ -225,8 +225,6 @@
 .cm-pill--claim { color: var(--claim); background: color-mix(in srgb, var(--claim) 16%, transparent); border-color: color-mix(in srgb, var(--claim) 40%, var(--border)); }
 .cm-pill--person { color: var(--person); background: color-mix(in srgb, var(--person) 16%, transparent); border-color: color-mix(in srgb, var(--person) 40%, var(--border)); }
 .cm-pill--work { color: var(--work); background: color-mix(in srgb, var(--work) 16%, transparent); border-color: color-mix(in srgb, var(--work) 40%, var(--border)); }
-.cm-pill--draft { color: #e8b86a; background: rgba(232,184,106,0.12); border-color: #8a6a30; }
-.cm-pill--reviewed { color: var(--muted); }
 
 .cm-drawer__section { margin-top: 16px; }
 .cm-drawer__section h3 {
@@ -343,13 +341,6 @@
   font-size: 0.65rem;
   color: var(--muted);
   margin-bottom: 4px;
-}
-.cm-node__draft {
-  font-size: 0.6rem;
-  padding: 0 5px;
-  border-radius: 999px;
-  border: 1px solid #8a6a30;
-  color: #e8b86a;
 }
 .cm-node__label {
   display: block;
@@ -594,21 +585,6 @@ a.cm-btn:hover { text-decoration: none; }
   border-color: #8a6a30;
 }
 
-.cm-review-bar { display: grid; gap: 4px; }
-.cm-review-bar--lg { margin-top: 14px; }
-.cm-review-bar__track {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--bg-elev-2);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.cm-review-bar__fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--concept), var(--accent));
-  border-radius: 999px;
-}
-.cm-review-bar__label { font-size: 0.72rem; color: var(--muted); }
 
 /* Book detail */
 .cm-book-detail {

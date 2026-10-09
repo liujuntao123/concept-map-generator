@@ -5,7 +5,6 @@ import { NODE_TYPE_LABEL, type NodeType } from '../types/graph';
 export type GraphNodeData = {
   label: string;
   nodeType: NodeType;
-  reviewStatus?: 'draft' | 'reviewed';
   dimmed?: boolean;
   neighbor?: boolean;
 };
@@ -25,10 +24,7 @@ function GraphNodeComponent({ data, selected }: NodeProps<Node<GraphNodeData>>) 
   return (
     <div className={cls} title={data.label}>
       <Handle type="target" position={Position.Top} className="cm-handle" />
-      <span className="cm-node__badge">
-        {typeLabel}
-        {data.reviewStatus === 'draft' ? <span className="cm-node__draft">待审</span> : null}
-      </span>
+      <span className="cm-node__badge">{typeLabel}</span>
       <span className="cm-node__label">{data.label}</span>
       <Handle type="source" position={Position.Bottom} className="cm-handle" />
     </div>

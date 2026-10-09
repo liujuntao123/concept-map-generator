@@ -13,13 +13,6 @@ function coverInitial(m: MapIndexEntry): string {
   return t.slice(0, 2);
 }
 
-function reviewPct(m: MapIndexEntry): number | null {
-  const r = m.review;
-  if (!r) return null;
-  const total = (r.draft || 0) + (r.reviewed || 0);
-  if (!total) return null;
-  return Math.round((r.reviewed / total) * 100);
-}
 
 export default function HomePage() {
   const [index, setIndex] = useState<MapsIndex | null>(null);
@@ -174,7 +167,6 @@ export default function HomePage() {
         ) : (
           <div className="cm-home__grid">
             {filtered.map((m) => {
-              const pct = reviewPct(m);
               const status = m.status ?? 'draft';
               return (
                 <article key={m.id} className="cm-book-card">
@@ -213,19 +205,6 @@ export default function HomePage() {
                         <span>{formatGeneratedAt(m.generatedAt)}</span>
                       ) : null}
                     </div>
-                    {pct !== null && m.review ? (
-                      <div className="cm-review-bar" title={`已审 ${m.review.reviewed} · 待审 ${m.review.draft}`}>
-                        <div className="cm-review-bar__track">
-                          <div
-                            className="cm-review-bar__fill"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <span className="cm-review-bar__label">
-                          审校 {pct}%（{m.review.reviewed}/{m.review.reviewed + m.review.draft}）
-                        </span>
-                      </div>
-                    ) : null}
                     <div className="cm-book-card__actions">
                       <Link className="cm-btn cm-btn--primary" to={`/maps/${m.id}`}>
                         打开地图

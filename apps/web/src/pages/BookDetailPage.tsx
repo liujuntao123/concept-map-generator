@@ -55,10 +55,6 @@ export default function BookDetailPage() {
   }
 
   const status = (meta.status ?? 'draft') as MapPublishStatus;
-  const review = meta.review;
-  const reviewTotal = review ? review.draft + review.reviewed : 0;
-  const reviewPct =
-    review && reviewTotal ? Math.round((review.reviewed / reviewTotal) * 100) : null;
 
   const nodeBreakdown = meta.nodeTypeBreakdown ?? {
     chapter: meta.stats?.chapters,
@@ -159,16 +155,6 @@ export default function BookDetailPage() {
                 <dd>{meta.stats?.concepts ?? '—'}</dd>
               </div>
             </dl>
-            {reviewPct !== null && review ? (
-              <div className="cm-review-bar cm-review-bar--lg">
-                <div className="cm-review-bar__track">
-                  <div className="cm-review-bar__fill" style={{ width: `${reviewPct}%` }} />
-                </div>
-                <span className="cm-review-bar__label">
-                  审校进度 {reviewPct}% — 已审 {review.reviewed} · 待审 {review.draft}
-                </span>
-              </div>
-            ) : null}
           </div>
 
           <div className="cm-panel">
