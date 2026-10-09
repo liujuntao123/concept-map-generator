@@ -1,21 +1,67 @@
-import type { MapNode } from '../types/graph';
+import { useState } from 'react';
+import { formatGeneratedAt, relatedFor } from '../lib/graphUtils';
+import {
+  EDGE_TYPE_LABEL,
+  NODE_TYPE_LABEL,
+  type ConceptGraph,
+  type MapMeta,
+  type MapNode,
+  type NodeType,
+} from '../types/graph';
 
 interface Props {
-  node: MapNode | null;
+  node: MapNode;
+  graph: ConceptGraph;
+  meta: MapMeta;
   onClose: () => void;
+  onSelectRelated: (node: MapNode) => void;
+  onFocusChapter?: (chapterLabel: string) => void;
 }
 
-export default function DetailDrawer({ node, onClose }: Props) {
-  if (!node) return null;
+export default function DetailDrawer({
+  node,
+  graph,
+  meta,
+  onClose,
+  onSelectRelated,
+  onFocusChapter,
+}: Props) {
+  const [copied, setCopied] = useState(false);
+  const typeLabel = NODE_TYPE_LABEL[node.type as NodeType] ?? node.type;
+  const related = relatedFor(graph, node.id);
+  const isDraft = node.reviewStatus === 'draft';
+  const anchor = node.source.anchor || node.source.file;
 
-  const typeLabel = node.type === 'chapter' ? '章节' : '概念';
+  async function copyExcerpt() {
+    try {
+      await navigator.clipboard.writeText(node.source.excerpt);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
-    <aside className="cm-drawer" aria-label="节点详情">
+    <aside className="cm-drawer" aria-label="节点详情" role="dialog">
       <header className="cm-drawer__header">
         <div>
-          <span className={`cm-pill cm-pill--${node.type}`}>{typeLabel}</span>
-          <h2>{node.label}</h2>
+          <div className="cm-drawer__badges">
+            <span className={`cm-pill cm-pill--${node.type}`}>{typeLabel}</span>
+            {isDraft ? (
+              <span className="cm-pill cm-pill--draft" title="AI 生成草稿，待人工审校">
+                待审
+              </span>
+            ) : (
+              <span className="cm-pill cm-pill--reviewed">已审</span>
+            )}
+            {(node.tags ?? []).slice(0, 3).map((t) => (
+              <span key={t} className="cm-pill">
+                {t}
+              </span>
+            ))}
+          </div>
+          <h2 title={node.label}>{node.label}</h2>
         </div>
         <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">
           ×
@@ -33,13 +79,68 @@ export default function DetailDrawer({ node, onClose }: Props) {
       </section>
 
       <section className="cm-drawer__section">
-        <h3>原文出处</h3>
-        <p className="cm-drawer__source-meta">
-          {node.source.chapter}
-          {node.source.file ? ` · ${node.source.file}` : ''}
-        </p>
-        <blockquote className="cm-excerpt">{node.source.excerpt}</blockquote>
+        <h3>在书中定位</h3>
+        <div className="cm-locate">
+          <span>
+            章节：
+            <button
+              type="button"
+              className="cm-btn cm-btn--ghost"
+              style={{ marginLeft: 6 }}
+              onClick={() => onFocusChapter?.(node.source.chapter)}
+            >
+              {node.source.chapter}
+            </button>
+          </span>
+          {anchor ? (
+            <span>
+              原文文件：<code title="epub 内路径">{anchor}</code>
+            </span>
+          ) : null}
+        </div>
+        <div className="cm-excerpt-wrap">
+          <blockquote className="cm-excerpt">{node.source.excerpt}</blockquote>
+          <button type="button" className="cm-copy-btn" onClick={() => void copyExcerpt()}>
+            {copied ? '已复制摘录' : '复制原文摘录'}
+          </button>
+        </div>
       </section>
+
+      {related.length > 0 ? (
+        <section className="cm-drawer__section">
+          <h3>相关节点（{related.length}）</h3>
+          <div className="cm-related-list">
+            {related.map(({ node: rn, edge, direction }) => (
+              <button
+                key={`${edge.id}-${rn.id}`}
+                type="button"
+                className="cm-related-item"
+                onClick={() => onSelectRelated(rn)}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="cm-related-item__meta">
+                    {EDGE_TYPE_LABEL[edge.type] ?? edge.type} · {edge.label}
+                    {direction === 'out' ? ' →' : ' ←'}
+                  </div>
+                  <div className="cm-related-item__label" title={rn.label}>
+                    {rn.label}
+                  </div>
+                </div>
+                <span className={`cm-pill cm-pill--${rn.type}`}>
+                  {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <div className="cm-meta-footer">
+        地图版本 {meta.version ?? '—'} · 生成于 {formatGeneratedAt(meta.generatedAt ?? meta.createdAt)}
+        <br />
+        来源：{meta.source?.file ?? (typeof meta.ima?.file_name === 'string' ? meta.ima.file_name : undefined) ?? '未知'}
+        {meta.author ? ` · ${meta.author}` : ''}
+      </div>
     </aside>
   );
 }

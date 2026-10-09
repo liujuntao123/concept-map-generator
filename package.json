@@ -1,11 +1,16 @@
 {
   "name": "concept-map-generator",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "IMA book → concept map Web reader",
   "scripts": {
+    "sync-maps": "node scripts/sync-maps.mjs",
+    "validate": "node scripts/validate-graph.mjs",
+    "predev": "npm run sync-maps",
     "dev": "npm --prefix apps/web run dev",
+    "prebuild": "npm run sync-maps",
     "build": "npm --prefix apps/web run build",
-    "preview": "npm --prefix apps/web run preview"
+    "preview": "npm --prefix apps/web run preview",
+    "deploy": "npm run build && npx --prefix apps/web wrangler pages deploy apps/web/dist --project-name concept-map-generator"
   }
 }

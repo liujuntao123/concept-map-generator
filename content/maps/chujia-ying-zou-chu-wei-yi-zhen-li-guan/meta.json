@@ -14,12 +14,58 @@
     "file_name": "走出唯一真理观-陈嘉映.epub"
   },
   "stats": {
-    "nodes": 69,
-    "edges": 106,
+    "nodes": 70,
+    "edges": 108,
     "chapters": 28,
-    "concepts": 41
+    "concepts": 38,
+    "claims": 2,
+    "persons": 1,
+    "works": 1
   },
   "createdAt": "2026-10-09T21:45:00+08:00",
-  "version": "1.0.0",
-  "description": "从 IMA 知识库 epub 抽取并整理的《走出唯一真理观》概念地图：章节节点 + 概念节点，边表示包含/阐发/对照等关系，节点详情含原文摘录。"
+  "version": "1.1.0",
+  "description": "从 IMA 知识库 epub 抽取并整理的《走出唯一真理观》概念地图：章节节点 + 概念节点，边表示包含/阐发/对照等关系，节点详情含原文摘录。",
+  "generatedAt": "2026-10-09T22:40:00+08:00",
+  "source": {
+    "file": "走出唯一真理观-陈嘉映.epub",
+    "kind": "epub",
+    "imaKb": "走出唯一真理观",
+    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_bd310290e9d43d1396ff3824da687dcb7507361946149972"
+  },
+  "featuredPaths": [
+    {
+      "id": "path-weiyi",
+      "title": "走出唯一真理观",
+      "description": "从「唯一真理观」到道路多元与哲学之死",
+      "nodeIds": [
+        "c-weiyi-zhenliguan",
+        "c-duoyuan-dao",
+        "c-zhexue-siwang",
+        "c-si-de-renwu"
+      ]
+    },
+    {
+      "id": "path-shuoli",
+      "title": "说理与对话",
+      "description": "说理、对话、心服与共识",
+      "nodeIds": [
+        "c-shuoli",
+        "c-duihua",
+        "c-xin-fu",
+        "c-gongshi"
+      ]
+    },
+    {
+      "id": "path-dazai",
+      "title": "此在与本真",
+      "description": "《存在与时间》线索：此在、在世、共在、本真",
+      "nodeIds": [
+        "w-cunzai-yu-shijian",
+        "c-cidai",
+        "c-shijie",
+        "c-gongzai",
+        "c-benzhen"
+      ]
+    }
+  ]
 }

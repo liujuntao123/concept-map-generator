@@ -1,0 +1,27 @@
+name: Validate concept maps
+
+on:
+  push:
+    paths:
+      - 'content/maps/**'
+      - 'schemas/**'
+      - 'scripts/validate-graph.mjs'
+      - 'apps/web/package.json'
+  pull_request:
+    paths:
+      - 'content/maps/**'
+      - 'schemas/**'
+      - 'scripts/validate-graph.mjs'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deps (ajv via apps/web)
+        run: npm --prefix apps/web ci
+      - name: Validate graph.json files
+        run: node scripts/validate-graph.mjs

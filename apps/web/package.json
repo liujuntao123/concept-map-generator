@@ -7,20 +7,25 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prebuild": "node ../../scripts/sync-maps.mjs",
+    "predev": "node ../../scripts/sync-maps.mjs",
+    "validate": "node ../../scripts/validate-graph.mjs"
   },
   "dependencies": {
     "@types/dagre": "^0.7.54",
     "@xyflow/react": "^12.12.0",
     "dagre": "^0.8.5",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "ajv": "^8.20.0",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"

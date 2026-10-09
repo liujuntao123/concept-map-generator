@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-10-09T22:40:00+08:00",
+  "maps": [
+    {
+      "id": "chujia-ying-zou-chu-wei-yi-zhen-li-guan",
+      "title": "走出唯一真理观",
+      "subtitle": "陈嘉映文集概念地图（试点）",
+      "author": "陈嘉映",
+      "description": "从 IMA 知识库 epub 抽取并整理的《走出唯一真理观》概念地图：章节节点 + 概念节点，边表示包含/阐发/对照等关系，节点详情含原文摘录。",
+      "version": "1.1.0",
+      "generatedAt": "2026-10-09T22:40:00+08:00",
+      "sourceFile": "走出唯一真理观-陈嘉映.epub",
+      "stats": {
+        "nodes": 70,
+        "edges": 108,
+        "chapters": 28,
+        "concepts": 38,
+        "claims": 2,
+        "persons": 1,
+        "works": 1
+      },
+      "path": "/maps/chujia-ying-zou-chu-wei-yi-zhen-li-guan"
+    }
+  ]
+}

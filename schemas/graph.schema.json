@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://concept-map-generator.pages.dev/schemas/graph.schema.json",
+  "title": "ConceptMapGraph",
+  "type": "object",
+  "required": [
+    "mapId",
+    "schemaVersion",
+    "nodes",
+    "edges"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "mapId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schemaVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "label",
+        "summary",
+        "content",
+        "source"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "chapter",
+            "concept",
+            "claim",
+            "person",
+            "work"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reviewStatus": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "reviewed"
+          ]
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "chapter",
+            "excerpt"
+          ],
+          "additionalProperties": true,
+          "properties": {
+            "chapter": {
+              "type": "string"
+            },
+            "file": {
+              "type": "string"
+            },
+            "excerpt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": [
+        "id",
+        "source",
+        "target",
+        "type",
+        "label"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "related",
+            "contains",
+            "contrasts",
+            "cites"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
