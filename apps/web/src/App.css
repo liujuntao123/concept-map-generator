@@ -266,6 +266,10 @@
   border-radius: 0 10px 10px 0;
   color: var(--text);
   font-size: 0.92rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: min(48vh, 420px);
+  overflow: auto;
 }
 .cm-copy-btn {
   margin-top: 8px;
