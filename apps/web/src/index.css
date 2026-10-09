@@ -1,0 +1,26 @@
+:root {
+  color-scheme: dark;
+  --bg: #0c1017;
+  --bg-elev: #141b26;
+  --bg-elev-2: #1a2332;
+  --border: #2a3648;
+  --text: #e8eef7;
+  --muted: #8b9bb4;
+  --accent: #7eb8ff;
+  --chapter: #5b8fd4;
+  --concept: #6fbf86;
+  --excerpt: #f0c674;
+  font-family: "Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+button, input { font: inherit; color: inherit; }
+a { color: var(--accent); }

@@ -1,0 +1,25 @@
+{
+  "id": "chujia-ying-zou-chu-wei-yi-zhen-li-guan",
+  "title": "走出唯一真理观",
+  "subtitle": "陈嘉映文集概念地图（试点）",
+  "author": "陈嘉映",
+  "publisher": "上海文艺出版社",
+  "isbn": "9787532175468",
+  "language": "zh-CN",
+  "ima": {
+    "kb_id": "mn4_ylU4oKBdULI0gLMTNgvGe46Rr2PUh5e7PncPolo=",
+    "kb_name": "走出唯一真理观",
+    "media_id": "epub_2fabf5187bf33404addbb97d852bb3a7_bd310290e9d43d1396ff3824da687dcb7507361946149972",
+    "media_type": 21,
+    "file_name": "走出唯一真理观-陈嘉映.epub"
+  },
+  "stats": {
+    "nodes": 69,
+    "edges": 106,
+    "chapters": 28,
+    "concepts": 41
+  },
+  "createdAt": "2026-10-09T21:45:00+08:00",
+  "version": "1.0.0",
+  "description": "从 IMA 知识库 epub 抽取并整理的《走出唯一真理观》概念地图：章节节点 + 概念节点，边表示包含/阐发/对照等关系，节点详情含原文摘录。"
+}
