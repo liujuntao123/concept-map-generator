@@ -75,6 +75,18 @@ export default function MapPage() {
     }
   }, [graph, searchParams]);
 
+  // deep link ?type= for node type filter (from book detail / library)
+  useEffect(() => {
+    const t = searchParams.get('type');
+    if (!t || t === 'all') {
+      // only reset if URL explicitly has type=all
+      if (t === 'all') setFilter('all');
+      return;
+    }
+    const allowed = new Set(['chapter', 'concept', 'claim', 'person', 'work']);
+    if (allowed.has(t)) setFilter(t as TypeFilter);
+  }, [searchParams]);
+
   useEffect(() => {
     const handler = (ev: Event) => {
       const id = (ev as CustomEvent<{ id: string }>).detail?.id;
@@ -205,7 +217,7 @@ export default function MapPage() {
           <div className="cm-brand__mark" aria-hidden />
           <div>
             <Link className="cm-back" to="/">
-              ← 地图目录
+              ← 图书列表
             </Link>
             <h1>{meta.title}</h1>
             <p>
@@ -280,7 +292,18 @@ export default function MapPage() {
                 key={f.key}
                 type="button"
                 className={`cm-chip${filter === f.key ? ' is-active' : ''}`}
-                onClick={() => setFilter(f.key)}
+                onClick={() => {
+                  setFilter(f.key);
+                  setSearchParams(
+                    (prev) => {
+                      const next = new URLSearchParams(prev);
+                      if (f.key === 'all') next.delete('type');
+                      else next.set('type', f.key);
+                      return next;
+                    },
+                    { replace: true },
+                  );
+                }}
               >
                 {f.label}
               </button>
@@ -331,6 +354,9 @@ export default function MapPage() {
             </div>
           ) : null}
 
+          <Link className="cm-btn cm-btn--ghost" to={`/books/${mapId}`}>
+            图书详情
+          </Link>
           <button
             type="button"
             className="cm-theme-toggle"

@@ -1,6 +1,7 @@
 export type NodeType = 'chapter' | 'concept' | 'claim' | 'person' | 'work';
 export type EdgeType = 'related' | 'contains' | 'contrasts' | 'cites';
 export type ReviewStatus = 'draft' | 'reviewed';
+export type MapPublishStatus = 'draft' | 'published';
 
 export interface SourceRef {
   chapter: string;
@@ -44,6 +45,21 @@ export interface FeaturedPath {
   nodeIds: string[];
 }
 
+export interface MapStats {
+  nodes: number;
+  edges: number;
+  chapters: number;
+  concepts: number;
+  claims?: number;
+  persons?: number;
+  works?: number;
+}
+
+export interface ReviewCounts {
+  draft: number;
+  reviewed: number;
+}
+
 export interface MapMeta {
   id: string;
   title: string;
@@ -54,21 +70,22 @@ export interface MapMeta {
   generatedAt?: string;
   createdAt?: string;
   publisher?: string;
+  isbn?: string;
+  language?: string;
+  coverColor?: string;
+  coverText?: string;
+  status?: MapPublishStatus;
+  schemaVersion?: string;
   source?: {
     file: string;
     kind?: string;
     imaKb?: string;
     mediaId?: string;
   };
-  stats?: {
-    nodes: number;
-    edges: number;
-    chapters: number;
-    concepts: number;
-    claims?: number;
-    persons?: number;
-    works?: number;
-  };
+  stats?: MapStats;
+  review?: ReviewCounts;
+  nodeTypeBreakdown?: Partial<Record<NodeType, number>>;
+  edgeTypeBreakdown?: Record<string, number>;
   featuredPaths?: FeaturedPath[];
   ima?: Record<string, unknown>;
 }
@@ -82,7 +99,12 @@ export interface MapIndexEntry {
   version?: string;
   generatedAt?: string;
   sourceFile?: string;
-  stats?: MapMeta['stats'];
+  coverColor?: string;
+  coverText?: string;
+  status?: MapPublishStatus;
+  schemaVersion?: string;
+  stats?: MapStats;
+  review?: ReviewCounts;
   path: string;
 }
 
@@ -104,4 +126,9 @@ export const EDGE_TYPE_LABEL: Record<string, string> = {
   contains: '包含',
   contrasts: '对照',
   cites: '引用',
+};
+
+export const STATUS_LABEL: Record<MapPublishStatus, string> = {
+  draft: '草稿',
+  published: '已发布',
 };

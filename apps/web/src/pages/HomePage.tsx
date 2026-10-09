@@ -1,12 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatGeneratedAt } from '../lib/graphUtils';
-import type { MapsIndex } from '../types/graph';
+import type { MapIndexEntry, MapsIndex } from '../types/graph';
+import { STATUS_LABEL } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
+
+type SortKey = 'recent' | 'title' | 'nodes';
+
+function coverInitial(m: MapIndexEntry): string {
+  if (m.coverText) return m.coverText.slice(0, 2);
+  const t = m.title?.trim() || '?';
+  return t.slice(0, 2);
+}
+
+function reviewPct(m: MapIndexEntry): number | null {
+  const r = m.review;
+  if (!r) return null;
+  const total = (r.draft || 0) + (r.reviewed || 0);
+  if (!total) return null;
+  return Math.round((r.reviewed / total) * 100);
+}
 
 export default function HomePage() {
   const [index, setIndex] = useState<MapsIndex | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortKey>('recent');
   const { theme, toggle } = useTheme();
 
   useEffect(() => {
@@ -14,7 +33,7 @@ export default function HomePage() {
     async function load() {
       try {
         const res = await fetch('/maps/index.json');
-        if (!res.ok) throw new Error('无法加载地图目录');
+        if (!res.ok) throw new Error('无法加载图书目录');
         const data = (await res.json()) as MapsIndex;
         if (!cancelled) setIndex(data);
       } catch (e) {
@@ -27,6 +46,34 @@ export default function HomePage() {
     };
   }, []);
 
+  const filtered = useMemo(() => {
+    if (!index) return [] as MapIndexEntry[];
+    const q = query.trim().toLowerCase();
+    let list = index.maps.slice();
+    if (q) {
+      list = list.filter((m) => {
+        const hay = [m.title, m.author, m.subtitle, m.description, m.sourceFile]
+          .filter(Boolean)
+          .join('\n')
+          .toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    list.sort((a, b) => {
+      if (sort === 'title') {
+        return (a.title || '').localeCompare(b.title || '', 'zh-CN');
+      }
+      if (sort === 'nodes') {
+        return (b.stats?.nodes ?? 0) - (a.stats?.nodes ?? 0);
+      }
+      // recent
+      const ta = a.generatedAt ? new Date(a.generatedAt).getTime() : 0;
+      const tb = b.generatedAt ? new Date(b.generatedAt).getTime() : 0;
+      return tb - ta;
+    });
+    return list;
+  }, [index, query, sort]);
+
   if (error) {
     return (
       <div className="cm-shell cm-shell--center">
@@ -38,12 +85,11 @@ export default function HomePage() {
   if (!index) {
     return (
       <div className="cm-shell cm-shell--center">
-        <p className="cm-loading">正在加载地图目录…</p>
+        <p className="cm-loading">正在加载图书目录…</p>
       </div>
     );
   }
 
-  // Single map: still show index card for discoverability (backlog #20)
   return (
     <div className="cm-shell">
       <header className="cm-topbar">
@@ -51,7 +97,7 @@ export default function HomePage() {
           <div className="cm-brand__mark" aria-hidden />
           <div>
             <h1>概念地图</h1>
-            <p>从书籍到可交互知识结构</p>
+            <p>图书管理 · 从书籍到可交互知识结构</p>
           </div>
         </div>
         <button
@@ -64,36 +110,136 @@ export default function HomePage() {
           {theme === 'dark' ? '☾' : '☀'}
         </button>
       </header>
+
       <main className="cm-home">
         <div className="cm-home__hero">
-          <h1>选择一本地图</h1>
+          <h1>图书与地图</h1>
           <p>
-            每本地图由 IMA 知识库中的书籍拆解而来：章节、概念、主张、人物与著作相互关联，节点详情含原文摘录。
+            浏览已生成的概念地图。每本书来自 IMA 知识库拆解：章节、概念、主张、人物与著作相互关联，节点详情含原文摘录。
           </p>
+          <div className="cm-home__summary">
+            <span>{index.maps.length} 本</span>
+            <span>
+              {index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0)} 节点
+            </span>
+            <span>
+              {index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0)} 关系
+            </span>
+          </div>
         </div>
-        <div className="cm-home__grid">
-          {index.maps.map((m) => (
-            <Link key={m.id} className="cm-map-card" to={`/maps/${m.id}`}>
-              <h2>{m.title}</h2>
-              <div className="meta">
-                {m.author ? `${m.author} · ` : ''}
-                {m.subtitle ?? '概念地图'}
-              </div>
-              {m.description ? <p className="desc">{m.description}</p> : null}
-              <div className="stats">
-                {m.stats ? (
-                  <>
-                    <span>{m.stats.nodes} 节点</span>
-                    <span>{m.stats.edges} 关系</span>
-                    <span>{m.stats.chapters} 章节</span>
-                  </>
-                ) : null}
-                {m.version ? <span>v{m.version}</span> : null}
-                {m.generatedAt ? <span>{formatGeneratedAt(m.generatedAt)}</span> : null}
-              </div>
-            </Link>
-          ))}
+
+        <div className="cm-library-toolbar">
+          <div className="cm-search-wrap cm-library-search">
+            <input
+              className="cm-search"
+              type="search"
+              placeholder="按书名、作者搜索…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="搜索图书"
+            />
+          </div>
+          <div className="cm-library-sort">
+            <label htmlFor="cm-sort">排序</label>
+            <select
+              id="cm-sort"
+              className="cm-select"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+            >
+              <option value="recent">最近生成</option>
+              <option value="title">书名</option>
+              <option value="nodes">节点数</option>
+            </select>
+          </div>
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="cm-empty-books">
+            <div className="cm-empty-books__icon" aria-hidden>
+              📚
+            </div>
+            <h2>{query.trim() ? '没有匹配的图书' : '还没有图书'}</h2>
+            <p>
+              {query.trim()
+                ? '试试其他关键词，或清空搜索查看全部。'
+                : '用 book-to-conceptmap skill 从 IMA 知识库生成第一本地图后，会出现在这里。'}
+            </p>
+            {query.trim() ? (
+              <button type="button" className="cm-btn" onClick={() => setQuery('')}>
+                清空搜索
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <div className="cm-home__grid">
+            {filtered.map((m) => {
+              const pct = reviewPct(m);
+              const status = m.status ?? 'draft';
+              return (
+                <article key={m.id} className="cm-book-card">
+                  <div
+                    className="cm-book-card__cover"
+                    style={{ background: m.coverColor || 'var(--bg-elev-2)' }}
+                    aria-hidden
+                  >
+                    <span>{coverInitial(m)}</span>
+                  </div>
+                  <div className="cm-book-card__body">
+                    <div className="cm-book-card__badges">
+                      <span className={`cm-pill cm-pill--status-${status}`}>
+                        {STATUS_LABEL[status]}
+                      </span>
+                      {m.version ? <span className="cm-pill">v{m.version}</span> : null}
+                    </div>
+                    <h2>{m.title}</h2>
+                    <div className="cm-book-card__meta">
+                      {m.author ? <span>{m.author}</span> : null}
+                      {m.subtitle ? <span>{m.subtitle}</span> : null}
+                    </div>
+                    {m.description ? (
+                      <p className="cm-book-card__desc">{m.description}</p>
+                    ) : null}
+                    <div className="cm-book-card__stats">
+                      {m.stats ? (
+                        <>
+                          <span>{m.stats.chapters} 章节</span>
+                          <span>{m.stats.concepts} 概念</span>
+                          <span>{m.stats.nodes} 节点</span>
+                          <span>{m.stats.edges} 关系</span>
+                        </>
+                      ) : null}
+                      {m.generatedAt ? (
+                        <span>{formatGeneratedAt(m.generatedAt)}</span>
+                      ) : null}
+                    </div>
+                    {pct !== null && m.review ? (
+                      <div className="cm-review-bar" title={`已审 ${m.review.reviewed} · 待审 ${m.review.draft}`}>
+                        <div className="cm-review-bar__track">
+                          <div
+                            className="cm-review-bar__fill"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="cm-review-bar__label">
+                          审校 {pct}%（{m.review.reviewed}/{m.review.reviewed + m.review.draft}）
+                        </span>
+                      </div>
+                    ) : null}
+                    <div className="cm-book-card__actions">
+                      <Link className="cm-btn cm-btn--primary" to={`/maps/${m.id}`}>
+                        打开地图
+                      </Link>
+                      <Link className="cm-btn cm-btn--ghost" to={`/books/${m.id}`}>
+                        查看详情
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );

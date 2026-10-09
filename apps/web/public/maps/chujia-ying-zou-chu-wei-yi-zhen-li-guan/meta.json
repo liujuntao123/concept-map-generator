@@ -67,5 +67,26 @@
         "c-benzhen"
       ]
     }
-  ]
+  ],
+  "coverColor": "#3d5a80",
+  "coverText": "走出",
+  "status": "published",
+  "schemaVersion": "1.1",
+  "review": {
+    "draft": 42,
+    "reviewed": 28
+  },
+  "nodeTypeBreakdown": {
+    "chapter": 28,
+    "claim": 2,
+    "concept": 38,
+    "person": 1,
+    "work": 1
+  },
+  "edgeTypeBreakdown": {
+    "contains": 28,
+    "related": 69,
+    "contrasts": 9,
+    "cites": 2
+  }
 }
