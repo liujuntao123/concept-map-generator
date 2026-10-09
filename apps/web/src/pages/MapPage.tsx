@@ -94,11 +94,15 @@ export default function MapPage() {
     setQuery(searchParams.get('q') ?? '');
   }, [searchParams]);
 
-  // deep link ?node= / ?edge=
+  // deep link ?node= / ?edge= (M5: drop type-mismatched node on cold open)
   useEffect(() => {
     if (!graph) return;
     const nid = searchParams.get('node');
     const eid = searchParams.get('edge');
+    const typeParam = searchParams.get('type');
+    const typeFilter: TypeFilter =
+      typeParam && ALLOWED_TYPES.has(typeParam) ? (typeParam as TypeFilter) : 'all';
+
     if (eid) {
       const e = graph.edges.find((x) => x.id === eid) ?? null;
       setSelectedEdge(e);
@@ -107,30 +111,50 @@ export default function MapPage() {
     }
     if (nid) {
       const n = graph.nodes.find((x) => x.id === nid) ?? null;
-      setSelected(n);
-      setSelectedEdge(null);
-    }
-  }, [graph, searchParams]);
-
-  useEffect(() => {
-    const handler = (ev: Event) => {
-      const id = (ev as CustomEvent<{ id: string }>).detail?.id;
-      if (id) {
-        setChapterFocusId(id);
-        setPathHighlight(null);
+      if (n && typeFilter !== 'all' && n.type !== typeFilter) {
+        // Match interactive path: clear mismatched selection + clean URL
+        setSelected(null);
+        setSelectedEdge(null);
         setSearchParams(
           (prev) => {
             const next = new URLSearchParams(prev);
-            next.set('focus', id);
+            next.delete('node');
             return next;
           },
           { replace: true },
         );
+        return;
       }
+      setSelected(n);
+      setSelectedEdge(null);
+      return;
+    }
+    // no node/edge in URL → leave selection alone (user may have cleared)
+  }, [graph, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const id = (ev as CustomEvent<{ id: string }>).detail?.id;
+      if (!id || !graph) return;
+      const n = graph.nodes.find((x) => x.id === id) ?? null;
+      setChapterFocusId(id);
+      setPathHighlight(null);
+      setSelected(n);
+      setSelectedEdge(null);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('focus', id);
+          if (n) next.set('node', n.id);
+          next.delete('edge');
+          return next;
+        },
+        { replace: true },
+      );
     };
     window.addEventListener('cm-chapter-focus', handler);
     return () => window.removeEventListener('cm-chapter-focus', handler);
-  }, [setSearchParams]);
+  }, [graph, setSearchParams]);
 
   const byId = useMemo(() => {
     const m = new Map<string, MapNode>();
@@ -223,16 +247,29 @@ export default function MapPage() {
     [patchParams],
   );
 
-  const setFocusAndUrl = useCallback(
-    (id: string | null) => {
-      setChapterFocusId(id);
+  /** M6: write focus + node in ONE URL update so selectNode cannot drop ?focus= */
+  const focusChapter = useCallback(
+    (chapterId: string | null) => {
       setPathHighlight(null);
+      if (!chapterId) {
+        setChapterFocusId(null);
+        patchParams((next) => {
+          next.delete('focus');
+        });
+        return;
+      }
+      const n = byId.get(chapterId) ?? null;
+      setChapterFocusId(chapterId);
+      setSelected(n);
+      setSelectedEdge(null);
       patchParams((next) => {
-        if (id) next.set('focus', id);
-        else next.delete('focus');
+        next.set('focus', chapterId);
+        if (n) next.set('node', n.id);
+        else next.delete('node');
+        next.delete('edge');
       });
     },
-    [patchParams],
+    [byId, patchParams],
   );
 
   // M3: when search has zero hits, close drawer and clear selection
@@ -275,7 +312,7 @@ export default function MapPage() {
           selectNode(null);
           selectEdge(null);
         } else if (chapterFocusId) {
-          setFocusAndUrl(null);
+          focusChapter(null);
         }
         return;
       }
@@ -299,18 +336,15 @@ export default function MapPage() {
     selectNode,
     selectEdge,
     chapterFocusId,
-    setFocusAndUrl,
+    focusChapter,
   ]);
 
   const focusChapterByLabel = useCallback(
     (label: string) => {
       const ch = chapters.find((c) => c.label === label);
-      if (ch) {
-        setFocusAndUrl(ch.id);
-        selectNode(ch);
-      }
+      if (ch) focusChapter(ch.id);
     },
-    [chapters, selectNode, setFocusAndUrl],
+    [chapters, focusChapter],
   );
 
   if (error) {
@@ -331,7 +365,7 @@ export default function MapPage() {
   }
 
   const stats = meta.stats;
-  const focusChapter = chapterFocusId ? byId.get(chapterFocusId) : null;
+  const focusChapterNode = chapterFocusId ? byId.get(chapterFocusId) : null;
   const showSuggest = searchOpen && !query.trim();
   const featured = meta.featuredPaths ?? [];
   const hasDrawer = Boolean(selected || selectedEdge);
@@ -381,9 +415,16 @@ export default function MapPage() {
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       setPathHighlight(p.nodeIds);
-                      setFocusAndUrl(null);
+                      setChapterFocusId(null);
                       const first = byId.get(p.nodeIds[0]);
-                      if (first) selectNode(first);
+                      setSelected(first ?? null);
+                      setSelectedEdge(null);
+                      patchParams((next) => {
+                        next.delete('focus');
+                        if (first) next.set('node', first.id);
+                        else next.delete('node');
+                        next.delete('edge');
+                      });
                       setSearchOpen(false);
                     }}
                   >
@@ -436,11 +477,7 @@ export default function MapPage() {
               value={chapterFocusId ?? ''}
               onChange={(e) => {
                 const v = e.target.value || null;
-                setFocusAndUrl(v);
-                if (v) {
-                  const n = byId.get(v);
-                  if (n) selectNode(n);
-                }
+                focusChapter(v);
               }}
             >
               <option value="">全部章节</option>
@@ -455,7 +492,7 @@ export default function MapPage() {
                 type="button"
                 className="cm-btn"
                 onClick={() => {
-                  setFocusAndUrl(null);
+                  focusChapter(null);
                   setPathHighlight(null);
                 }}
               >
@@ -508,10 +545,10 @@ export default function MapPage() {
 
       <main className="cm-main">
         <div className="cm-canvas">
-          {focusChapter ? (
+          {focusChapterNode ? (
             <div className="cm-focus-banner">
-              <span>聚焦章节：{focusChapter.label}（双击章节可聚焦）</span>
-              <button type="button" className="cm-btn" onClick={() => setFocusAndUrl(null)}>
+              <span>聚焦章节：{focusChapterNode.label}（双击章节可聚焦）</span>
+              <button type="button" className="cm-btn" onClick={() => focusChapter(null)}>
                 显示全部
               </button>
             </div>

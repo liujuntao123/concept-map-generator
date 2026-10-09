@@ -34,6 +34,9 @@ const nodeTypes: NodeTypes = {
   work: GraphNode,
 };
 
+/** Floor for default fit so node titles stay readable (~0.75 ≈ readable 0.86rem labels). */
+const READABLE_MIN_ZOOM = 0.75;
+
 export type TypeFilter = 'all' | NodeType;
 
 export interface MapCanvasHandle {
@@ -75,7 +78,7 @@ function MapCanvasInner(
   }: Props,
   ref: React.Ref<MapCanvasHandle>,
 ) {
-  const { fitView, setCenter, getNode, getZoom } = useReactFlow();
+  const { fitView, setCenter, getNode, getZoom, setViewport, getViewport } = useReactFlow();
 
   const byId = useMemo(() => {
     const m = new Map<string, MapNode>();
@@ -120,21 +123,17 @@ function MapCanvasInner(
 
     const visible = new Set(hits);
 
-    // Keep selected node visible even if type filter would hide it (deep link)
-    if (selectedId && byId.has(selectedId)) {
-      if (!focusIds || focusIds.has(selectedId)) {
-        visible.add(selectedId);
-      }
-    }
+    // Do NOT force type-mismatched selection onto the canvas (M5).
+    // Selected node only stays if it already passes the type filter (in hits)
+    // or is part of chapter focus / search context below.
 
-    // when searching, keep 1-hop context for matched nodes (mark separately)
     const contextIds = new Set<string>();
     if (q) {
       for (const id of hits) {
         for (const nb of adj.get(id) ?? []) {
           if (filter !== 'all') {
             const nbNode = byId.get(nb);
-            if (nbNode && nbNode.type !== filter && nb !== selectedId) continue;
+            if (nbNode && nbNode.type !== filter) continue;
           }
           if (!focusIds || focusIds.has(nb)) {
             if (!hits.has(nb)) contextIds.add(nb);
@@ -242,15 +241,36 @@ function MapCanvasInner(
     });
   }, [hitIds, visibleIds, graph.nodes.length, onVisibleStats]);
 
+  /** Fit view but never below READABLE_MIN_ZOOM (M4). */
+  const fitReadable = useCallback(
+    (duration = 0) => {
+      void fitView({
+        padding: 0.18,
+        minZoom: READABLE_MIN_ZOOM,
+        maxZoom: 1.2,
+        duration,
+      }).then(() => {
+        // Extra clamp in case fitView ignored options before nodes measured
+        const z = getZoom();
+        if (z < READABLE_MIN_ZOOM) {
+          const vp = getViewport();
+          void setViewport({ ...vp, zoom: READABLE_MIN_ZOOM }, { duration: 0 });
+        }
+      });
+    },
+    [fitView, getZoom, getViewport, setViewport],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
       fitView: () => {
+        // Explicit「适配全部」may zoom out below readable floor
         void fitView({ padding: 0.15, duration: 300 });
       },
       focusSelected: () => {
         if (!selectedId) {
-          void fitView({ padding: 0.15, maxZoom: 0.9, duration: 300 });
+          fitReadable(300);
           return;
         }
         const n = getNode(selectedId);
@@ -264,34 +284,30 @@ function MapCanvasInner(
         }
       },
     }),
-    [fitView, getNode, selectedId, setCenter],
+    [fitView, fitReadable, getNode, selectedId, setCenter],
   );
 
-  // Initial readable zoom: fitView with maxZoom so nodes stay readable
+  // Cold open + filter/focus/query relayout: readable default zoom (M4)
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      void fitView({ padding: 0.18, maxZoom: 0.85, duration: 0 });
-    }, 60);
+    const t = window.setTimeout(() => fitReadable(0), 80);
     return () => window.clearTimeout(t);
-    // only on graph / filter / focus / query shape changes that relayout
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.mapId, filter, chapterFocusId, query, nodes.length]);
 
-  // pan to selected when URL / external select changes
+  // pan to selected when URL / external select changes (only if node is on canvas)
   useEffect(() => {
     if (!selectedId) return;
     const t = window.setTimeout(() => {
       const n = getNode(selectedId);
-      if (n) {
-        const w = n.measured?.width ?? 180;
-        const h = n.measured?.height ?? 56;
-        const z = Math.max(getZoom(), 0.9);
-        void setCenter(n.position.x + w / 2, n.position.y + h / 2, {
-          zoom: Math.min(z, 1.15),
-          duration: 350,
-        });
-      }
-    }, 100);
+      if (!n) return;
+      const w = n.measured?.width ?? 180;
+      const h = n.measured?.height ?? 56;
+      const z = Math.max(getZoom(), READABLE_MIN_ZOOM);
+      void setCenter(n.position.x + w / 2, n.position.y + h / 2, {
+        zoom: Math.min(Math.max(z, 0.9), 1.15),
+        duration: 350,
+      });
+    }, 120);
     return () => window.clearTimeout(t);
   }, [selectedId, getNode, setCenter, getZoom, nodes.length]);
 
@@ -343,14 +359,17 @@ function MapCanvasInner(
       onEdgeClick={onEdgeClick}
       onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
-      fitView
-      fitViewOptions={{ padding: 0.18, maxZoom: 0.85 }}
+      // Avoid uncontrolled fitView racing our readable floor
+      fitView={false}
       minZoom={0.12}
       maxZoom={2}
+      defaultViewport={{ x: 0, y: 0, zoom: READABLE_MIN_ZOOM }}
       proOptions={{ hideAttribution: true }}
+      onInit={() => {
+        fitReadable(0);
+      }}
     >
       <Background gap={22} size={1} color="var(--rf-bg-dot)" />
-      {/* Controls bottom-left — away from MiniMap bottom-right (M1) */}
       <Controls showInteractive={false} position="bottom-left" />
       <MiniMap
         position="bottom-right"
