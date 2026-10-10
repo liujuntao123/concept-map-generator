@@ -88,76 +88,41 @@ export function snippetForQuery(n: MapNode, q: string): string {
   return clean(n.summary || n.label || '').slice(0, 96);
 }
 
-const BOILERPLATE_RES: RegExp[] = [
-  /与「概要」不同[^。]*。?/g,
-  /核对接引请看下方摘录[^。]*。?/g,
-  /请看下方摘录[^。]*。?/g,
-  /文中继续推进[：:]/g,
-  /后文还落到[：:]/g,
-  /开篇与主线可概括为[：:]/g,
-  /其原意可先把握为[：:]/g,
-  /因此详述负责[^。]*。?/g,
-  /因此「详述」负责展开层次与区分[^。]*。?/g,
-  /二者必须不同，摘录则提供可核对的原文区间。?/g,
-  /摘录提供可核对的原文区间。?/g,
-  /就原文而言，核心说法是[：:]/g,
-  /核心说法是[：:]\s*/g,
-  /作者进一步区分或展开[：:]/g,
-  /相关收束或转进[：:]/g,
-  /概念「[^」]+」需要放回「[^」]+」的问题脉络里理解，而不是抽成词典义项。/g,
-  /本篇「[^」]+」属于《[^》]+》的正式正文[^。]*。?/g,
-  /论证上，作者把这一主张放进更长的思想史与自我澄清之中[：:]/g,
-  /导读首先交代[：:]/g,
-  /随后进入问题结构[：:]/g,
-  /著作节点「[^」]+」对应书中导读所围绕的文本，而非简单书目条目。/g,
-  /主张「[^」]+」不是口号，而是作者用来组织全书问题意识的枢纽命题。/g,
-];
-
-/** Strip generator UI instructions from node content for reader display. */
-export function cleanReaderContent(raw: string): string {
-  let c = (raw || '').trim();
-  if (!c) return '';
-  for (const re of BOILERPLATE_RES) c = c.replace(re, '');
-  c = c.replace(/\s{2,}/g, ' ').replace(/^[。！？：:，,、\s]+/u, '').trim();
-  c = c.replace(/^(核心说法是|作者进一步区分或展开|相关收束或转进)[：:]\s*$/u, '').trim();
-  c = c.replace(/核心说法是[：:]\s*。/g, '').trim();
-  c = c.replace(/^[。！？：:\s]+/u, '').trim();
-  c = c.replace(/[。！？：:]\s*[。！？：:]+/gu, '。').trim();
-  if (/^[。！？：:\s]*$/u.test(c)) return '';
-  return c;
+/** Normalize reader-facing prose: collapse spacing and stray punctuation. */
+function normalizeProse(raw: string): string {
+  return (raw || '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[。！？：:，,、\s]+/u, '')
+    .replace(/[。！？：:]\s*[。！？：:]+/gu, '。')
+    .trim();
 }
 
 /**
  * Argument-level body for the drawer.
- * Hide when empty, equal to summary, leftover template, or mostly repeating the excerpt.
+ * Hide when empty, equal to summary, or merely repeating the excerpt.
  */
 export function readerBody(n: MapNode): string | null {
-  let cleaned = cleanReaderContent(n.content ?? '');
-  if (!cleaned) return null;
-  cleaned = cleaned.replace(/^[。！？：:\s]+/u, '').trim();
+  const cleaned = normalizeProse(n.content ?? '');
   if (!cleaned || /^[。！？：:\s]*$/u.test(cleaned)) return null;
+
   const summary = (n.summary ?? '').trim();
   if (cleaned === summary) return null;
   if (summary && cleaned.includes(summary) && cleaned.length < summary.length + 12) return null;
-  if (cleaned.includes('属于《') && cleaned.includes('正式正文')) return null;
+
   const excerpt = (n.source?.excerpt ?? '').trim();
-  if (excerpt && excerpt.length > 20) {
-    // if cleaned largely embeds excerpt, keep only the non-excerpt framing sentences
-    if (cleaned.includes(excerpt.slice(0, Math.min(40, excerpt.length)))) {
+  if (excerpt.length > 20) {
+    // content is a slice of the quote → nothing new to show
+    if (excerpt.includes(cleaned)) return null;
+    // content wraps the quote → keep only the framing sentences
+    if (cleaned.includes(excerpt)) {
       let rest = cleaned.replace(excerpt, '').trim();
-      // also strip near-duplicate first sentence of excerpt
       const first = excerpt.split(/[。！？]/)[0];
       if (first && first.length > 12) rest = rest.replace(first, '').trim();
-      // Ux2-7: strip leading sentence punct left by excerpt splice (。！？：)
       rest = rest.replace(/^[。！？：:，,、\s]+/u, '').trim();
-      // drop empty / punct-only leftovers
-      if (!rest || /^[。！？：:\s]*$/u.test(rest) || rest.length < 24) return null;
+      if (!rest || rest.length < 24) return null;
       return rest;
     }
   }
-  // final guard for any path
-  cleaned = cleaned.replace(/^[。！？：:\s]+/u, '').trim();
-  if (!cleaned || /^[。！？：:\s]*$/u.test(cleaned)) return null;
   return cleaned;
 }
 
