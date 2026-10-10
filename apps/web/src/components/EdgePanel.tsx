@@ -1,3 +1,4 @@
+import { edgeRelationSentence } from '../lib/graphUtils';
 import { EDGE_TYPE_LABEL, NODE_TYPE_LABEL, type MapEdge, type MapNode, type NodeType } from '../types/graph';
 
 interface Props {
@@ -12,10 +13,18 @@ export default function EdgePanel({ edge, sourceNode, targetNode, onClose, onOpe
   const typeLabel = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
   const a = sourceNode?.label ?? edge.source;
   const b = targetNode?.label ?? edge.target;
-  const rel = edge.label && edge.label !== typeLabel ? edge.label : typeLabel;
-  const sentence =
-    edge.description?.trim() ||
-    `「${a}」通过「${rel}」关系到「${b}」。`;
+  const sentence = edgeRelationSentence(edge, a, b);
+
+  // Optional short note only if description is real prose (not type dump)
+  const raw = (edge.description || '').trim();
+  const note =
+    raw &&
+    !/原关系类型/.test(raw) &&
+    raw !== edge.label &&
+    raw !== typeLabel &&
+    raw.length > 4
+      ? raw
+      : null;
 
   return (
     <aside className="cm-edge-panel" aria-label="关系说明" role="dialog">
@@ -34,6 +43,7 @@ export default function EdgePanel({ edge, sourceNode, targetNode, onClose, onOpe
       <section className="cm-drawer__section">
         <h3>这句话</h3>
         <p className="cm-edge-sentence">{sentence}</p>
+        {note ? <p className="cm-muted">{note}</p> : null}
       </section>
 
       <section className="cm-drawer__section">

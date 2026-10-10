@@ -81,6 +81,14 @@ const BOILERPLATE_RES: RegExp[] = [
   /开篇与主线可概括为[：:]/g,
   /其原意可先把握为[：:]/g,
   /因此详述负责[^。]*。?/g,
+  /因此「详述」负责展开层次与区分[^。]*。?/g,
+  /二者必须不同，摘录则提供可核对的原文区间。?/g,
+  /摘录提供可核对的原文区间。?/g,
+  /就原文而言，核心说法是[：:]/g,
+  /核心说法是[：:]\s*/g,
+  /作者进一步区分或展开[：:]/g,
+  /相关收束或转进[：:]/g,
+  /概念「[^」]+」需要放回「[^」]+」的问题脉络里理解，而不是抽成词典义项。/g,
   /本篇「[^」]+」属于《[^》]+》的正式正文[^。]*。?/g,
 ];
 
@@ -90,6 +98,8 @@ export function cleanReaderContent(raw: string): string {
   if (!c) return '';
   for (const re of BOILERPLATE_RES) c = c.replace(re, '');
   c = c.replace(/\s{2,}/g, ' ').replace(/^[：:，,、\s]+/, '').trim();
+  c = c.replace(/^(核心说法是|作者进一步区分或展开|相关收束或转进)[：:]\s*$/u, '').trim();
+  c = c.replace(/核心说法是[：:]\s*。/g, '').trim();
   return c;
 }
 
@@ -263,4 +273,31 @@ export function groupChapters(chapters: MapNode[]): Array<{ group: string; items
   }
   if (current.items.length) groups.push(current);
   return groups;
+}
+
+
+/** Natural-language A—relates-to—B for the edge panel (never dump EN type codes). */
+export function edgeRelationSentence(
+  edge: MapEdge,
+  sourceLabel: string,
+  targetLabel: string,
+): string {
+  const typeLabel: Record<string, string> = {
+    related: '相关',
+    contains: '包含',
+    contrasts: '对照',
+    cites: '引用',
+  };
+  const typeZh = typeLabel[String(edge.type)] ?? String(edge.type);
+  let rel = (edge.label || '').trim() || typeZh;
+  // strip leftover "（原关系类型：foo）"
+  rel = rel.replace(/（原关系类型：[^）]+）/g, '').trim() || typeZh;
+  if (rel === typeZh) {
+    // phrase by type
+    if (edge.type === 'contains') return `「${sourceLabel}」收录 / 包含「${targetLabel}」。`;
+    if (edge.type === 'contrasts') return `「${sourceLabel}」与「${targetLabel}」形成对照。`;
+    if (edge.type === 'cites') return `「${sourceLabel}」引用或指向「${targetLabel}」。`;
+    return `「${sourceLabel}」与「${targetLabel}」相关。`;
+  }
+  return `「${sourceLabel}」通过「${rel}」关系到「${targetLabel}」。`;
 }

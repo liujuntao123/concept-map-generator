@@ -1,7 +1,8 @@
 .cm-shell {
   height: 100%;
   display: grid;
-  grid-template-rows: auto 1fr;
+  /* header + subbar + main (U1: was auto 1fr → main height 0 with 3 kids) */
+  grid-template-rows: auto auto 1fr;
   background:
     radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
     radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--concept) 10%, transparent), transparent 55%),
@@ -127,13 +128,15 @@
 .cm-main {
   position: relative;
   min-height: 0;
+  height: 100%;
   display: grid;
   grid-template-columns: 1fr;
+  overflow: hidden;
 }
 .cm-shell.has-drawer .cm-main {
   grid-template-columns: 1fr min(420px, 44vw);
 }
-.cm-canvas { min-height: 0; height: 100%; position: relative; }
+.cm-canvas { min-height: 0; height: 100%; position: relative; overflow: hidden; }
 .cm-view-controls {
   position: absolute;
   left: 12px;
@@ -965,5 +968,6 @@ a.cm-btn:hover { text-decoration: none; }
   .cm-legend { display: none; }
   .cm-search-hits { width: min(280px, 70vw); top: 48px; }
   .cm-subbar { display: none; }
+  .cm-shell { grid-template-rows: auto 1fr; }
 }
 .cm-scale-line{font-size:1.15rem;font-weight:650;margin:0;line-height:1.5;}
