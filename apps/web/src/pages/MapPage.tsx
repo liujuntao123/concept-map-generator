@@ -25,6 +25,8 @@ import {
   IconShare,
   IconSun,
   IconWork,
+  pathThemeIcon,
+  IconBook,
 } from '../components/icons';
 import {
   type ConceptGraph,
@@ -737,9 +739,11 @@ export default function MapPage() {
     <div
       className={`cm-shell${hasDrawer ? ' has-drawer' : ''}${hasDrawer && !sheetExpanded ? ' has-drawer-peek' : ''}`}
     >
-      <header className="cm-topbar">
+      <header className="cm-topbar cm-topbar--map">
         <div className="cm-brand">
-          <div className="cm-brand__mark" aria-hidden />
+          <div className="cm-brand__mark cm-brand__mark--book" aria-hidden>
+            <IconBook size={18} />
+          </div>
           <div>
             <Link className="cm-back" to="/">
               ← 图书列表
@@ -907,17 +911,20 @@ export default function MapPage() {
       </header>
 
       <div className={`cm-subbar${activePath ? ' cm-subbar--path' : ''}`}>
-        <div className="cm-path-bar" aria-label="推荐路径">
-          <span className="cm-path-bar__label">路径</span>
+        <div className="cm-path-tabs" role="tablist" aria-label="推荐路径">
           {featured.map((p) => (
             <button
               key={p.id}
               type="button"
-              className={`cm-chip${pathId === p.id ? ' is-active' : ''}`}
+              role="tab"
+              aria-selected={pathId === p.id}
+              className={`cm-path-tab${pathId === p.id ? ' is-active' : ''}`}
               onClick={() => activatePath(p, 0)}
               title={p.description}
             >
-              {p.theme || p.title}
+              {pathThemeIcon(p.theme || p.id || p.title, 15)}
+              <span>{p.theme || p.title}</span>
+              {p.durationMin ? <em>约 {p.durationMin}′</em> : null}
             </button>
           ))}
         </div>
@@ -955,6 +962,10 @@ export default function MapPage() {
             onToggleComplete={togglePathComplete}
             onPrev={() => goPathStep(-1)}
             onNext={() => goPathStep(1)}
+            onSkip={() => {
+              if (pathStep < activePath.nodeIds.length - 1) goPathStep(1);
+              else clearPath();
+            }}
             onExit={clearPath}
             onJump={(i) => activatePath(activePath, i)}
             tableOpen={pathTableOpen}
@@ -1080,9 +1091,9 @@ export default function MapPage() {
           <div className="cm-tips__card">
             <h2>怎么读这张图</h2>
             <ol>
-              <li>顶栏「路径」带你一步步走完一条思路。</li>
-              <li>点「下一步 / 上一步」，或点节点上的序号。</li>
-              <li>抽屉里点「相关」可离开路径看邻域；「退出路径」回全图。</li>
+              <li>顶栏路径主题带你一步步走完一条思路。</li>
+              <li>点「下一步」或进度点；可用「跳过」略过当前步。</li>
+              <li>点选节点打开详情；滚轮/按钮缩放（节点不可拖拽）。</li>
               <li>手机上详情从下方滑出，可继续看地图上半部分。</li>
             </ol>
             <button

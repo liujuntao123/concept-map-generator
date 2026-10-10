@@ -4,8 +4,10 @@ import {
   IconChevronRight,
   IconClock,
   IconExit,
+  IconList,
   IconPath,
   IconSignal,
+  IconSkip,
 } from './icons';
 import type { FeaturedPath, MapNode } from '../types/graph';
 
@@ -20,10 +22,10 @@ interface Props {
   onNext: () => void;
   onExit: () => void;
   onJump: (i: number) => void;
+  onSkip?: () => void;
   tableOpen?: boolean;
   onToggleTable?: () => void;
   labelOf: (id: string) => string;
-  /** true when consecutive steps lack a real graph edge */
   missingEdgeAt?: boolean[];
 }
 
@@ -38,6 +40,7 @@ export default function PathGuide({
   onNext,
   onExit,
   onJump,
+  onSkip,
   tableOpen,
   onToggleTable,
   labelOf,
@@ -53,7 +56,7 @@ export default function PathGuide({
   const nextWhy = nextStep?.rationale;
 
   return (
-    <section className="cm-path-guide" aria-label="路径导读">
+    <section className="cm-path-guide cm-path-guide--card" aria-label="路径导读">
       <div className="cm-path-guide__meta">
         {minutes != null ? (
           <span className="cm-path-guide__pill">
@@ -87,7 +90,21 @@ export default function PathGuide({
         )}
       </div>
 
-      <div className="cm-path-guide__controls">
+      <div className="cm-path-dots" role="tablist" aria-label="路径步骤">
+        {path.nodeIds.map((_, i) => (
+          <button
+            key={`${path.id}-dot-${i}`}
+            type="button"
+            role="tab"
+            aria-selected={i === stepIndex}
+            className={`cm-path-dot${i === stepIndex ? ' is-active' : ''}${i < stepIndex ? ' is-done' : ''}`}
+            onClick={() => onJump(i)}
+            title={`第 ${i + 1} 步`}
+          />
+        ))}
+      </div>
+
+      <div className="cm-path-guide__controls cm-path-guide__controls--card">
         <button
           type="button"
           className="cm-icon-btn"
@@ -98,27 +115,24 @@ export default function PathGuide({
         >
           <IconChevronLeft />
         </button>
-        <div className="cm-path-dots" role="tablist" aria-label="路径步骤">
-          {path.nodeIds.map((_, i) => (
-            <button
-              key={`${path.id}-dot-${i}`}
-              type="button"
-              role="tab"
-              aria-selected={i === stepIndex}
-              className={`cm-path-dot${i === stepIndex ? ' is-active' : ''}${i < stepIndex ? ' is-done' : ''}`}
-              onClick={() => onJump(i)}
-              title={`第 ${i + 1} 步`}
-            />
-          ))}
-        </div>
         <button
           type="button"
-          className="cm-btn cm-btn--primary cm-path-guide__nextbtn"
+          className="cm-btn cm-btn--primary cm-path-guide__nextbtn cm-path-guide__nextbtn--lg"
           onClick={onNext}
           disabled={stepIndex >= n - 1}
         >
-          下一步 <IconChevronRight size={14} />
+          下一步 <IconChevronRight size={16} />
         </button>
+        {onSkip ? (
+          <button type="button" className="cm-btn cm-btn--ghost" onClick={onSkip} title="跳过本步">
+            <IconSkip size={14} /> 跳过
+          </button>
+        ) : null}
+        {onToggleTable ? (
+          <button type="button" className="cm-btn cm-btn--ghost" onClick={onToggleTable}>
+            <IconList size={14} /> {tableOpen ? '收起步骤' : '步骤表'}
+          </button>
+        ) : null}
         <button type="button" className="cm-icon-btn" onClick={onExit} aria-label="退出路径" title="退出路径">
           <IconExit />
         </button>
@@ -131,11 +145,6 @@ export default function PathGuide({
         >
           <IconCheck />
         </button>
-        {onToggleTable ? (
-          <button type="button" className="cm-btn cm-btn--ghost" onClick={onToggleTable}>
-            {tableOpen ? '收起步骤' : '步骤表'}
-          </button>
-        ) : null}
       </div>
 
       {tableOpen ? (

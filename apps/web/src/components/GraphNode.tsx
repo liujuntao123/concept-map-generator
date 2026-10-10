@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { NODE_TYPE_LABEL, type NodeType } from '../types/graph';
+import { nodeTypeIcon } from './icons';
 
 export type GraphNodeData = {
   label: string;
@@ -31,7 +32,12 @@ function GraphNodeComponent({ data, selected }: NodeProps<Node<GraphNodeData>>) 
     <div className={cls} title={data.label}>
       <Handle type="target" position={Position.Top} className="cm-handle" />
       {data.nodeType === 'chapter' ? <span className="cm-node__strip" aria-hidden /> : null}
-      <span className="cm-node__badge">{typeLabel}</span>
+      <span className="cm-node__badge">
+        <span className="cm-node__type-icon" aria-hidden>
+          {nodeTypeIcon(data.nodeType, 11)}
+        </span>
+        {typeLabel}
+      </span>
       <span className="cm-node__label">{data.label}</span>
       {data.pathStep != null ? (
         <span className="cm-node__step" aria-label={`路径第 ${data.pathStep} 步`}>

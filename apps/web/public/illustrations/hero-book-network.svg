@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f1fb"/>
+      <stop offset="55%" stop-color="#f5f8fc"/>
+      <stop offset="100%" stop-color="#dfeaf6"/>
+    </linearGradient>
+    <linearGradient id="mt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b7c9de" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#9bb0c9" stop-opacity=".25"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="320" fill="url(#sky)"/>
+  <path d="M0 220 C80 180 140 200 200 190 C280 175 320 150 380 165 C430 176 460 190 480 200 L480 320 L0 320 Z" fill="url(#mt)"/>
+  <path d="M0 250 C100 230 180 260 260 245 C340 230 400 250 480 240 L480 320 L0 320 Z" fill="#c5d4e6" opacity=".45"/>
+  <!-- open book -->
+  <path d="M160 230 C200 210 240 210 240 230 L240 268 C200 250 160 250 160 268 Z" fill="#fff" stroke="#7aa2c7" stroke-width="2"/>
+  <path d="M240 230 C240 210 280 210 320 230 L320 268 C320 250 280 250 240 268 Z" fill="#f7fbff" stroke="#7aa2c7" stroke-width="2"/>
+  <!-- network rising -->
+  <circle cx="240" cy="150" r="10" fill="#5b8fd9"/>
+  <circle cx="190" cy="120" r="7" fill="#7eb8ff"/>
+  <circle cx="290" cy="115" r="7" fill="#98c379"/>
+  <circle cx="215" cy="85" r="6" fill="#f0c674"/>
+  <circle cx="270" cy="80" r="6" fill="#e06c75"/>
+  <circle cx="240" cy="55" r="5" fill="#c678dd"/>
+  <path d="M240 150 L190 120 M240 150 L290 115 M190 120 L215 85 M290 115 L270 80 M215 85 L240 55 M270 80 L240 55 M240 150 L240 210" stroke="#7aa2c7" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+</svg>

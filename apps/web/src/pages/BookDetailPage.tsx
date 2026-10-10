@@ -106,7 +106,7 @@ export default function BookDetailPage() {
         </div>
         <div className="cm-toolbar">
           <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}?view=all`}>
-            打开地图
+            进入地图
           </Link>
           <button
             type="button"
@@ -148,7 +148,7 @@ export default function BookDetailPage() {
             </p>
             <div className="cm-book-detail__cta">
               <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}?view=all`}>
-                <IconMap size={14} /> 进地图
+                <IconMap size={14} /> 进入地图
               </Link>
               {meta.featuredPaths?.[0] ? (
                 <Link

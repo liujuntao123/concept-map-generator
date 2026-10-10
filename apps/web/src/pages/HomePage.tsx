@@ -4,19 +4,29 @@ import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate } from '../lib/graphUtils';
 import type { FeaturedPath, MapIndexEntry, MapMeta, MapsIndex } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
-import { IconMap, IconMoon, IconSun } from '../components/icons';
+import {
+  IconBooks,
+  IconClock,
+  IconEdges,
+  IconMap,
+  IconMoon,
+  IconNetwork,
+  IconNodes,
+  IconSearch,
+  IconSun,
+  pathThemeIcon,
+} from '../components/icons';
 
-function coverGlyph(m: MapIndexEntry): string {
-  if (m.coverText) return m.coverText.slice(0, 2);
-  return (m.title?.trim() || '?').slice(0, 1);
+const COVER_SRC: Record<string, string> = {
+  'kahneman-si-kao-kuai-yu-man': '/illustrations/cover-kahneman.svg',
+  'chujia-ying-zou-chu-wei-yi-zhen-li-guan': '/illustrations/cover-chujia.svg',
+};
+
+function coverOf(id: string) {
+  return COVER_SRC[id] || '/illustrations/cover-default.svg';
 }
 
-function shortQuote(m: MapIndexEntry): string {
-  const d = (m.description || m.subtitle || '').trim();
-  if (!d) return '';
-  const cut = d.split(/[。！？]/)[0] || d;
-  return cut.length > 36 ? cut.slice(0, 34) + '…' : cut;
-}
+
 
 function BookCard({ m }: { m: MapIndexEntry }) {
   const [paths, setPaths] = useState<FeaturedPath[]>([]);
@@ -37,18 +47,13 @@ function BookCard({ m }: { m: MapIndexEntry }) {
 
   const year = m.generatedAt ? formatGeneratedDate(m.generatedAt).slice(0, 4) : '';
   const badge = [m.author, year].filter(Boolean).join(' · ');
-  const quote = shortQuote(m);
   const chips = paths.slice(0, 3);
 
   return (
-    <article className="cm-book-card cm-book-card--wide">
-      <div
-        className="cm-book-card__cover cm-book-card__cover--quote"
-        style={{ background: m.coverColor || 'var(--bg-elev-2)' }}
-        aria-hidden
-      >
-        <span className="cm-book-card__cover-title">{m.coverText || coverGlyph(m)}</span>
-        {quote ? <span className="cm-book-card__cover-quote">{quote}</span> : null}
+    <article className="cm-book-card cm-book-card--wide cm-book-card--v5">
+      <div className="cm-book-card__accent" aria-hidden />
+      <div className="cm-book-card__cover cm-book-card__cover--art" aria-hidden>
+        <img src={coverOf(m.id)} alt="" width={120} height={156} />
       </div>
       <div className="cm-book-card__body">
         {badge ? (
@@ -58,11 +63,19 @@ function BookCard({ m }: { m: MapIndexEntry }) {
         ) : null}
         <h2>{m.title}</h2>
         {m.subtitle ? <div className="cm-book-card__meta">{m.subtitle}</div> : null}
-        <div className="cm-book-card__stats">
+        <div className="cm-book-card__stats cm-book-card__stats--icons">
           {m.stats ? (
-            <span>
-              {m.stats.nodes} 节点 · {m.stats.edges} 关系 · {m.stats.chapters} 章
-            </span>
+            <>
+              <span>
+                <IconNodes size={13} /> {m.stats.nodes} 节点
+              </span>
+              <span>
+                <IconEdges size={13} /> {m.stats.edges} 关系
+              </span>
+              <span>
+                <IconBooks size={13} /> {m.stats.chapters} 章
+              </span>
+            </>
           ) : null}
         </div>
         {chips.length ? (
@@ -74,15 +87,20 @@ function BookCard({ m }: { m: MapIndexEntry }) {
                 to={`/maps/${m.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(p.nodeIds[0] || '')}`}
                 title={p.description}
               >
-                {p.theme || p.title}
-                {p.durationMin ? ` · ${p.durationMin}′` : ''}
+                {pathThemeIcon(p.theme || p.id || p.title)}
+                <span>{p.theme || p.title}</span>
+                {p.durationMin ? (
+                  <em>
+                    <IconClock size={11} /> 约 {p.durationMin} 分钟
+                  </em>
+                ) : null}
               </Link>
             ))}
           </div>
         ) : null}
         <div className="cm-book-card__actions">
           <Link className="cm-btn cm-btn--primary" to={`/maps/${m.id}?view=all`}>
-            <IconMap size={14} /> 进地图
+            <IconMap size={14} /> 进入地图
           </Link>
           <Link className="cm-btn cm-btn--ghost" to={`/books/${m.id}`}>
             简介
@@ -152,12 +170,11 @@ export default function HomePage() {
     );
   }
 
-  const single = index.maps.length <= 1;
   const qTrim = query.trim();
 
   return (
-    <div className="cm-shell">
-      <header className="cm-topbar">
+    <div className="cm-shell cm-shell--home">
+      <header className="cm-topbar cm-topbar--home">
         <div className="cm-brand">
           <div className="cm-brand__mark" aria-hidden />
           <div>
@@ -175,39 +192,45 @@ export default function HomePage() {
         </button>
       </header>
 
-      <main className="cm-home">
-        <div className="cm-home__hero cm-home__hero--wide">
-          <h1>图书与地图</h1>
-          <p>沿推荐路径逐步读，或打开全图自由游走。节点旁有原文摘录。</p>
-          {!qTrim ? (
-            <div className="cm-home__summary">
+      <main className="cm-home cm-home--v5">
+        <section className="cm-home__hero-panel">
+          <div className="cm-home__hero-copy">
+            <h1>
+              <IconNetwork size={28} /> 图书与地图
+            </h1>
+            <p>沿推荐路径逐步读，或打开全图自由游走。节点旁有原文摘录。</p>
+            <div className="cm-home__stat-pill" aria-label="馆藏统计">
               <span>
-                {index.maps.length} 本 ·{' '}
-                {index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0)} 节点 ·{' '}
-                {index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0)} 关系
+                <IconBooks size={14} /> {index.maps.length} 本
+              </span>
+              <span>
+                <IconNodes size={14} /> {index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0)} 节点
+              </span>
+              <span>
+                <IconEdges size={14} /> {index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0)} 关系
               </span>
             </div>
-          ) : (
-            <div className="cm-home__summary">
-              <span>匹配 {filtered.length} 本</span>
-            </div>
-          )}
-        </div>
-
-        {!single ? (
-          <div className="cm-library-toolbar">
-            <div className="cm-search-wrap cm-library-search">
-              <input
-                className="cm-search"
-                type="search"
-                placeholder="按书名、作者搜索…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                aria-label="搜索图书"
-              />
-            </div>
           </div>
-        ) : null}
+          <div className="cm-home__hero-art" aria-hidden>
+            <img src="/illustrations/hero-book-network.svg" alt="" width={420} height={280} />
+          </div>
+        </section>
+
+        <div className="cm-library-toolbar cm-library-toolbar--wide">
+          <div className="cm-search-wrap cm-library-search">
+            <span className="cm-search-icon" aria-hidden>
+              <IconSearch size={16} />
+            </span>
+            <input
+              className="cm-search cm-search--wide"
+              type="search"
+              placeholder="按书名、作者搜索…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="搜索图书"
+            />
+          </div>
+        </div>
 
         {filtered.length === 0 ? (
           <div className="cm-empty-books">

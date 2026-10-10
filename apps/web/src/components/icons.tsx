@@ -1,5 +1,5 @@
 /** Lightweight inline icons (no lucide dependency). */
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
@@ -236,4 +236,142 @@ export function IconStructure(p: IconProps) {
       <path d="M10 6h6M8 16v-6h6" />
     </svg>
   );
+}
+
+export function IconBrain(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M9.5 4a3.5 3.5 0 0 0-3.4 4.2A3.5 3.5 0 0 0 4 11.5V14a4 4 0 0 0 4 4h1" />
+      <path d="M14.5 4a3.5 3.5 0 0 1 3.4 4.2A3.5 3.5 0 0 1 20 11.5V14a4 4 0 0 1-4 4h-1" />
+      <path d="M12 4v16M9 9h.01M15 9h.01M9 13h.01M15 13h.01" />
+    </svg>
+  );
+}
+export function IconLightbulb(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12c.6.6 1 1.5 1 2.5V17h6v-.5c0-1 .4-1.9 1-2.5A7 7 0 0 0 12 2z" />
+    </svg>
+  );
+}
+export function IconTrend(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M3 17 9 11l4 4 8-8" />
+      <path d="M14 7h7v7" />
+    </svg>
+  );
+}
+export function IconChart(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M4 20h16M7 16V10M12 16V6M17 16v-4" />
+    </svg>
+  );
+}
+export function IconUsers(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="9" cy="8" r="3" />
+      <circle cx="17" cy="9" r="2.5" />
+      <path d="M3 20c1.2-3 3.5-4.5 6-4.5S13.8 17 15 20M14 15.5c1.8.2 3.5 1.2 4.5 3.5" />
+    </svg>
+  );
+}
+export function IconCompass(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m16 8-2.5 6.5L7 17l2.5-6.5z" />
+    </svg>
+  );
+}
+export function IconChat(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9l-5 3z" />
+    </svg>
+  );
+}
+export function IconSkip(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M5 5v14l10-7zM19 5v14" />
+    </svg>
+  );
+}
+export function IconNote(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+export function IconNetwork(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="12" cy="6" r="2.5" />
+      <circle cx="6" cy="17" r="2.5" />
+      <circle cx="18" cy="17" r="2.5" />
+      <path d="M12 8.5 7.5 15M12 8.5l4.5 6.5M8.5 17h7" />
+    </svg>
+  );
+}
+export function IconNodes(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="8" cy="8" r="3" />
+      <circle cx="16" cy="16" r="3" />
+      <path d="M10.5 10.5 13.5 13.5" />
+    </svg>
+  );
+}
+export function IconEdges(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="12" r="2.5" />
+      <path d="M8.5 12h7" />
+    </svg>
+  );
+}
+export function IconBooks(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M4 5h5a2 2 0 0 1 2 2v12H6a2 2 0 0 0-2 2z" />
+      <path d="M20 5h-5a2 2 0 0 0-2 2v12h5a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+export function IconHome(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="m4 11 8-7 8 7" />
+      <path d="M6 10v10h12V10" />
+    </svg>
+  );
+}
+
+/** Theme icon for featured path chips/tabs */
+export function pathThemeIcon(themeOrId: string, size = 14): ReactNode {
+  const k = themeOrId.toLowerCase();
+  if (/双系统|dual|system/.test(k)) return <IconBrain size={size} />;
+  if (/启发|heur|偏见/.test(k)) return <IconLightbulb size={size} />;
+  if (/过度|over|自信/.test(k)) return <IconTrend size={size} />;
+  if (/前景|prospect|损失/.test(k)) return <IconChart size={size} />;
+  if (/两个自我|self|幸福/.test(k)) return <IconUsers size={size} />;
+  if (/唯一|weiyi|真理/.test(k)) return <IconCompass size={size} />;
+  if (/说理|对话|shuoli/.test(k)) return <IconChat size={size} />;
+  if (/此在|本真|dazai/.test(k)) return <IconHome size={size} />;
+  return <IconPath size={size} />;
+}
+
+export function nodeTypeIcon(type: string, size = 12): ReactNode {
+  if (type === 'chapter') return <IconChapter size={size} />;
+  if (type === 'concept') return <IconConcept size={size} />;
+  if (type === 'claim') return <IconClaim size={size} />;
+  if (type === 'person') return <IconPerson size={size} />;
+  if (type === 'work') return <IconWork size={size} />;
+  return <IconConcept size={size} />;
 }
