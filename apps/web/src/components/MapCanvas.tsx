@@ -16,6 +16,7 @@ import '@xyflow/react/dist/style.css';
 
 import GraphNode from './GraphNode';
 import MapLegend from './MapLegend';
+import { IconFit, IconFocus, IconZoomIn, IconZoomOut } from './icons';
 import { layoutPathSpine, layoutWithDagre } from '../lib/layout';
 import {
   chapterSubgraphIds,
@@ -227,7 +228,7 @@ function MapCanvasInner(
             (e.source === a && e.target === b) || (e.source === b && e.target === a),
         );
         const isCurrentStep = pathStepIndex === i || pathStepIndex === i + 1;
-        const synId = `path-next:${a}>${b}`;
+        const synId = `path-gap:${a}>${b}`;
         const raw: MapEdge = existing
           ? { ...existing, source: a, target: b }
           : {
@@ -235,7 +236,7 @@ function MapCanvasInner(
               source: a,
               target: b,
               type: 'related',
-              label: '下一步',
+              label: '无线',
             };
         const selected = raw.id === selectedEdgeId || (!existing && selectedEdgeId === synId);
         const showLabel = true;
@@ -243,24 +244,30 @@ function MapCanvasInner(
           id: existing?.id ?? synId,
           source: a,
           target: b,
-          label: showLabel ? (existing?.label ?? '下一步') : undefined,
+          label: showLabel ? (existing?.label ?? '无线') : undefined,
           type: 'smoothstep',
           animated: false,
           interactionWidth: 16,
           zIndex: 25,
           className: [
             'is-path-edge',
-            !existing ? 'is-path-synthetic' : '',
+            !existing ? 'is-path-missing' : '',
             isCurrentStep || selected ? 'is-hl' : 'is-path-dim',
             `cm-edge--${raw.type}`,
           ]
             .filter(Boolean)
             .join(' '),
-          markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+          markerEnd: existing
+            ? { type: MarkerType.ArrowClosed, width: 14, height: 14 }
+            : undefined,
           style: {
-            stroke: selected || isCurrentStep ? 'var(--accent)' : edgeTypeColor(String(raw.type)),
+            stroke: !existing
+              ? 'var(--danger, #e05a5a)'
+              : selected || isCurrentStep
+                ? 'var(--accent)'
+                : edgeTypeColor(String(raw.type)),
             strokeWidth: selected || isCurrentStep ? 2.8 : 2,
-            strokeDasharray: existing ? undefined : '5 5',
+            strokeDasharray: existing ? undefined : '4 4',
             opacity: isCurrentStep || selected ? 1 : 0.45,
           },
           labelStyle: { fill: 'var(--text)', fontSize: 11, fontWeight: 650 },
@@ -476,10 +483,10 @@ function MapCanvasInner(
     }
     if (selectedEdgeId) {
       let e = graph.edges.find((x) => x.id === selectedEdgeId);
-      if (!e && selectedEdgeId.startsWith('path-next:')) {
-        const body = selectedEdgeId.slice('path-next:'.length);
+      if (!e && selectedEdgeId.startsWith('path-gap:')) {
+        const body = selectedEdgeId.slice('path-gap:'.length);
         const [sa, sb] = body.split('>');
-        if (sa && sb) e = { id: selectedEdgeId, source: sa, target: sb, type: 'related', label: '下一步' };
+        if (sa && sb) e = { id: selectedEdgeId, source: sa, target: sb, type: 'related', label: '无线' };
       }
       if (e) {
         const t = window.setTimeout(
@@ -587,25 +594,32 @@ function MapCanvasInner(
         />
       </ReactFlow>
       <div className="cm-zoom-controls" role="group" aria-label="缩放">
-        <button type="button" className="cm-btn" onClick={() => zoomTowardSelection('in')}>
-          放大
+        <button type="button" className="cm-icon-btn cm-zoom-btn" onClick={() => zoomTowardSelection('in')} aria-label="放大" title="放大">
+          <IconZoomIn />
         </button>
-        <button type="button" className="cm-btn" onClick={() => zoomTowardSelection('out')}>
-          缩小
+        <button type="button" className="cm-icon-btn cm-zoom-btn" onClick={() => zoomTowardSelection('out')} aria-label="缩小" title="缩小">
+          <IconZoomOut />
         </button>
-        <button type="button" className="cm-btn" onClick={() => fitReadable(300)}>
-          适配可见
+        <button type="button" className="cm-icon-btn cm-zoom-btn" onClick={() => fitReadable(300)} aria-label="适配" title="适配可见">
+          <IconFit />
         </button>
         <button
           type="button"
-          className="cm-btn"
+          className="cm-icon-btn cm-zoom-btn"
+          aria-label="聚焦"
+          title="聚焦邻域"
           onClick={() => {
             if (selectedId) focusNeighborhood([selectedId, ...neighborSet]);
-            else if (highlightPathIds?.length) focusNeighborhood(highlightPathIds);
-            else fitReadable(300);
+            else if (highlightPathIds?.length) {
+              const cur =
+                pathStepIndex != null && highlightPathIds[pathStepIndex]
+                  ? highlightPathIds[pathStepIndex]
+                  : highlightPathIds[0];
+              focusNeighborhood([cur]);
+            } else fitReadable(300);
           }}
         >
-          聚焦邻域
+          <IconFocus />
         </button>
       </div>
       <MapLegend />

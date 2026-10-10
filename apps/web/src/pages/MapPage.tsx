@@ -8,9 +8,24 @@ import MapCanvas, {
 import DetailDrawer from '../components/DetailDrawer';
 import EdgePanel from '../components/EdgePanel';
 import SearchHits from '../components/SearchHits';
+import PathGuide from '../components/PathGuide';
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate, groupChapters, matchesQuery } from '../lib/graphUtils';
 import { useTheme } from '../hooks/useTheme';
+import {
+  IconChapter,
+  IconStructure,
+  IconClaim,
+  IconConcept,
+  IconMap,
+  IconMore,
+  IconMoon,
+  IconPerson,
+  IconSearch,
+  IconShare,
+  IconSun,
+  IconWork,
+} from '../components/icons';
 import {
   type ConceptGraph,
   type FeaturedPath,
@@ -20,14 +35,24 @@ import {
   type NodeType,
 } from '../types/graph';
 
-const TYPE_FILTERS: Array<{ key: TypeFilter; label: string }> = [
-  { key: 'all', label: '全部' },
-  { key: 'chapter', label: '章节' },
-  { key: 'concept', label: '概念' },
-  { key: 'claim', label: '主张' },
-  { key: 'person', label: '人物' },
-  { key: 'work', label: '著作' },
+const TYPE_FILTERS: Array<{ key: TypeFilter; label: string; short: string }> = [
+  { key: 'all', label: '全部', short: '全部' },
+  { key: 'chapter', label: '章节', short: '章节' },
+  { key: 'concept', label: '概念', short: '概念' },
+  { key: 'claim', label: '主张', short: '主张' },
+  { key: 'person', label: '人物', short: '人物' },
+  { key: 'work', label: '著作', short: '著作' },
 ];
+
+function TypeIcon({ k, size = 14 }: { k: TypeFilter; size?: number }) {
+  if (k === 'chapter') return <IconChapter size={size} />;
+  if (k === 'concept') return <IconConcept size={size} />;
+  if (k === 'claim') return <IconClaim size={size} />;
+  if (k === 'person') return <IconPerson size={size} />;
+  if (k === 'work') return <IconWork size={size} />;
+  return <IconMap size={size} />;
+}
+
 
 const ALLOWED_TYPES = new Set(['chapter', 'concept', 'claim', 'person', 'work']);
 
@@ -72,6 +97,8 @@ export default function MapPage() {
   });
   /** Narrow path tour: peek sheet so map stays visible (Ux3-3) */
   const [sheetExpanded, setSheetExpanded] = useState(true);
+  const [pathTableOpen, setPathTableOpen] = useState(false);
+  const [pathCompleted, setPathCompleted] = useState(false);
 
   const isNarrow = useCallback(() => {
     try {
@@ -252,6 +279,57 @@ export default function MapPage() {
     () => (pathId ? featured.find((p) => p.id === pathId) ?? null : null),
     [featured, pathId],
   );
+
+  useEffect(() => {
+    if (!mapId || !pathId) {
+      setPathCompleted(false);
+      return;
+    }
+    try {
+      setPathCompleted(localStorage.getItem(`cm-path-done:${mapId}:${pathId}`) === '1');
+    } catch {
+      setPathCompleted(false);
+    }
+  }, [mapId, pathId]);
+
+  const togglePathComplete = useCallback(() => {
+    if (!mapId || !pathId) return;
+    setPathCompleted((prev) => {
+      const next = !prev;
+      try {
+        const k = `cm-path-done:${mapId}:${pathId}`;
+        if (next) localStorage.setItem(k, '1');
+        else localStorage.removeItem(k);
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, [mapId, pathId]);
+
+  const missingEdgeAt = useMemo(() => {
+    if (!graph || !activePath) return [] as boolean[];
+    const pair = new Set(
+      graph.edges.flatMap((e) => [`${e.source}::${e.target}`, `${e.target}::${e.source}`]),
+    );
+    return activePath.nodeIds.map((id, i) => {
+      if (i === 0) return false;
+      const prev = activePath.nodeIds[i - 1];
+      return !pair.has(`${prev}::${id}`);
+    });
+  }, [graph, activePath]);
+
+  const pathEdgeKeep = useMemo(() => {
+    // Ux4-5: keep highlighting the edge into current step while touring
+    if (!graph || !activePath || pathStep <= 0) return null as MapEdge | null;
+    const a = activePath.nodeIds[pathStep - 1];
+    const b = activePath.nodeIds[pathStep];
+    return (
+      graph.edges.find(
+        (e) => (e.source === a && e.target === b) || (e.source === b && e.target === a),
+      ) ?? null
+    );
+  }, [graph, activePath, pathStep]);
   const pathHighlight = activePath?.nodeIds ?? null;
 
   useEffect(() => {
@@ -668,11 +746,14 @@ export default function MapPage() {
 
         <div className="cm-toolbar">
           <div className="cm-search-wrap">
+            <span className="cm-search-icon" aria-hidden>
+              <IconSearch size={14} />
+            </span>
             <input
               ref={searchRef}
               className="cm-search"
               type="search"
-              placeholder="搜索…（按 / 聚焦）"
+              placeholder="搜索…"
               value={query}
               onChange={(e) => setQueryAndUrl(e.target.value)}
               onFocus={() => setSearchOpen(true)}
@@ -710,10 +791,12 @@ export default function MapPage() {
               <button
                 key={f.key}
                 type="button"
-                className={`cm-chip${filter === f.key ? ' is-active' : ''}`}
+                className={`cm-chip cm-chip--type${filter === f.key ? ' is-active' : ''}`}
                 onClick={() => setFilterAndUrl(f.key)}
+                title={f.label}
               >
-                {f.label}
+                <TypeIcon k={f.key} />
+                <span>{f.short.slice(0, 2)}</span>
               </button>
             ))}
           </div>
@@ -754,30 +837,34 @@ export default function MapPage() {
 
           <button
             type="button"
-            className="cm-btn cm-btn--primary cm-btn--share"
+            className="cm-icon-btn cm-btn--share"
             onClick={() => void copyShareLink()}
-            title="复制当前视图链接"
+            title="分享链接"
+            aria-label="分享链接"
           >
-            {copied ? '已复制' : '分享链接'}
+            <IconShare />
           </button>
 
           <button
             type="button"
-            className="cm-theme-toggle"
+            className="cm-icon-btn cm-theme-toggle"
             onClick={toggle}
             aria-label={theme === 'dark' ? '切换浅色' : '切换深色'}
+            title={theme === 'dark' ? '浅色' : '深色'}
           >
-            {theme === 'dark' ? '☾' : '☀'}
+            {theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
 
           <div className="cm-more-wrap">
             <button
               type="button"
-              className="cm-btn"
+              className="cm-icon-btn"
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
+              aria-label="更多"
+              title="更多"
             >
-              更多
+              <IconMore />
             </button>
             {moreOpen ? (
               <div className="cm-more-menu">
@@ -787,7 +874,7 @@ export default function MapPage() {
                     checked={showStructural}
                     onChange={(e) => setShowStructural(e.target.checked)}
                   />
-                  显示收录/包含线
+                  <IconStructure size={14} /> 结构线
                 </label>
                 <button
                   type="button"
@@ -811,7 +898,7 @@ export default function MapPage() {
         </div>
       </header>
 
-      <div className="cm-subbar">
+      <div className={`cm-subbar${activePath ? ' cm-subbar--path' : ''}`}>
         <div className="cm-path-bar" aria-label="推荐路径">
           <span className="cm-path-bar__label">路径</span>
           {featured.map((p) => (
@@ -822,38 +909,9 @@ export default function MapPage() {
               onClick={() => activatePath(p, 0)}
               title={p.description}
             >
-              {({ 'path-weiyi': '唯一真理观', 'path-shuoli': '说理与对话', 'path-dazai': '此在与本真' } as Record<string, string>)[p.id] ?? p.title}
+              {p.theme || p.title}
             </button>
           ))}
-          {activePath ? (
-            <>
-              <span className="cm-path-blurb cm-hide-narrow">{activePath.description}</span>
-              <div className="cm-path-stepper">
-                <button
-                  type="button"
-                  className="cm-btn"
-                  disabled={pathStep <= 0}
-                  onClick={() => goPathStep(-1)}
-                >
-                  上一步
-                </button>
-                <span>
-                  {pathStep + 1} / {activePath.nodeIds.length}
-                </span>
-                <button
-                  type="button"
-                  className="cm-btn"
-                  disabled={pathStep >= activePath.nodeIds.length - 1}
-                  onClick={() => goPathStep(1)}
-                >
-                  下一步
-                </button>
-                <button type="button" className="cm-btn" onClick={clearPath}>
-                  退出路径
-                </button>
-              </div>
-            </>
-          ) : null}
         </div>
 
         <div className="cm-stats">
@@ -874,6 +932,29 @@ export default function MapPage() {
             </span>
           ) : null}
         </div>
+
+        {activePath ? (
+          <PathGuide
+            path={activePath}
+            stepIndex={pathStep}
+            currentNode={byId.get(activePath.nodeIds[pathStep]) ?? selected}
+            nextNode={
+              pathStep < activePath.nodeIds.length - 1
+                ? byId.get(activePath.nodeIds[pathStep + 1]) ?? null
+                : null
+            }
+            completed={pathCompleted}
+            onToggleComplete={togglePathComplete}
+            onPrev={() => goPathStep(-1)}
+            onNext={() => goPathStep(1)}
+            onExit={clearPath}
+            onJump={(i) => activatePath(activePath, i)}
+            tableOpen={pathTableOpen}
+            onToggleTable={() => setPathTableOpen((v) => !v)}
+            labelOf={(id) => byId.get(id)?.label ?? id}
+            missingEdgeAt={missingEdgeAt}
+          />
+        ) : null}
       </div>
 
       <main className="cm-main">
@@ -947,6 +1028,19 @@ export default function MapPage() {
             onSelectRelated={selectRelated}
             onBack={nodeHistory.length ? goBackNode : undefined}
             onFocusChapter={focusChapterByLabel}
+            pathContext={
+              activePath
+                ? {
+                    path: activePath,
+                    stepIndex: pathStep,
+                    edgeInto: pathEdgeKeep,
+                    nextLabel:
+                      pathStep < activePath.nodeIds.length - 1
+                        ? byId.get(activePath.nodeIds[pathStep + 1])?.label ?? null
+                        : null,
+                  }
+                : null
+            }
           />
         ) : selectedEdge ? (
           <EdgePanel

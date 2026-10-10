@@ -41,11 +41,29 @@ export interface ConceptGraph {
   edges: MapEdge[];
 }
 
+export type PathDifficulty = '入门' | '进阶' | '深入';
+
+export interface FeaturedPathStep {
+  nodeId: string;
+  /** Why this step matters in the tour */
+  rationale: string;
+  /** Preferred edge label into this step (from previous) */
+  edgeLabel?: string;
+}
+
 export interface FeaturedPath {
   id: string;
   title: string;
   description: string;
   nodeIds: string[];
+  /** Short theme for chips (fallback: title) */
+  theme?: string;
+  /** One-line narrative arc */
+  arc?: string;
+  difficulty?: PathDifficulty | string;
+  durationMin?: number;
+  /** Per-step guide; length should match nodeIds when present */
+  steps?: FeaturedPathStep[];
 }
 
 export interface MapStats {

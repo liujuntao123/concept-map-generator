@@ -324,8 +324,8 @@ export function edgeRelationSentence(
   let rel = (edge.label || '').trim() || kind;
   rel = rel.replace(/（原关系类型：[^）]+）/g, '').trim() || kind;
   // synthetic path step
-  if (edge.id.startsWith('path-next:') || rel === '下一步') {
-    return `顺着路径，下一步从「${sourceLabel}」走到「${targetLabel}」。`;
+  if (edge.id.startsWith('path-gap:') || rel === '无线') {
+    return `路径上「${sourceLabel}」与「${targetLabel}」之间暂无图谱边（无线）。`;
   }
   if (edge.type === 'contains' || rel === '收录' || rel === '包含') {
     return `「${sourceLabel}」里收有「${targetLabel}」。`;

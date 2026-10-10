@@ -2,12 +2,95 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate } from '../lib/graphUtils';
-import type { MapIndexEntry, MapsIndex } from '../types/graph';
+import type { FeaturedPath, MapIndexEntry, MapMeta, MapsIndex } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
+import { IconMap, IconMoon, IconSun } from '../components/icons';
 
 function coverGlyph(m: MapIndexEntry): string {
   if (m.coverText) return m.coverText.slice(0, 2);
   return (m.title?.trim() || '?').slice(0, 1);
+}
+
+function shortQuote(m: MapIndexEntry): string {
+  const d = (m.description || m.subtitle || '').trim();
+  if (!d) return '';
+  const cut = d.split(/[。！？]/)[0] || d;
+  return cut.length > 36 ? cut.slice(0, 34) + '…' : cut;
+}
+
+function BookCard({ m }: { m: MapIndexEntry }) {
+  const [paths, setPaths] = useState<FeaturedPath[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void fetchJson<MapMeta>(`/maps/${m.id}/meta.json`, 'meta').then(
+      (meta) => {
+        if (!cancelled) setPaths(meta.featuredPaths ?? []);
+      },
+      () => {
+        if (!cancelled) setPaths([]);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [m.id]);
+
+  const year = m.generatedAt ? formatGeneratedDate(m.generatedAt).slice(0, 4) : '';
+  const badge = [m.author, year].filter(Boolean).join(' · ');
+  const quote = shortQuote(m);
+  const chips = paths.slice(0, 3);
+
+  return (
+    <article className="cm-book-card cm-book-card--wide">
+      <div
+        className="cm-book-card__cover cm-book-card__cover--quote"
+        style={{ background: m.coverColor || 'var(--bg-elev-2)' }}
+        aria-hidden
+      >
+        <span className="cm-book-card__cover-title">{m.coverText || coverGlyph(m)}</span>
+        {quote ? <span className="cm-book-card__cover-quote">{quote}</span> : null}
+      </div>
+      <div className="cm-book-card__body">
+        {badge ? (
+          <div className="cm-book-card__badges">
+            <span className="cm-pill">{badge}</span>
+          </div>
+        ) : null}
+        <h2>{m.title}</h2>
+        {m.subtitle ? <div className="cm-book-card__meta">{m.subtitle}</div> : null}
+        <div className="cm-book-card__stats">
+          {m.stats ? (
+            <span>
+              {m.stats.nodes} 节点 · {m.stats.edges} 关系 · {m.stats.chapters} 章
+            </span>
+          ) : null}
+        </div>
+        {chips.length ? (
+          <div className="cm-book-card__paths" aria-label="推荐路径">
+            {chips.map((p) => (
+              <Link
+                key={p.id}
+                className="cm-chip cm-chip--path"
+                to={`/maps/${m.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(p.nodeIds[0] || '')}`}
+                title={p.description}
+              >
+                {p.theme || p.title}
+                {p.durationMin ? ` · ${p.durationMin}′` : ''}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+        <div className="cm-book-card__actions">
+          <Link className="cm-btn cm-btn--primary" to={`/maps/${m.id}?view=all`}>
+            <IconMap size={14} /> 进地图
+          </Link>
+          <Link className="cm-btn cm-btn--ghost" to={`/books/${m.id}`}>
+            简介
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export default function HomePage() {
@@ -80,18 +163,18 @@ export default function HomePage() {
         </div>
         <button
           type="button"
-          className="cm-theme-toggle"
+          className="cm-icon-btn cm-theme-toggle"
           onClick={toggle}
           aria-label={theme === 'dark' ? '切换浅色' : '切换深色'}
         >
-          {theme === 'dark' ? '☾' : '☀'}
+          {theme === 'dark' ? <IconSun /> : <IconMoon />}
         </button>
       </header>
 
       <main className="cm-home">
-        <div className="cm-home__hero">
+        <div className="cm-home__hero cm-home__hero--wide">
           <h1>图书与地图</h1>
-          <p>打开地图，沿章节与概念游走；节点旁有原文摘录，可按路径逐步阅读。</p>
+          <p>沿推荐路径逐步读，或打开全图自由游走。节点旁有原文摘录。</p>
           {!qTrim ? (
             <div className="cm-home__summary">
               <span>
@@ -102,9 +185,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="cm-home__summary">
-              <span>
-                匹配 {filtered.length} 本
-              </span>
+              <span>匹配 {filtered.length} 本</span>
             </div>
           )}
         </div>
@@ -135,50 +216,10 @@ export default function HomePage() {
             ) : null}
           </div>
         ) : (
-          <div className="cm-home__grid">
-            {filtered.map((m) => {
-              const year = m.generatedAt ? formatGeneratedDate(m.generatedAt).slice(0, 4) : '';
-              const badge = [m.author, (m as { publisher?: string }).publisher, year]
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <article key={m.id} className="cm-book-card">
-                  <div
-                    className="cm-book-card__cover"
-                    style={{ background: m.coverColor || 'var(--bg-elev-2)' }}
-                    aria-hidden
-                  >
-                    <span className="cm-book-card__cover-title">{m.coverText || coverGlyph(m)}</span>
-                    <span className="cm-book-card__cover-sub">{m.title}</span>
-                  </div>
-                  <div className="cm-book-card__body">
-                    {badge ? (
-                      <div className="cm-book-card__badges">
-                        <span className="cm-pill">{badge}</span>
-                      </div>
-                    ) : null}
-                    <h2>{m.title}</h2>
-                    {m.subtitle ? <div className="cm-book-card__meta">{m.subtitle}</div> : null}
-                    {m.description ? <p className="cm-book-card__desc">{m.description}</p> : null}
-                    <div className="cm-book-card__stats">
-                      {m.stats ? (
-                        <span>
-                          {m.stats.nodes} 节点 · {m.stats.edges} 关系 · {m.stats.chapters} 章
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="cm-book-card__actions">
-                      <Link className="cm-btn cm-btn--primary" to={`/maps/${m.id}`}>
-                        打开地图
-                      </Link>
-                      <Link className="cm-btn cm-btn--ghost" to={`/books/${m.id}`}>
-                        图书简介
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="cm-home__grid cm-home__grid--wide">
+            {filtered.map((m) => (
+              <BookCard key={m.id} m={m} />
+            ))}
           </div>
         )}
       </main>

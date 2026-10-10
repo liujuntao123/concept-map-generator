@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   dedupeTags,
   formatGeneratedDate,
@@ -10,10 +10,27 @@ import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
   type ConceptGraph,
+  type FeaturedPath,
+  type MapEdge,
   type MapMeta,
   type MapNode,
   type NodeType,
 } from '../types/graph';
+import {
+  IconBack,
+  IconBook,
+  IconClose,
+  IconInfo,
+  IconList,
+  IconPath,
+} from './icons';
+
+export interface PathDrawerContext {
+  path: FeaturedPath;
+  stepIndex: number;
+  edgeInto: MapEdge | null;
+  nextLabel: string | null;
+}
 
 interface Props {
   node: MapNode;
@@ -26,6 +43,7 @@ interface Props {
   onSelectRelated: (node: MapNode) => void;
   onBack?: () => void;
   onFocusChapter?: (chapterLabel: string) => void;
+  pathContext?: PathDrawerContext | null;
 }
 
 export default function DetailDrawer({
@@ -39,25 +57,33 @@ export default function DetailDrawer({
   onSelectRelated,
   onBack,
   onFocusChapter,
+  pathContext = null,
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [relatedOpen, setRelatedOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const typeLabel = NODE_TYPE_LABEL[node.type as NodeType] ?? node.type;
   const related = relatedFor(graph, node.id);
   const tags = dedupeTags(node.type, node.tags);
   const body = readerBody(node);
   const excerpt = (node.source.excerpt || '').trim();
   const sourceFile = node.source.anchor || node.source.file;
+  const summary = (node.summary || '').trim();
+  const showDetail = Boolean(
+    body &&
+      body.replace(/\s/g, '') !== summary.replace(/\s/g, '') &&
+      body.length > summary.length + 24,
+  );
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, typeof related>();
-    for (const r of related) {
-      const k = String(r.edge.type);
-      if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push(r);
-    }
-    return [...map.entries()];
-  }, [related]);
+  const step = pathContext?.path.steps?.[pathContext.stepIndex];
+  const stepLine =
+    step?.rationale ||
+    summary.split(/[。！？]/)[0] ||
+    summary.slice(0, 72);
+
+
+  const relatedFlat = related.slice(0, relatedOpen ? related.length : 3);
 
   async function copyExcerpt() {
     try {
@@ -85,9 +111,9 @@ export default function DetailDrawer({
         <div>
           <div className="cm-drawer__badges">
             <span className={`cm-pill cm-pill--${node.type}`}>{typeLabel}</span>
-            {tags.slice(0, 3).map((t) => (
-              <span key={t} className="cm-pill">
-                {t}
+            {tags.slice(0, 2).map((tg) => (
+              <span key={tg} className="cm-pill">
+                {tg}
               </span>
             ))}
           </div>
@@ -98,7 +124,7 @@ export default function DetailDrawer({
             </button>
           ) : onBack ? (
             <button type="button" className="cm-btn cm-btn--ghost cm-drawer__back" onClick={onBack}>
-              ← 返回上一概念
+              <IconBack size={14} /> 返回上一概念
             </button>
           ) : null}
         </div>
@@ -109,69 +135,116 @@ export default function DetailDrawer({
             </button>
           ) : null}
           <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">
-            ×
+            <IconClose />
           </button>
         </div>
       </header>
 
-      <section className="cm-drawer__section">
-        <h3>概要</h3>
-        <p>{node.summary}</p>
-      </section>
-
-      {body ? (
+      {pathContext ? (
+        <section className="cm-drawer__section cm-drawer__step">
+          <h3>
+            <IconPath size={14} /> 这一步
+          </h3>
+          <p className="cm-drawer__step-meta">
+            第 {pathContext.stepIndex + 1}/{pathContext.path.nodeIds.length} 步
+            {pathContext.path.difficulty ? ` · ${pathContext.path.difficulty}` : ''}
+            {pathContext.path.durationMin ? ` · 约 ${pathContext.path.durationMin} 分钟` : ''}
+          </p>
+          <p className="cm-scale-line">{stepLine}</p>
+          {pathContext.edgeInto || step?.edgeLabel ? (
+            <p className="cm-drawer__edge-keep">
+              关系：
+              {pathContext.edgeInto?.label ||
+                step?.edgeLabel ||
+                EDGE_TYPE_LABEL[String(pathContext.edgeInto?.type)] ||
+                '相关'}
+            </p>
+          ) : null}
+          {pathContext.nextLabel ? (
+            <p className="cm-muted">
+              下一步预览：
+              {pathContext.path.steps?.[pathContext.stepIndex + 1]?.edgeLabel
+                ? `${pathContext.path.steps[pathContext.stepIndex + 1]!.edgeLabel} · `
+                : ''}
+              {pathContext.nextLabel}
+            </p>
+          ) : (
+            <p className="cm-muted">已到路径终点</p>
+          )}
+        </section>
+      ) : (
         <section className="cm-drawer__section">
-          <h3>论述</h3>
-          <p className="cm-drawer__content">{body}</p>
+          <h3>
+            <IconInfo size={14} /> 这一步
+          </h3>
+          <p className="cm-drawer__clamp">{summary}</p>
+        </section>
+      )}
+
+      {showDetail ? (
+        <section className="cm-drawer__section">
+          <button
+            type="button"
+            className="cm-drawer__fold"
+            onClick={() => setDetailOpen((v) => !v)}
+          >
+            <IconList size={14} /> {detailOpen ? '收起详述' : '展开详述'}
+          </button>
+          {detailOpen ? <p className="cm-drawer__content">{body}</p> : null}
         </section>
       ) : null}
 
       {related.length > 0 ? (
         <section className="cm-drawer__section">
-          <h3>相关节点（{related.length}）</h3>
-          {grouped.map(([etype, items]) => (
-            <div key={etype} className="cm-related-group">
-              <div className="cm-related-group__title">
-                {EDGE_TYPE_LABEL[etype] ?? etype}
-                {etype === 'contains' ? ' · 结构' : ''}
-              </div>
-              <div className="cm-related-list">
-                {items.map(({ node: rn, edge, direction }) => {
-                  const edgeType = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
-                  const edgeLabel =
-                    edge.label && edge.label !== edgeType && !isStructuralEdge(edge)
-                      ? edge.label
-                      : null;
-                  return (
-                    <button
-                      key={`${edge.id}-${rn.id}`}
-                      type="button"
-                      className="cm-related-item"
-                      onClick={() => onSelectRelated(rn)}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="cm-related-item__meta">
-                          {edgeLabel || edgeType}
-                          {direction === 'out' ? ' →' : ' ←'}
-                        </div>
-                        <div className="cm-related-item__label" title={rn.label}>
-                          {rn.label}
-                        </div>
-                      </div>
-                      <span className={`cm-pill cm-pill--${rn.type}`}>
-                        {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          <h3>
+            <IconList size={14} /> 相关（{related.length}）
+          </h3>
+          <div className="cm-related-list">
+            {relatedFlat.map(({ node: rn, edge, direction }) => {
+              const edgeType = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
+              const edgeLabel =
+                edge.label && edge.label !== edgeType && !isStructuralEdge(edge)
+                  ? edge.label
+                  : null;
+              return (
+                <button
+                  key={`${edge.id}-${rn.id}`}
+                  type="button"
+                  className="cm-related-item"
+                  onClick={() => onSelectRelated(rn)}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="cm-related-item__meta">
+                      {edgeLabel || edgeType}
+                      {direction === 'out' ? ' →' : ' ←'}
+                    </div>
+                    <div className="cm-related-item__label" title={rn.label}>
+                      {rn.label}
+                    </div>
+                  </div>
+                  <span className={`cm-pill cm-pill--${rn.type}`}>
+                    {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {related.length > 3 ? (
+            <button
+              type="button"
+              className="cm-btn cm-btn--ghost"
+              onClick={() => setRelatedOpen((v) => !v)}
+            >
+              {relatedOpen ? '收起相关' : `显示全部 ${related.length}`}
+            </button>
+          ) : null}
         </section>
       ) : null}
 
       <section className="cm-drawer__section">
-        <h3>原文摘录</h3>
+        <h3>
+          <IconBook size={14} /> 原文摘录
+        </h3>
         <div className="cm-locate">
           <span>
             章节：
@@ -223,18 +296,6 @@ export default function DetailDrawer({
               <dd>
                 <code>{sourceFile}</code>
               </dd>
-            </div>
-          ) : null}
-          {meta.schemaVersion ? (
-            <div>
-              <dt>数据版本</dt>
-              <dd>{meta.schemaVersion}</dd>
-            </div>
-          ) : null}
-          {meta.author ? (
-            <div>
-              <dt>作者</dt>
-              <dd>{meta.author}</dd>
             </div>
           ) : null}
         </dl>

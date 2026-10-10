@@ -10,11 +10,14 @@ import {
   type NodeType,
 } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
+import { IconMap, IconMoon, IconPath, IconSun } from '../components/icons';
+import type { ConceptGraph } from '../types/graph';
 
 export default function BookDetailPage() {
   const params = useParams();
   const bookId = params.bookId || params.mapId || '';
   const [meta, setMeta] = useState<MapMeta | null>(null);
+  const [graph, setGraph] = useState<ConceptGraph | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { theme, toggle } = useTheme();
 
@@ -22,12 +25,16 @@ export default function BookDetailPage() {
     let cancelled = false;
     async function load() {
       try {
-        const data = await fetchJson<MapMeta>(
-          `/maps/${bookId}/meta.json`,
-          '无法加载图书详情。请确认图书地址是否正确。',
-        );
+        const [data, g] = await Promise.all([
+          fetchJson<MapMeta>(
+            `/maps/${bookId}/meta.json`,
+            '无法加载图书详情。请确认图书地址是否正确。',
+          ),
+          fetchJson<ConceptGraph>(`/maps/${bookId}/graph.json`, '无法加载图谱').catch(() => null),
+        ]);
         if (!cancelled) {
           setMeta(data);
+          setGraph(g);
           setError(null);
         }
       } catch (e) {
@@ -95,11 +102,11 @@ export default function BookDetailPage() {
           </Link>
           <button
             type="button"
-            className="cm-theme-toggle"
+            className="cm-icon-btn cm-theme-toggle"
             onClick={toggle}
             aria-label={theme === 'dark' ? '切换浅色' : '切换深色'}
           >
-            {theme === 'dark' ? '☾' : '☀'}
+            {theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
         </div>
       </header>
@@ -133,11 +140,16 @@ export default function BookDetailPage() {
             </p>
             <div className="cm-book-detail__cta">
               <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}?view=all`}>
-                打开完整地图
+                <IconMap size={14} /> 进地图
               </Link>
-              <Link className="cm-btn cm-btn--ghost" to={`/maps/${meta.id}?path=path-weiyi`}>
-                从推荐路径开始
-              </Link>
+              {meta.featuredPaths?.[0] ? (
+                <Link
+                  className="cm-btn cm-btn--ghost"
+                  to={`/maps/${meta.id}?path=${encodeURIComponent(meta.featuredPaths[0].id)}&step=0&node=${encodeURIComponent(meta.featuredPaths[0].nodeIds[0] || '')}`}
+                >
+                  <IconPath size={14} /> 从推荐路径开始
+                </Link>
+              ) : null}
             </div>
           </div>
         </section>
@@ -146,17 +158,39 @@ export default function BookDetailPage() {
           <section className="cm-panel cm-panel--wide">
             <h2>推荐阅读路径</h2>
             <div className="cm-path-cards">
-              {meta.featuredPaths.map((p) => (
-                <Link
-                  key={p.id}
-                  className="cm-path-card"
-                  to={`/maps/${meta.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(p.nodeIds[0] || '')}`}
-                >
-                  <h3>{p.title}</h3>
-                  <p>{p.description}</p>
-                  <span>{p.nodeIds.length} 步</span>
-                </Link>
-              ))}
+              {meta.featuredPaths.map((p) => {
+                const firstId = p.nodeIds[0] || '';
+                const firstLabel =
+                  graph?.nodes.find((n) => n.id === firstId)?.label || firstId;
+                const shortNames = p.nodeIds.slice(0, 6).map((id, i) => {
+                  const lab = graph?.nodes.find((n) => n.id === id)?.label || id;
+                  const short = lab.length > 10 ? lab.slice(0, 9) + '…' : lab;
+                  return `${i + 1}. ${short}`;
+                });
+                return (
+                  <div key={p.id} className="cm-path-card">
+                    <h3>{p.theme || p.title}</h3>
+                    <p className="cm-path-card__meta">
+                      {p.difficulty || '入门'}
+                      {p.durationMin ? ` · 约 ${p.durationMin} 分钟` : ''}
+                      {p.arc ? ` · ${p.arc}` : ''}
+                    </p>
+                    <p>{p.description}</p>
+                    <ol className="cm-path-card__steps">
+                      {shortNames.map((s) => (
+                        <li key={s}>{s}</li>
+                      ))}
+                      {p.nodeIds.length > 6 ? <li>…共 {p.nodeIds.length} 步</li> : null}
+                    </ol>
+                    <Link
+                      className="cm-btn cm-btn--primary"
+                      to={`/maps/${meta.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(firstId)}`}
+                    >
+                      从「{firstLabel.length > 12 ? firstLabel.slice(0, 11) + '…' : firstLabel}」开始 · {p.nodeIds.length} 步
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           </section>
         ) : null}
