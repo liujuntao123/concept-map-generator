@@ -50,6 +50,14 @@ export default function BookDetailPage() {
     };
   }, [bookId]);
 
+  useEffect(() => {
+    if (!meta) return;
+    document.title = `${meta.title} · 概念地图`;
+    return () => {
+      document.title = '概念地图';
+    };
+  }, [meta]);
+
   if (error) {
     return (
       <div className="cm-shell cm-shell--center">

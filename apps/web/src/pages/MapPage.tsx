@@ -141,6 +141,14 @@ export default function MapPage() {
     };
   }, [mapId]);
 
+  useEffect(() => {
+    if (!meta) return;
+    document.title = `${meta.title} · 概念地图`;
+    return () => {
+      document.title = '概念地图';
+    };
+  }, [meta]);
+
   // Ux2-1: cold open defaults into first path (or 辑一) so map is readable
   useEffect(() => {
     if (!graph || !meta || defaultBootstrapped) return;

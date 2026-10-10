@@ -115,6 +115,10 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    document.title = '概念地图';
+  }, []);
+
   const filtered = useMemo(() => {
     if (!index) return [] as MapIndexEntry[];
     const q = query.trim().toLowerCase();

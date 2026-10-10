@@ -46,8 +46,8 @@ export default function PathGuide({
   const n = path.nodeIds.length;
   const step = path.steps?.[stepIndex];
   const nextStep = path.steps?.[stepIndex + 1];
-  const difficulty = path.difficulty || '入门';
-  const minutes = path.durationMin ?? Math.max(8, Math.round(n * 1.2));
+  const difficulty = path.difficulty || null;
+  const minutes = path.durationMin ?? null;
   const edgeIntoNext = nextStep?.edgeLabel;
   const why = step?.rationale || path.description;
   const nextWhy = nextStep?.rationale;
@@ -55,12 +55,16 @@ export default function PathGuide({
   return (
     <section className="cm-path-guide" aria-label="路径导读">
       <div className="cm-path-guide__meta">
-        <span className="cm-path-guide__pill">
-          <IconClock size={14} /> 约 {minutes} 分钟
-        </span>
-        <span className="cm-path-guide__pill">
-          <IconSignal size={14} /> {difficulty}
-        </span>
+        {minutes != null ? (
+          <span className="cm-path-guide__pill">
+            <IconClock size={14} /> 约 {minutes} 分钟
+          </span>
+        ) : null}
+        {difficulty ? (
+          <span className="cm-path-guide__pill">
+            <IconSignal size={14} /> {difficulty}
+          </span>
+        ) : null}
         <span className="cm-path-guide__pill">
           <IconPath size={14} /> 第 {stepIndex + 1}/{n} 步
         </span>
