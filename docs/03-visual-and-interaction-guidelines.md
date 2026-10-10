@@ -76,7 +76,8 @@ token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（
 约定：
 - **按钮必须来自原语**，不要在页面里手写按钮类。需要覆盖尺寸时通过 `className` 传增量（`cn` 会自动让后者胜出）。
 - 链接按钮统一用 `<Link className={buttonClass(...)}>`，不要给 `<a>` 加自定义下划线。
-- 图标统一来自 [icons.tsx](file:///workspace/apps/web/src/components/icons.tsx)，默认带 `inline-block shrink-0 align-[-0.15em]`。
+- 图标统一来自 [icons.tsx](file:///workspace/apps/web/src/components/icons.tsx)：底层是 **lucide-react**，该文件只做一层薄适配（统一 `strokeWidth=1.75` 与 `inline-block shrink-0 align-[-0.15em]`、默认 `aria-hidden`、保留原有 `Icon*` 导出名）。
+  **不要手绘 SVG**，需要新图标时从 lucide 导入并在该文件登记导出即可。
 
 ## 4. 交互规范
 

@@ -19,6 +19,8 @@ import {
 import {
   IconBack,
   IconBook,
+  IconChevronLeft,
+  IconChevronRight,
   IconClose,
   IconInfo,
   IconList,
@@ -235,7 +237,8 @@ export default function DetailDrawer({
               title="收起侧栏，地图变宽"
               aria-label="收起侧栏"
             >
-              收起 ›
+              收起
+              <IconChevronRight size={14} />
             </button>
           ) : null}
           <button
@@ -453,9 +456,13 @@ export default function DetailDrawer({
                       <Pill tone={rn.type as NodeType}>
                         {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
                       </Pill>
-                      <span>
+                      <span className="inline-flex items-center gap-1">
                         {edgeLabel || edgeType}
-                        {direction === 'out' ? ' →' : ' ←'}
+                        {direction === 'out' ? (
+                          <IconChevronRight size={13} />
+                        ) : (
+                          <IconChevronLeft size={13} />
+                        )}
                       </span>
                     </div>
                     <div title={rn.label}>{rn.label}</div>

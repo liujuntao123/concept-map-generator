@@ -1,5 +1,6 @@
 import { edgeRelationSentence } from '../lib/graphUtils';
 import { EDGE_TYPE_LABEL, NODE_TYPE_LABEL, type MapEdge, type MapNode, type NodeType } from '../types/graph';
+import { IconChevronRight, IconClose } from './icons';
 import Pill from './ui/Pill';
 import { buttonClass, iconButtonClass } from './ui/styles';
 import { SHEET_HEIGHT, SHEET_PEEK_HEIGHT, SHEET_SHELL } from './ui/drawer';
@@ -128,7 +129,8 @@ export default function EdgePanel({
               title="收起侧栏，地图变宽"
               aria-label="收起侧栏"
             >
-              收起 ›
+              收起
+              <IconChevronRight size={14} />
             </button>
           ) : null}
           <button
@@ -137,7 +139,7 @@ export default function EdgePanel({
             onClick={onClose}
             aria-label="关闭"
           >
-            ×
+            <IconClose />
           </button>
         </div>
       </header>

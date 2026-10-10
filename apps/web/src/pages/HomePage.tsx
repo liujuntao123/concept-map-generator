@@ -62,30 +62,35 @@ function BookCard({ m }: { m: MapIndexEntry }) {
       )}
       data-book={m.id}
     >
-      {/* 封面作为卡片背景：右侧透出封面，文字所在的左侧保持实体底色以保证可读性 */}
+      {/* 封面铺满整卡作为底图：降低不透明度 + 模糊，退成色彩氛围而不是可读文字，
+          避免封面上的大字标题与卡片信息相互干扰；scale 用于吃掉模糊后的边缘 */}
       <img
         src={coverOf(m.id)}
         alt=""
         aria-hidden
         decoding="async"
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center dark:brightness-[0.82] dark:contrast-[1.05]"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full scale-110 object-cover object-center opacity-60 blur-2xl dark:opacity-40 dark:brightness-[0.8]"
       />
+      {/* 蒙层：把封面压到不干扰阅读的程度；卡片信息整体叠在它上面。
+          深色下封面多为大面积白底，需压得更重，否则描述文字对比度不足 */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-r from-surface from-0% via-surface via-65% to-surface/25 max-[860px]:to-surface/95"
+        className="pointer-events-none absolute inset-0 z-0 bg-surface/55 dark:bg-surface/72"
       />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5 min-[861px]:max-w-[62%] max-[860px]:p-4">
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5 max-[860px]:p-4">
         {badge ? (
           <div className="flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center rounded-full border border-line px-2 py-0.5 text-[0.72rem] leading-[1.5] text-muted">
+            <span className="inline-flex items-center rounded-full border border-line bg-surface/60 px-2 py-0.5 text-[0.72rem] leading-[1.5] text-ink/75">
               {badge}
             </span>
           </div>
         ) : null}
 
         <h2 className="text-[1.2rem] leading-tight font-bold">{m.title}</h2>
-        {desc ? <p className="line-clamp-2 text-[0.88rem] leading-snug text-muted">{desc}</p> : null}
+        {desc ? (
+          <p className="line-clamp-2 text-[0.88rem] leading-snug text-ink/85">{desc}</p>
+        ) : null}
 
         {m.stats ? (
           <div className="flex flex-wrap gap-1.5">
