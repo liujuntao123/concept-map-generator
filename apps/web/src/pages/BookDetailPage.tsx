@@ -90,7 +90,7 @@ export default function BookDetailPage() {
           </div>
         </div>
         <div className="cm-toolbar">
-          <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}`}>
+          <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}?view=all`}>
             打开地图
           </Link>
           <button
@@ -132,7 +132,7 @@ export default function BookDetailPage() {
                 '这本书被整理成可交互的概念地图：可从章节走进概念与主张，边旁有原文摘录。'}
             </p>
             <div className="cm-book-detail__cta">
-              <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}`}>
+              <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}?view=all`}>
                 打开完整地图
               </Link>
               <Link className="cm-btn cm-btn--ghost" to={`/maps/${meta.id}?path=path-weiyi`}>

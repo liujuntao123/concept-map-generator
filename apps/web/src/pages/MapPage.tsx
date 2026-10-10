@@ -61,6 +61,14 @@ export default function MapPage() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [hitsCollapsed, setHitsCollapsed] = useState(false);
   const [defaultBootstrapped, setDefaultBootstrapped] = useState(false);
+  const [nodeHistory, setNodeHistory] = useState<string[]>([]);
+  const [tipsOpen, setTipsOpen] = useState(() => {
+    try {
+      return localStorage.getItem('cm-tips-v1') !== '1';
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +112,8 @@ export default function MapPage() {
       searchParams.get('focus') ||
       searchParams.get('edge') ||
       searchParams.get('q') ||
-      searchParams.get('type');
+      searchParams.get('type') ||
+      searchParams.get('view') === 'all';
     if (hasDeep) {
       setDefaultBootstrapped(true);
       return;
@@ -257,8 +266,13 @@ export default function MapPage() {
   );
 
   const selectNode = useCallback(
-    (node: MapNode | null) => {
-      setSelected(node);
+    (node: MapNode | null, opts?: { fromHistory?: boolean }) => {
+      setSelected((prev) => {
+        if (!opts?.fromHistory && prev && node && prev.id !== node.id) {
+          setNodeHistory((h) => [...h.slice(-19), prev.id]);
+        }
+        return node;
+      });
       setSelectedEdge(null);
       patchParams((next) => {
         if (node) next.set('node', node.id);
@@ -381,6 +395,61 @@ export default function MapPage() {
       activatePath(activePath, next);
     },
     [activePath, pathStep, activatePath],
+  );
+
+  /** Ux3-1: related click — exit path if off-path, else sync step */
+  const selectRelated = useCallback(
+    (node: MapNode) => {
+      if (pathId && activePath) {
+        const idx = activePath.nodeIds.indexOf(node.id);
+        if (idx >= 0) {
+          activatePath(activePath, idx);
+          return;
+        }
+        setPathId(null);
+        setPathStep(0);
+        setSelectedEdge(null);
+        setSelected((prev) => {
+          if (prev && prev.id !== node.id) setNodeHistory((h) => [...h.slice(-19), prev.id]);
+          return node;
+        });
+        patchParams((next) => {
+          next.delete('path');
+          next.delete('step');
+          next.set('node', node.id);
+          next.delete('edge');
+        });
+        window.setTimeout(() => canvasRef.current?.focusSelected(), 80);
+        return;
+      }
+      selectNode(node);
+      window.setTimeout(() => canvasRef.current?.focusSelected(), 80);
+    },
+    [pathId, activePath, activatePath, selectNode, patchParams],
+  );
+
+  const goBackNode = useCallback(() => {
+    setNodeHistory((h) => {
+      if (!h.length) return h;
+      const prevId = h[h.length - 1];
+      const n = byId.get(prevId) ?? null;
+      if (n) selectNode(n, { fromHistory: true });
+      return h.slice(0, -1);
+    });
+  }, [byId, selectNode]);
+
+  const onCanvasSelect = useCallback(
+    (node: MapNode | null) => {
+      if (node && pathId && activePath) {
+        const idx = activePath.nodeIds.indexOf(node.id);
+        if (idx >= 0) {
+          activatePath(activePath, idx);
+          return;
+        }
+      }
+      selectNode(node);
+    },
+    [pathId, activePath, activatePath, selectNode],
   );
 
   // Restore path selection when cold-opening ?path=
@@ -599,7 +668,7 @@ export default function MapPage() {
             ) : null}
           </div>
 
-          <div className="cm-filters" role="group" aria-label="节点类型筛选">
+          <div className="cm-filters cm-filters--chips" role="group" aria-label="节点类型筛选">
             {TYPE_FILTERS.filter(
               (f) => f.key === 'all' || presentTypes.has(f.key as NodeType),
             ).map((f) => (
@@ -613,6 +682,20 @@ export default function MapPage() {
               </button>
             ))}
           </div>
+          <select
+            className="cm-select cm-filters--select"
+            aria-label="节点类型"
+            value={filter}
+            onChange={(e) => setFilterAndUrl(e.target.value as TypeFilter)}
+          >
+            {TYPE_FILTERS.filter(
+              (f) => f.key === 'all' || presentTypes.has(f.key as NodeType),
+            ).map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
 
           <div className="cm-chapter-filter">
             <select
@@ -694,7 +777,7 @@ export default function MapPage() {
               onClick={() => activatePath(p, 0)}
               title={p.description}
             >
-              {p.title}
+              {({ 'path-weiyi': '唯一真理观', 'path-shuoli': '说理与对话', 'path-dazai': '此在与本真' } as Record<string, string>)[p.id] ?? p.title}
             </button>
           ))}
           {activePath ? (
@@ -729,7 +812,9 @@ export default function MapPage() {
         </div>
 
         <div className="cm-stats">
-          {qTrim && visibleStats ? (
+          {activePath ? (
+            <span>这条路径 {activePath.nodeIds.length} 步</span>
+          ) : qTrim && visibleStats ? (
             <>
               <span>命中 {visibleStats.hitCount}</span>
               <span>全库 {visibleStats.totalCount}</span>
@@ -796,39 +881,10 @@ export default function MapPage() {
             highlightPathIds={pathHighlight}
             pathStepIndex={activePath ? pathStep : null}
             showStructuralEdges={showStructural}
-            onSelect={selectNode}
+            onSelect={onCanvasSelect}
             onSelectEdge={selectEdge}
             onVisibleStats={setVisibleStats}
           />
-
-          <div className="cm-view-controls">
-            <button type="button" className="cm-btn" onClick={() => canvasRef.current?.zoomIn()}>
-              放大
-            </button>
-            <button type="button" className="cm-btn" onClick={() => canvasRef.current?.zoomOut()}>
-              缩小
-            </button>
-            <button type="button" className="cm-btn" onClick={() => canvasRef.current?.fitView()}>
-              适配可见
-            </button>
-            <button
-              type="button"
-              className="cm-btn"
-              onClick={() => canvasRef.current?.focusSelected()}
-              disabled={!selected && !pathHighlight}
-            >
-              聚焦邻域
-            </button>
-            {selected?.type === 'chapter' ? (
-              <button
-                type="button"
-                className="cm-btn"
-                onClick={() => focusChapter(selected.id)}
-              >
-                只看这一章
-              </button>
-            ) : null}
-          </div>
         </div>
 
         {selected ? (
@@ -837,7 +893,8 @@ export default function MapPage() {
             graph={graph}
             meta={meta}
             onClose={() => selectNode(null)}
-            onSelectRelated={(n) => selectNode(n)}
+            onSelectRelated={selectRelated}
+            onBack={nodeHistory.length ? goBackNode : undefined}
             onFocusChapter={focusChapterByLabel}
           />
         ) : selectedEdge ? (
@@ -855,6 +912,34 @@ export default function MapPage() {
       </main>
 
       {copied ? <div className="cm-toast" role="status">已复制当前视图链接</div> : null}
+
+      {tipsOpen ? (
+        <div className="cm-tips" role="dialog" aria-label="快速提示">
+          <div className="cm-tips__card">
+            <h2>怎么读这张图</h2>
+            <ol>
+              <li>顶栏「路径」带你一步步走完一条思路。</li>
+              <li>点「下一步 / 上一步」，或点节点上的序号。</li>
+              <li>抽屉里点「相关」可离开路径看邻域；「退出路径」回全图。</li>
+              <li>手机上详情从下方滑出，可继续看地图上半部分。</li>
+            </ol>
+            <button
+              type="button"
+              className="cm-btn cm-btn--primary"
+              onClick={() => {
+                try {
+                  localStorage.setItem('cm-tips-v1', '1');
+                } catch {
+                  /* ignore */
+                }
+                setTipsOpen(false);
+              }}
+            >
+              知道了
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {helpOpen ? (
         <div className="cm-help" role="dialog" aria-label="快捷键">

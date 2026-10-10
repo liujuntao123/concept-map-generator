@@ -21,6 +21,7 @@ interface Props {
   meta: MapMeta;
   onClose: () => void;
   onSelectRelated: (node: MapNode) => void;
+  onBack?: () => void;
   onFocusChapter?: (chapterLabel: string) => void;
 }
 
@@ -30,6 +31,7 @@ export default function DetailDrawer({
   meta,
   onClose,
   onSelectRelated,
+  onBack,
   onFocusChapter,
 }: Props) {
   const [copied, setCopied] = useState(false);
@@ -74,6 +76,11 @@ export default function DetailDrawer({
             ))}
           </div>
           <h2 title={node.label}>{node.label}</h2>
+          {onBack ? (
+            <button type="button" className="cm-btn cm-btn--ghost cm-drawer__back" onClick={onBack}>
+              ← 返回上一概念
+            </button>
+          ) : null}
         </div>
         <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">
           ×

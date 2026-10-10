@@ -23,7 +23,7 @@ export default function MapLegend() {
             <span className={`cm-legend__line cm-legend__line--${t}`} aria-hidden />
             <span>
               {EDGE_TYPE_LABEL[t] ?? t}
-              {t === 'contains' ? '（聚焦时短链）' : ''}
+              {t === 'contains' ? '（默认隐藏，可在「更多」打开）' : ''}
             </span>
           </div>
         ))}

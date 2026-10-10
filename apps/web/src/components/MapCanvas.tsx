@@ -16,7 +16,7 @@ import '@xyflow/react/dist/style.css';
 
 import GraphNode from './GraphNode';
 import MapLegend from './MapLegend';
-import { layoutWithDagre } from '../lib/layout';
+import { layoutPathSpine, layoutWithDagre } from '../lib/layout';
 import {
   chapterSubgraphIds,
   edgeTypeColor,
@@ -121,18 +121,15 @@ function MapCanvasInner(
     return m;
   }, [highlightPathIds]);
 
-  /** Ordered consecutive pairs along the tour */
-  const pathEdgeKeys = useMemo(() => {
-    const s = new Set<string>();
-    if (!highlightPathIds || highlightPathIds.length < 2) return s;
-    for (let i = 0; i < highlightPathIds.length - 1; i++) {
-      const a = highlightPathIds[i];
-      const b = highlightPathIds[i + 1];
-      s.add(`${a}|${b}`);
-      s.add(`${b}|${a}`);
-    }
-    return s;
-  }, [highlightPathIds]);
+  const currentPathNodeId =
+    pathStepIndex != null && highlightPathIds?.[pathStepIndex]
+      ? highlightPathIds[pathStepIndex]
+      : null;
+
+  const focusIds = useMemo(() => {
+    if (!chapterFocusId) return null;
+    return chapterSubgraphIds(graph, chapterFocusId, adj);
+  }, [graph, chapterFocusId, adj]);
 
   const neighborhoodSet = useMemo(() => {
     if (pathSet) return pathSet;
@@ -142,12 +139,7 @@ function MapCanvasInner(
 
   const { initialNodes, initialEdges, hitIds, visibleIds } = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let focusIds: Set<string> | null = null;
-    if (chapterFocusId) {
-      focusIds = chapterSubgraphIds(graph, chapterFocusId, adj);
-    }
 
-    // Ux2-4: path mode → only path nodes
     let candidate = graph.nodes;
     if (pathSet) {
       candidate = graph.nodes.filter((n) => pathSet.has(n.id));
@@ -162,7 +154,6 @@ function MapCanvasInner(
     );
 
     const visible = new Set(hits);
-
     if (pathSet) {
       for (const id of pathSet) if (byId.has(id)) visible.add(id);
     }
@@ -186,15 +177,17 @@ function MapCanvasInner(
     const rfNodes: Node[] = graph.nodes
       .filter((n) => visible.has(n.id))
       .map((n) => {
-        const isSel = n.id === selectedId;
+        const isSel = n.id === selectedId || n.id === currentPathNodeId;
         const isNb = neighborSet.has(n.id);
         const isHit = Boolean(q && hits.has(n.id));
         const isCtx = Boolean(q && contextIds.has(n.id));
+        const inFocus = focusIds ? focusIds.has(n.id) : true;
         const inNbhd = neighborhoodSet ? neighborhoodSet.has(n.id) : true;
+        // Ux3-6: do NOT dim nodes inside focused chapter
         const dimmed = Boolean(
-          (neighborhoodSet && !inNbhd && !isHit) ||
-            (selectedId && !isSel && !isNb && !isHit && !pathSet) ||
-            (pathSet && !pathSet.has(n.id) && !isSel) ||
+          (pathSet && n.id !== currentPathNodeId && !isSel) ||
+            (!pathSet && neighborhoodSet && !inNbhd && !isHit && !(focusIds && inFocus)) ||
+            (!pathSet && selectedId && !isSel && !isNb && !isHit && !focusIds) ||
             (q && isCtx && !isSel),
         );
         return {
@@ -211,31 +204,79 @@ function MapCanvasInner(
             searchContext: isCtx,
             pathStep: pathIndex.get(n.id) ?? null,
           },
-          selected:
-            isSel || (pathStepIndex != null && highlightPathIds?.[pathStepIndex] === n.id),
+          selected: isSel,
           draggable: false,
           connectable: false,
         };
       });
 
     const showContains =
-      showStructuralEdges || Boolean(chapterFocusId) || Boolean(pathSet);
+      showStructuralEdges || Boolean(chapterFocusId);
 
-    const rfEdges: Edge[] = graph.edges
-      .filter((e) => visible.has(e.source) && visible.has(e.target))
-      .filter((e) => {
-        if (pathSet) {
-          // path mode: only consecutive tour edges (or any edge between consecutive pair)
-          return pathEdgeKeys.has(`${e.source}|${e.target}`);
-        }
-        if (isStructuralEdge(e)) return showContains;
-        return true;
-      })
-      .map((e) => {
+    // --- Edges ---
+    const rfEdges: Edge[] = [];
+
+    if (pathSet && highlightPathIds && highlightPathIds.length >= 2) {
+      // Ux3-2: spine edges in step order; invent「下一步」when missing
+      for (let i = 0; i < highlightPathIds.length - 1; i++) {
+        const a = highlightPathIds[i];
+        const b = highlightPathIds[i + 1];
+        if (!visible.has(a) || !visible.has(b)) continue;
+        const existing = graph.edges.find(
+          (e) =>
+            (e.source === a && e.target === b) || (e.source === b && e.target === a),
+        );
+        const isCurrentStep = pathStepIndex === i || pathStepIndex === i + 1;
+        const synId = `path-next:${a}>${b}`;
+        const raw: MapEdge = existing
+          ? { ...existing, source: a, target: b }
+          : {
+              id: synId,
+              source: a,
+              target: b,
+              type: 'related',
+              label: '下一步',
+            };
+        const selected = raw.id === selectedEdgeId || (!existing && selectedEdgeId === synId);
+        const showLabel = true;
+        rfEdges.push({
+          id: existing?.id ?? synId,
+          source: a,
+          target: b,
+          label: showLabel ? (existing?.label ?? '下一步') : undefined,
+          type: 'smoothstep',
+          animated: false,
+          interactionWidth: 16,
+          zIndex: 25,
+          className: [
+            'is-path-edge',
+            !existing ? 'is-path-synthetic' : '',
+            isCurrentStep || selected ? 'is-hl' : 'is-path-dim',
+            `cm-edge--${raw.type}`,
+          ]
+            .filter(Boolean)
+            .join(' '),
+          markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+          style: {
+            stroke: selected || isCurrentStep ? 'var(--accent)' : edgeTypeColor(String(raw.type)),
+            strokeWidth: selected || isCurrentStep ? 2.8 : 2,
+            strokeDasharray: existing ? undefined : '5 5',
+            opacity: isCurrentStep || selected ? 1 : 0.45,
+          },
+          labelStyle: { fill: 'var(--text)', fontSize: 11, fontWeight: 650 },
+          labelBgStyle: { fill: 'var(--bg-elev)', fillOpacity: 0.96 },
+          labelBgPadding: [5, 3] as [number, number],
+          labelBgBorderRadius: 4,
+          data: { edge: raw },
+        });
+      }
+    } else {
+      for (const e of graph.edges) {
+        if (!visible.has(e.source) || !visible.has(e.target)) continue;
+        if (isStructuralEdge(e) && !showContains) continue;
         const structural = isStructuralEdge(e);
         const touchesSel =
           selectedId != null && (e.source === selectedId || e.target === selectedId);
-        const inPath = pathEdgeKeys.has(`${e.source}|${e.target}`);
         const inNbhd = Boolean(
           neighborhoodSet &&
             neighborhoodSet.has(e.source) &&
@@ -243,42 +284,31 @@ function MapCanvasInner(
         );
         const selected = e.id === selectedEdgeId;
         const hovered = e.id === hoveredEdgeId;
-        // Ux2-5: show verb labels on selected neighborhood
-        const showLabel = selected || hovered || inPath || touchesSel;
-        const farFade = Boolean(
-          !pathSet && neighborhoodSet && !inNbhd && !inPath && !touchesSel,
-        );
+        const showLabel = selected || hovered || touchesSel;
+        const farFade = Boolean(neighborhoodSet && !inNbhd && !touchesSel && !focusIds);
         const dimmed = Boolean(
-          structural ||
-            (selectedId && !touchesSel && !inPath) ||
-            (pathSet && !inPath) ||
-            farFade,
+          structural || (selectedId && !touchesSel) || farFade,
         );
-
         const stroke =
-          selected || hovered || touchesSel || inPath
+          selected || hovered || touchesSel
             ? 'var(--accent)'
             : edgeTypeColor(String(e.type));
-
         const strokeDasharray =
           e.type === 'contrasts' ? '6 4' : e.type === 'cites' ? '2 3' : undefined;
-
-        return {
+        rfEdges.push({
           id: e.id,
           source: e.source,
           target: e.target,
           label: showLabel ? e.label : undefined,
           type: 'smoothstep',
-          pathOptions: { borderRadius: 12, offset: 12 },
           animated: false,
           interactionWidth: 16,
-          zIndex: selected || hovered || inPath || touchesSel ? 20 : farFade ? 0 : 2,
+          zIndex: selected || hovered || touchesSel ? 20 : farFade ? 0 : 2,
           className: [
             dimmed ? 'is-dimmed' : '',
             farFade ? 'is-far' : '',
             structural ? 'is-structural' : '',
-            inPath ? 'is-path-edge' : '',
-            touchesSel || selected || inPath ? 'is-hl' : '',
+            touchesSel || selected ? 'is-hl' : '',
             `cm-edge--${e.type}`,
           ]
             .filter(Boolean)
@@ -288,31 +318,23 @@ function MapCanvasInner(
             : { type: MarkerType.ArrowClosed, width: 12, height: 12 },
           style: {
             stroke,
-            strokeWidth: selected || touchesSel || inPath ? 2.6 : structural ? 1.2 : 1.5,
+            strokeWidth: selected || touchesSel ? 2.6 : structural ? 1.2 : 1.5,
             strokeDasharray,
             opacity: structural ? 0.28 : farFade ? 0.1 : dimmed ? 0.32 : 1,
           },
-          labelStyle: {
-            fill: 'var(--text)',
-            fontSize: 11,
-            fontWeight: 650,
-          },
+          labelStyle: { fill: 'var(--text)', fontSize: 11, fontWeight: 650 },
           labelBgStyle: { fill: 'var(--bg-elev)', fillOpacity: 0.96 },
           labelBgPadding: [5, 3] as [number, number],
           labelBgBorderRadius: 4,
           data: { edge: e },
-        };
-      });
+        });
+      }
+    }
 
-    rfEdges.sort((a, b) => {
-      const score = (e: Edge) =>
-        (e.id === selectedEdgeId ? 4 : 0) +
-        ((e.className || '').includes('is-hl') ? 2 : 0) +
-        ((e.className || '').includes('is-path-edge') ? 1 : 0);
-      return score(a) - score(b);
-    });
+    const laid = pathSet && highlightPathIds
+      ? layoutPathSpine(rfNodes, highlightPathIds)
+      : layoutWithDagre(rfNodes, rfEdges, 'TB');
 
-    const laid = layoutWithDagre(rfNodes, rfEdges, 'TB');
     return {
       initialNodes: laid,
       initialEdges: rfEdges,
@@ -323,7 +345,7 @@ function MapCanvasInner(
     graph,
     filter,
     query,
-    chapterFocusId,
+    focusIds,
     adj,
     selectedId,
     selectedEdgeId,
@@ -332,11 +354,12 @@ function MapCanvasInner(
     pathIndex,
     pathStepIndex,
     highlightPathIds,
-    pathEdgeKeys,
+    currentPathNodeId,
     neighborhoodSet,
     byId,
     showStructuralEdges,
     hoveredEdgeId,
+    chapterFocusId,
   ]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -358,7 +381,7 @@ function MapCanvasInner(
   const fitReadable = useCallback(
     (duration = 0) => {
       void fitView({
-        padding: 0.22,
+        padding: 0.32,
         minZoom: READABLE_MIN_ZOOM,
         maxZoom: 1.15,
         duration,
@@ -381,7 +404,7 @@ function MapCanvasInner(
       }
       void fitView({
         nodes: present.map((id) => ({ id })),
-        padding: 0.32,
+        padding: 0.42,
         minZoom: READABLE_MIN_ZOOM,
         maxZoom: 1.2,
         duration: 360,
@@ -442,13 +465,28 @@ function MapCanvasInner(
       const t = window.setTimeout(() => focusNeighborhood(highlightPathIds), 120);
       return () => window.clearTimeout(t);
     }
+    if (selectedEdgeId) {
+      let e = graph.edges.find((x) => x.id === selectedEdgeId);
+      if (!e && selectedEdgeId.startsWith('path-next:')) {
+        const body = selectedEdgeId.slice('path-next:'.length);
+        const [sa, sb] = body.split('>');
+        if (sa && sb) e = { id: selectedEdgeId, source: sa, target: sb, type: 'related', label: '下一步' };
+      }
+      if (e) {
+        const t = window.setTimeout(
+          () => focusNeighborhood([e!.source, e!.target]),
+          120,
+        );
+        return () => window.clearTimeout(t);
+      }
+    }
     if (!selectedId) return;
     const t = window.setTimeout(() => {
       focusNeighborhood([selectedId, ...neighborsOf(adj, selectedId)]);
     }, 120);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, highlightPathIds?.join('|'), nodes.length]);
+  }, [selectedId, selectedEdgeId, highlightPathIds?.join('|'), pathStepIndex, nodes.length]);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -510,6 +548,7 @@ function MapCanvasInner(
         elementsSelectable
         deleteKeyCode={null}
         proOptions={{ hideAttribution: true }}
+        className="cm-flow"
         onInit={() => {
           if (highlightPathIds?.length) focusNeighborhood(highlightPathIds);
           else if (selectedId)
@@ -520,10 +559,17 @@ function MapCanvasInner(
         <Background gap={22} size={1} color="var(--rf-bg-dot)" />
         <MiniMap
           position="bottom-right"
-          nodeColor={(n) => nodeTypeColor((n.type as string) || 'concept')}
-          maskColor="color-mix(in srgb, var(--bg) 70%, transparent)"
+          nodeColor={(n) => {
+            if (currentPathNodeId && n.id === currentPathNodeId) return 'var(--accent)';
+            if (pathSet?.has(n.id)) return 'var(--claim)';
+            if (chapterFocusId && n.id === chapterFocusId) return 'var(--accent)';
+            if (focusIds?.has(n.id)) return nodeTypeColor((n.type as string) || 'concept');
+            return nodeTypeColor((n.type as string) || 'concept');
+          }}
+          maskColor="color-mix(in srgb, var(--bg) 55%, transparent)"
           pannable
           zoomable
+          className="cm-minimap"
         />
       </ReactFlow>
       <div className="cm-zoom-controls" role="group" aria-label="缩放">
@@ -532,6 +578,20 @@ function MapCanvasInner(
         </button>
         <button type="button" className="cm-btn" onClick={() => zoomTowardSelection('out')}>
           缩小
+        </button>
+        <button type="button" className="cm-btn" onClick={() => fitReadable(300)}>
+          适配可见
+        </button>
+        <button
+          type="button"
+          className="cm-btn"
+          onClick={() => {
+            if (selectedId) focusNeighborhood([selectedId, ...neighborSet]);
+            else if (highlightPathIds?.length) focusNeighborhood(highlightPathIds);
+            else fitReadable(300);
+          }}
+        >
+          聚焦邻域
         </button>
       </div>
       <MapLegend />

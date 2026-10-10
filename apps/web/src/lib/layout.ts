@@ -81,3 +81,26 @@ export function layoutWithDagre(
     };
   });
 }
+
+/** Vertical spine for path tour: one column in step order. */
+export function layoutPathSpine(
+  nodes: Node[],
+  pathIds: string[],
+  gapY = 110,
+): Node[] {
+  const order = new Map(pathIds.map((id, i) => [id, i]));
+  const cx = 280;
+  const startY = 40;
+  return nodes.map((n) => {
+    const i = order.get(n.id) ?? 0;
+    const sz = nodeCardSize(n.type || (n.data as { nodeType?: string } | undefined)?.nodeType);
+    return {
+      ...n,
+      position: {
+        x: cx - sz.width / 2,
+        y: startY + i * gapY,
+      },
+      style: { ...(n.style || {}), width: sz.width, height: sz.height },
+    };
+  });
+}

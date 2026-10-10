@@ -55,11 +55,27 @@ export function matchesQuery(n: MapNode, q: string): boolean {
 /** Best snippet field for a search hit, with optional mark of query. */
 export function snippetForQuery(n: MapNode, q: string): string {
   const qq = q.trim().toLowerCase();
+  // Prefer label → tags → summary (概要) over excerpt so multi-hit lists are not the same paste
   const fields = [n.label, ...(n.tags ?? []), n.summary, n.source?.excerpt ?? ''];
+  const clean = (raw: string) =>
+    raw
+      .replace(/（[^）]{0,40}）/g, '')
+      .replace(/\([^)]{0,40}\)/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   for (const f of fields) {
     if (!f) continue;
     if (!qq || f.toLowerCase().includes(qq)) {
-      const s = f.trim();
+      let s = clean(f);
+      if (!s) continue;
+      // Prefer summary when query only hits identical excerpt across nodes
+      if (f === n.source?.excerpt && n.summary && n.summary.trim()) {
+        const sum = clean(n.summary);
+        if (sum && (!qq || sum.toLowerCase().includes(qq) || !s.toLowerCase().includes(qq))) {
+          // if excerpt matches but we have summary, and summary also relates or excerpt is generic: use summary
+          if (sum.length > 8) s = sum;
+        }
+      }
       if (s.length <= 96) return s;
       if (!qq) return s.slice(0, 94) + '…';
       const i = s.toLowerCase().indexOf(qq);
@@ -69,7 +85,7 @@ export function snippetForQuery(n: MapNode, q: string): string {
       return (start > 0 ? '…' : '') + s.slice(start, end) + (end < s.length ? '…' : '');
     }
   }
-  return (n.summary || n.label || '').slice(0, 96);
+  return clean(n.summary || n.label || '').slice(0, 96);
 }
 
 const BOILERPLATE_RES: RegExp[] = [
@@ -298,22 +314,31 @@ export function edgeRelationSentence(
   sourceLabel: string,
   targetLabel: string,
 ): string {
-  const typeLabel: Record<string, string> = {
+  const typeZh: Record<string, string> = {
     related: '相关',
     contains: '包含',
     contrasts: '对照',
     cites: '引用',
   };
-  const typeZh = typeLabel[String(edge.type)] ?? String(edge.type);
-  let rel = (edge.label || '').trim() || typeZh;
-  // strip leftover "（原关系类型：foo）"
-  rel = rel.replace(/（原关系类型：[^）]+）/g, '').trim() || typeZh;
-  if (rel === typeZh) {
-    // phrase by type
-    if (edge.type === 'contains') return `「${sourceLabel}」收录 / 包含「${targetLabel}」。`;
-    if (edge.type === 'contrasts') return `「${sourceLabel}」与「${targetLabel}」形成对照。`;
-    if (edge.type === 'cites') return `「${sourceLabel}」引用或指向「${targetLabel}」。`;
-    return `「${sourceLabel}」与「${targetLabel}」相关。`;
+  const kind = typeZh[String(edge.type)] ?? String(edge.type);
+  let rel = (edge.label || '').trim() || kind;
+  rel = rel.replace(/（原关系类型：[^）]+）/g, '').trim() || kind;
+  // synthetic path step
+  if (edge.id.startsWith('path-next:') || rel === '下一步') {
+    return `顺着路径，下一步从「${sourceLabel}」走到「${targetLabel}」。`;
   }
-  return `「${sourceLabel}」通过「${rel}」关系到「${targetLabel}」。`;
+  if (edge.type === 'contains' || rel === '收录' || rel === '包含') {
+    return `「${sourceLabel}」里收有「${targetLabel}」。`;
+  }
+  if (edge.type === 'contrasts' || rel.includes('对照')) {
+    return `「${sourceLabel}」与「${targetLabel}」相互对照：${rel === kind ? '一正一反，互为参照' : rel}。`;
+  }
+  if (edge.type === 'cites') {
+    return `「${sourceLabel}」指向 / 引用「${targetLabel}」。`;
+  }
+  // verb-like labels: 阐发、互依、转向…
+  if (rel !== kind) {
+    return `「${sourceLabel}」${rel}「${targetLabel}」。`;
+  }
+  return `「${sourceLabel}」与「${targetLabel}」彼此关联。`;
 }
