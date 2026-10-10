@@ -8,6 +8,7 @@ import {
   IconPath,
   IconSignal,
   IconSkip,
+  pathThemeIcon,
 } from './icons';
 import type { FeaturedPath, MapNode } from '../types/graph';
 
@@ -57,37 +58,44 @@ export default function PathGuide({
 
   return (
     <section className="cm-path-guide cm-path-guide--card" aria-label="路径导读">
-      <div className="cm-path-guide__meta">
-        {minutes != null ? (
-          <span className="cm-path-guide__pill">
-            <IconClock size={14} /> 约 {minutes} 分钟
-          </span>
-        ) : null}
-        {difficulty ? (
-          <span className="cm-path-guide__pill">
-            <IconSignal size={14} /> {difficulty}
-          </span>
-        ) : null}
-        <span className="cm-path-guide__pill">
-          <IconPath size={14} /> 第 {stepIndex + 1}/{n} 步
-        </span>
-        {path.arc ? <span className="cm-path-guide__arc">{path.arc}</span> : null}
-      </div>
+      <div className="cm-path-guide__head">
+        <div className="cm-path-guide__theme-icon" aria-hidden>
+          {pathThemeIcon(path.theme || path.id || path.title, 32)}
+        </div>
+        <div className="cm-path-guide__head-main">
+          <div className="cm-path-guide__meta">
+            {minutes != null ? (
+              <span className="cm-path-guide__pill">
+                <IconClock size={14} /> 约 {minutes} 分钟
+              </span>
+            ) : null}
+            {difficulty ? (
+              <span className="cm-path-guide__pill">
+                <IconSignal size={14} /> {difficulty}
+              </span>
+            ) : null}
+            <span className="cm-path-guide__pill">
+              <IconPath size={14} /> 第 {stepIndex + 1}/{n} 步
+            </span>
+            {path.arc ? <span className="cm-path-guide__arc">{path.arc}</span> : null}
+          </div>
 
-      <div className="cm-path-guide__now">
-        <div className="cm-path-guide__now-label">这一步</div>
-        <strong className="cm-path-guide__now-title">{currentNode?.label ?? '…'}</strong>
-        <p className="cm-path-guide__why">{why}</p>
-        {nextNode ? (
-          <p className="cm-path-guide__next">
-            <span className="cm-path-guide__next-label">下一步</span>
-            {edgeIntoNext ? <span className="cm-path-guide__verb">{edgeIntoNext}</span> : null}
-            <span className="cm-path-guide__next-name">{nextNode.label}</span>
-            {nextWhy ? <span className="cm-path-guide__next-why">——{nextWhy}</span> : null}
-          </p>
-        ) : (
-          <p className="cm-path-guide__next is-end">已到路径终点</p>
-        )}
+          <div className="cm-path-guide__now">
+            <div className="cm-path-guide__now-label">这一步</div>
+            <strong className="cm-path-guide__now-title">{currentNode?.label ?? '…'}</strong>
+            <p className="cm-path-guide__why">{why}</p>
+            {nextNode ? (
+              <p className="cm-path-guide__next">
+                <span className="cm-path-guide__next-label">下一步</span>
+                {edgeIntoNext ? <span className="cm-path-guide__verb">{edgeIntoNext}</span> : null}
+                <span className="cm-path-guide__next-name">{nextNode.label}</span>
+                {nextWhy ? <span className="cm-path-guide__next-why">——{nextWhy}</span> : null}
+              </p>
+            ) : (
+              <p className="cm-path-guide__next is-end">已到路径终点</p>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="cm-path-dots" role="tablist" aria-label="路径步骤">

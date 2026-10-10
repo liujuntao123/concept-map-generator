@@ -50,7 +50,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
   const chips = paths.slice(0, 3);
 
   return (
-    <article className="cm-book-card cm-book-card--wide cm-book-card--v5">
+    <article className="cm-book-card cm-book-card--wide cm-book-card--v5" data-book={m.id}>
       <div className="cm-book-card__accent" aria-hidden />
       <div className="cm-book-card__cover cm-book-card__cover--art" aria-hidden>
         <img src={coverOf(m.id)} alt="" width={120} height={156} />

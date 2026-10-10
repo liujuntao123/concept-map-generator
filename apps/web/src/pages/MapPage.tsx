@@ -740,17 +740,17 @@ export default function MapPage() {
       className={`cm-shell${hasDrawer ? ' has-drawer' : ''}${hasDrawer && !sheetExpanded ? ' has-drawer-peek' : ''}`}
     >
       <header className="cm-topbar cm-topbar--map">
-        <div className="cm-brand">
+        <div className="cm-brand cm-brand--map">
           <div className="cm-brand__mark cm-brand__mark--book" aria-hidden>
-            <IconBook size={18} />
+            <IconBook size={22} />
           </div>
-          <div>
-            <Link className="cm-back" to="/">
-              ← 图书列表
+          <div className="cm-brand__text">
+            <Link className="cm-back" to="/" aria-label="返回图书列表" title="返回图书列表">
+              ←
             </Link>
             <h1>{meta.title}</h1>
             <p className="cm-brand__sub">
-              {meta.author ? `${meta.author}` : '概念地图'}
+              {meta.author ? meta.author : '概念地图'}
               {meta.generatedAt ? ` · ${formatGeneratedDate(meta.generatedAt)}` : ''}
             </p>
           </div>
@@ -924,7 +924,7 @@ export default function MapPage() {
             >
               {pathThemeIcon(p.theme || p.id || p.title, 15)}
               <span>{p.theme || p.title}</span>
-              {p.durationMin ? <em>约 {p.durationMin}′</em> : null}
+              {p.durationMin ? <em title={`${p.durationMin}′`}>约 {p.durationMin} 分钟</em> : null}
             </button>
           ))}
         </div>
