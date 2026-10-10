@@ -7,11 +7,13 @@ import MapCanvas, {
 } from '../components/MapCanvas';
 import DetailDrawer from '../components/DetailDrawer';
 import EdgePanel from '../components/EdgePanel';
+import SearchHits from '../components/SearchHits';
 import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedAt, matchesQuery } from '../lib/graphUtils';
+import { formatGeneratedDate, groupChapters, matchesQuery } from '../lib/graphUtils';
 import { useTheme } from '../hooks/useTheme';
 import {
   type ConceptGraph,
+  type FeaturedPath,
   type MapEdge,
   type MapMeta,
   type MapNode,
@@ -34,6 +36,7 @@ export default function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, toggle } = useTheme();
   const canvasRef = useRef<MapCanvasHandle>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const [graph, setGraph] = useState<ConceptGraph | null>(null);
   const [meta, setMeta] = useState<MapMeta | null>(null);
@@ -46,8 +49,16 @@ export default function MapPage() {
   const [chapterFocusId, setChapterFocusId] = useState<string | null>(
     () => searchParams.get('focus') ?? null,
   );
-  const [pathHighlight, setPathHighlight] = useState<string[] | null>(null);
+  const [pathId, setPathId] = useState<string | null>(() => searchParams.get('path'));
+  const [pathStep, setPathStep] = useState(() => {
+    const s = Number(searchParams.get('step') ?? '0');
+    return Number.isFinite(s) && s >= 0 ? s : 0;
+  });
   const [visibleStats, setVisibleStats] = useState<VisibleStats | null>(null);
+  const [showStructural, setShowStructural] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +93,6 @@ export default function MapPage() {
     };
   }, [mapId]);
 
-  // Sync URL → state for type / focus / q
   useEffect(() => {
     const t = searchParams.get('type');
     if (!t || t === 'all') setFilter('all');
@@ -92,9 +102,13 @@ export default function MapPage() {
     setChapterFocusId(focus && focus.length ? focus : null);
 
     setQuery(searchParams.get('q') ?? '');
+
+    const p = searchParams.get('path');
+    setPathId(p && p.length ? p : null);
+    const s = Number(searchParams.get('step') ?? '0');
+    setPathStep(Number.isFinite(s) && s >= 0 ? s : 0);
   }, [searchParams]);
 
-  // deep link ?node= / ?edge= (M5: drop type-mismatched node on cold open)
   useEffect(() => {
     if (!graph) return;
     const nid = searchParams.get('node');
@@ -112,7 +126,6 @@ export default function MapPage() {
     if (nid) {
       const n = graph.nodes.find((x) => x.id === nid) ?? null;
       if (n && typeFilter !== 'all' && n.type !== typeFilter) {
-        // Match interactive path: clear mismatched selection + clean URL
         setSelected(null);
         setSelectedEdge(null);
         setSearchParams(
@@ -127,34 +140,8 @@ export default function MapPage() {
       }
       setSelected(n);
       setSelectedEdge(null);
-      return;
     }
-    // no node/edge in URL → leave selection alone (user may have cleared)
   }, [graph, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    const handler = (ev: Event) => {
-      const id = (ev as CustomEvent<{ id: string }>).detail?.id;
-      if (!id || !graph) return;
-      const n = graph.nodes.find((x) => x.id === id) ?? null;
-      setChapterFocusId(id);
-      setPathHighlight(null);
-      setSelected(n);
-      setSelectedEdge(null);
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('focus', id);
-          if (n) next.set('node', n.id);
-          next.delete('edge');
-          return next;
-        },
-        { replace: true },
-      );
-    };
-    window.addEventListener('cm-chapter-focus', handler);
-    return () => window.removeEventListener('cm-chapter-focus', handler);
-  }, [graph, setSearchParams]);
 
   const byId = useMemo(() => {
     const m = new Map<string, MapNode>();
@@ -166,6 +153,43 @@ export default function MapPage() {
     () => (graph ? graph.nodes.filter((n) => n.type === 'chapter') : []),
     [graph],
   );
+  const chapterGroups = useMemo(() => groupChapters(chapters), [chapters]);
+
+  const featured = useMemo<FeaturedPath[]>(
+    () => meta?.featuredPaths ?? [],
+    [meta],
+  );
+  const activePath = useMemo(
+    () => (pathId ? featured.find((p) => p.id === pathId) ?? null : null),
+    [featured, pathId],
+  );
+  const pathHighlight = activePath?.nodeIds ?? null;
+
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      const id = (ev as CustomEvent<{ id: string }>).detail?.id;
+      if (!id || !graph) return;
+      const n = graph.nodes.find((x) => x.id === id) ?? null;
+      setChapterFocusId(id);
+      setPathId(null);
+      setSelected(n);
+      setSelectedEdge(null);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('focus', id);
+          next.delete('path');
+          next.delete('step');
+          if (n) next.set('node', n.id);
+          next.delete('edge');
+          return next;
+        },
+        { replace: true },
+      );
+    };
+    window.addEventListener('cm-chapter-focus', handler);
+    return () => window.removeEventListener('cm-chapter-focus', handler);
+  }, [graph, setSearchParams]);
 
   const patchParams = useCallback(
     (mutate: (next: URLSearchParams) => void) => {
@@ -185,7 +209,6 @@ export default function MapPage() {
     (node: MapNode | null) => {
       setSelected(node);
       setSelectedEdge(null);
-      setPathHighlight(null);
       patchParams((next) => {
         if (node) next.set('node', node.id);
         else next.delete('node');
@@ -200,7 +223,6 @@ export default function MapPage() {
       setSelectedEdge(edge);
       if (edge) {
         setSelected(null);
-        setPathHighlight(null);
         patchParams((next) => {
           next.set('edge', edge.id);
           next.delete('node');
@@ -218,11 +240,8 @@ export default function MapPage() {
     (key: TypeFilter) => {
       setFilter(key);
       setSelectedEdge(null);
-      // M5: clear selection if it no longer matches the type filter
       const mismatch = Boolean(selected && key !== 'all' && selected.type !== key);
-      if (mismatch) {
-        setSelected(null);
-      }
+      if (mismatch) setSelected(null);
       patchParams((next) => {
         if (key === 'all') next.delete('type');
         else next.set('type', key);
@@ -247,10 +266,8 @@ export default function MapPage() {
     [patchParams],
   );
 
-  /** M6: write focus + node in ONE URL update so selectNode cannot drop ?focus= */
   const focusChapter = useCallback(
     (chapterId: string | null) => {
-      setPathHighlight(null);
       if (!chapterId) {
         setChapterFocusId(null);
         patchParams((next) => {
@@ -260,10 +277,13 @@ export default function MapPage() {
       }
       const n = byId.get(chapterId) ?? null;
       setChapterFocusId(chapterId);
+      setPathId(null);
       setSelected(n);
       setSelectedEdge(null);
       patchParams((next) => {
         next.set('focus', chapterId);
+        next.delete('path');
+        next.delete('step');
         if (n) next.set('node', n.id);
         else next.delete('node');
         next.delete('edge');
@@ -272,7 +292,56 @@ export default function MapPage() {
     [byId, patchParams],
   );
 
-  // M3: when search has zero hits, close drawer and clear selection
+  const activatePath = useCallback(
+    (p: FeaturedPath, step = 0) => {
+      const safeStep = Math.max(0, Math.min(step, p.nodeIds.length - 1));
+      const first = byId.get(p.nodeIds[safeStep]) ?? byId.get(p.nodeIds[0]) ?? null;
+      setPathId(p.id);
+      setPathStep(safeStep);
+      setChapterFocusId(null);
+      setSelected(first);
+      setSelectedEdge(null);
+      patchParams((next) => {
+        next.set('path', p.id);
+        next.set('step', String(safeStep));
+        next.delete('focus');
+        if (first) next.set('node', first.id);
+        else next.delete('node');
+        next.delete('edge');
+      });
+    },
+    [byId, patchParams],
+  );
+
+  const clearPath = useCallback(() => {
+    setPathId(null);
+    setPathStep(0);
+    patchParams((next) => {
+      next.delete('path');
+      next.delete('step');
+    });
+  }, [patchParams]);
+
+  const goPathStep = useCallback(
+    (delta: number) => {
+      if (!activePath) return;
+      const next = Math.max(0, Math.min(activePath.nodeIds.length - 1, pathStep + delta));
+      activatePath(activePath, next);
+    },
+    [activePath, pathStep, activatePath],
+  );
+
+  // Restore path selection when cold-opening ?path=
+  useEffect(() => {
+    if (!graph || !meta || !pathId) return;
+    const p = meta.featuredPaths?.find((x) => x.id === pathId);
+    if (!p) return;
+    const nid = p.nodeIds[pathStep] ?? p.nodeIds[0];
+    const n = graph.nodes.find((x) => x.id === nid) ?? null;
+    if (n && selected?.id !== n.id) setSelected(n);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graph, meta, pathId]);
+
   useEffect(() => {
     if (!graph) return;
     const q = query.trim().toLowerCase();
@@ -289,31 +358,64 @@ export default function MapPage() {
       next.delete('node');
       next.delete('edge');
     });
-    // intentionally omit selected/selectedEdge from deps to run on query/filter change only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph, query, filter, patchParams]);
 
-  const filteredCycle = useMemo(() => {
+  const searchHits = useMemo(() => {
     if (!graph) return [] as MapNode[];
     const q = query.trim().toLowerCase();
+    if (!q) return [];
     return graph.nodes.filter((n) => {
       if (filter !== 'all' && n.type !== filter) return false;
       return matchesQuery(n, q);
     });
-  }, [graph, filter, query]);
+  }, [graph, query, filter]);
 
-  // keyboard
+  const filteredCycle = useMemo(() => {
+    if (searchHits.length) return searchHits;
+    if (!graph) return [] as MapNode[];
+    return graph.nodes.filter((n) => filter === 'all' || n.type === filter);
+  }, [searchHits, graph, filter]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+      if (e.key === '/' && !typing) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        return;
+      }
+      if ((e.key === '?' || (e.key === '/' && e.shiftKey)) && !typing) {
+        e.preventDefault();
+        setHelpOpen((v) => !v);
+        return;
+      }
+      if (typing) return;
+
       if (e.key === 'Escape') {
+        if (helpOpen) {
+          setHelpOpen(false);
+          return;
+        }
         if (selected || selectedEdge) {
           selectNode(null);
           selectEdge(null);
+        } else if (pathId) {
+          clearPath();
         } else if (chapterFocusId) {
           focusChapter(null);
         }
+        return;
+      }
+      if ((e.key === 'Enter' || e.key === ' ') && selected) {
+        // drawer already open when selected
+        return;
+      }
+      if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && activePath) {
+        e.preventDefault();
+        goPathStep(e.key === 'ArrowRight' ? 1 : -1);
         return;
       }
       if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && filteredCycle.length) {
@@ -337,6 +439,11 @@ export default function MapPage() {
     selectEdge,
     chapterFocusId,
     focusChapter,
+    helpOpen,
+    pathId,
+    clearPath,
+    activePath,
+    goPathStep,
   ]);
 
   const focusChapterByLabel = useCallback(
@@ -346,6 +453,16 @@ export default function MapPage() {
     },
     [chapters, focusChapter],
   );
+
+  const copyShareLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }, []);
 
   if (error) {
     return (
@@ -364,14 +481,11 @@ export default function MapPage() {
     );
   }
 
-  const stats = meta.stats;
   const focusChapterNode = chapterFocusId ? byId.get(chapterFocusId) : null;
   const showSuggest = searchOpen && !query.trim();
-  const featured = meta.featuredPaths ?? [];
   const hasDrawer = Boolean(selected || selectedEdge);
   const qTrim = query.trim();
   const zeroSearch = Boolean(qTrim && visibleStats && visibleStats.hitCount === 0);
-
   const presentTypes = new Set(graph.nodes.map((n) => n.type));
 
   return (
@@ -385,9 +499,8 @@ export default function MapPage() {
             </Link>
             <h1>{meta.title}</h1>
             <p>
-              {meta.subtitle ?? '概念地图'}
-              {meta.author ? ` · ${meta.author}` : ''}
-              {meta.version ? ` · v${meta.version}` : ''}
+              {meta.author ? `${meta.author}` : '概念地图'}
+              {meta.generatedAt ? ` · ${formatGeneratedDate(meta.generatedAt)}` : ''}
             </p>
           </div>
         </div>
@@ -395,9 +508,10 @@ export default function MapPage() {
         <div className="cm-toolbar">
           <div className="cm-search-wrap">
             <input
+              ref={searchRef}
               className="cm-search"
               type="search"
-              placeholder="搜索标签 / 概要 / 摘录…"
+              placeholder="搜索…（按 / 聚焦）"
               value={query}
               onChange={(e) => setQueryAndUrl(e.target.value)}
               onFocus={() => setSearchOpen(true)}
@@ -414,43 +528,16 @@ export default function MapPage() {
                     className="cm-suggest__item"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
-                      setPathHighlight(p.nodeIds);
-                      setChapterFocusId(null);
-                      const first = byId.get(p.nodeIds[0]);
-                      setSelected(first ?? null);
-                      setSelectedEdge(null);
-                      patchParams((next) => {
-                        next.delete('focus');
-                        if (first) next.set('node', first.id);
-                        else next.delete('node');
-                        next.delete('edge');
-                      });
+                      activatePath(p, 0);
                       setSearchOpen(false);
                     }}
                   >
                     <strong>{p.title}</strong>
-                    <span>{p.description}</span>
+                    <span>
+                      {p.description} · {p.nodeIds.length} 步
+                    </span>
                   </button>
                 ))}
-                <div className="cm-suggest__title">精选概念</div>
-                {graph.nodes
-                  .filter((n) => n.type === 'claim' || n.type === 'concept')
-                  .slice(0, 6)
-                  .map((n) => (
-                    <button
-                      key={n.id}
-                      type="button"
-                      className="cm-suggest__item"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        selectNode(n);
-                        setSearchOpen(false);
-                      }}
-                    >
-                      <strong>{n.label}</strong>
-                      <span>{n.summary.slice(0, 48)}…</span>
-                    </button>
-                  ))}
               </div>
             ) : null}
           </div>
@@ -470,68 +557,15 @@ export default function MapPage() {
             ))}
           </div>
 
-          <div className="cm-chapter-filter">
-            <select
-              className="cm-select"
-              aria-label="按章节筛选"
-              value={chapterFocusId ?? ''}
-              onChange={(e) => {
-                const v = e.target.value || null;
-                focusChapter(v);
-              }}
-            >
-              <option value="">全部章节</option>
-              {chapters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            {chapterFocusId || pathHighlight ? (
-              <button
-                type="button"
-                className="cm-btn"
-                onClick={() => {
-                  focusChapter(null);
-                  setPathHighlight(null);
-                }}
-              >
-                显示全部
-              </button>
-            ) : null}
-          </div>
-
-          <div
-            className="cm-stats"
-            title={`生成于 ${formatGeneratedAt(meta.generatedAt)} · 来源 ${meta.source?.file ?? ''}`}
+          <button
+            type="button"
+            className="cm-btn cm-btn--primary"
+            onClick={() => void copyShareLink()}
+            title="复制当前视图链接"
           >
-            {qTrim && visibleStats ? (
-              <>
-                <span>
-                  命中 {visibleStats.hitCount}
-                  {visibleStats.visibleCount > visibleStats.hitCount
-                    ? ` · 含邻居 ${visibleStats.visibleCount}`
-                    : ''}
-                </span>
-                <span>全库 {visibleStats.totalCount}</span>
-              </>
-            ) : filter !== 'all' && visibleStats ? (
-              <>
-                <span>可见 {visibleStats.visibleCount}</span>
-                <span>全库 {visibleStats.totalCount}</span>
-              </>
-            ) : stats ? (
-              <>
-                <span>{stats.chapters} 章节</span>
-                <span>{stats.concepts} 概念</span>
-                <span>{stats.edges} 关系</span>
-              </>
-            ) : null}
-          </div>
+            {copied ? '已复制' : '分享链接'}
+          </button>
 
-          <Link className="cm-btn cm-btn--ghost" to={`/books/${mapId}`}>
-            图书详情
-          </Link>
           <button
             type="button"
             className="cm-theme-toggle"
@@ -540,30 +574,156 @@ export default function MapPage() {
           >
             {theme === 'dark' ? '☾' : '☀'}
           </button>
+
+          <div className="cm-more-wrap">
+            <button
+              type="button"
+              className="cm-btn"
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-expanded={moreOpen}
+            >
+              更多
+            </button>
+            {moreOpen ? (
+              <div className="cm-more-menu">
+                <label className="cm-more-item">
+                  <input
+                    type="checkbox"
+                    checked={showStructural}
+                    onChange={(e) => setShowStructural(e.target.checked)}
+                  />
+                  显示收录/包含线
+                </label>
+                <button type="button" className="cm-more-item" onClick={() => setHelpOpen(true)}>
+                  键盘快捷键（?）
+                </button>
+                <Link className="cm-more-item" to={`/books/${mapId}`} onClick={() => setMoreOpen(false)}>
+                  图书详情
+                </Link>
+                <div className="cm-chapter-filter cm-more-item">
+                  <select
+                    className="cm-select"
+                    aria-label="按章节筛选"
+                    value={chapterFocusId ?? ''}
+                    onChange={(e) => {
+                      focusChapter(e.target.value || null);
+                      setMoreOpen(false);
+                    }}
+                  >
+                    <option value="">全部章节</option>
+                    {chapterGroups.map((g) => (
+                      <optgroup key={g.group} label={g.group}>
+                        {g.items.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
+
+      <div className="cm-subbar">
+        <div className="cm-path-bar" aria-label="推荐路径">
+          <span className="cm-path-bar__label">路径</span>
+          {featured.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`cm-chip${pathId === p.id ? ' is-active' : ''}`}
+              onClick={() => activatePath(p, 0)}
+              title={p.description}
+            >
+              {p.title}
+            </button>
+          ))}
+          {activePath ? (
+            <div className="cm-path-stepper">
+              <button
+                type="button"
+                className="cm-btn"
+                disabled={pathStep <= 0}
+                onClick={() => goPathStep(-1)}
+              >
+                上一步
+              </button>
+              <span>
+                {pathStep + 1} / {activePath.nodeIds.length}
+              </span>
+              <button
+                type="button"
+                className="cm-btn"
+                disabled={pathStep >= activePath.nodeIds.length - 1}
+                onClick={() => goPathStep(1)}
+              >
+                下一步
+              </button>
+              <button type="button" className="cm-btn" onClick={clearPath}>
+                退出路径
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="cm-stats">
+          {qTrim && visibleStats ? (
+            <>
+              <span>命中 {visibleStats.hitCount}</span>
+              <span>全库 {visibleStats.totalCount}</span>
+            </>
+          ) : chapterFocusId && visibleStats ? (
+            <span>本章可见 {visibleStats.visibleCount} 节点</span>
+          ) : filter !== 'all' && visibleStats ? (
+            <span>可见 {visibleStats.visibleCount}</span>
+          ) : meta.stats ? (
+            <span>
+              {meta.stats.nodes} 节点 · {meta.stats.edges} 关系 · {meta.stats.chapters} 章
+            </span>
+          ) : null}
+        </div>
+      </div>
 
       <main className="cm-main">
         <div className="cm-canvas">
           {focusChapterNode ? (
             <div className="cm-focus-banner">
-              <span>聚焦章节：{focusChapterNode.label}（双击章节可聚焦）</span>
+              <span>
+                只看这一章：{focusChapterNode.label}
+                <em className="cm-hint">（双击章节节点也可聚焦）</em>
+              </span>
               <button type="button" className="cm-btn" onClick={() => focusChapter(null)}>
                 显示全部
               </button>
             </div>
           ) : null}
+
+          {qTrim ? (
+            <SearchHits
+              hits={searchHits}
+              query={qTrim}
+              selectedId={selected?.id ?? null}
+              onSelect={(n) => {
+                selectNode(n);
+                window.setTimeout(() => canvasRef.current?.focusSelected(), 50);
+              }}
+            />
+          ) : null}
+
           {zeroSearch ? (
             <div className="cm-empty-search" role="status">
               <h2>没有匹配的节点</h2>
-              <p>
-                未找到与「{qTrim}」相关的节点。试试其他关键词，或清空搜索查看全部。
-              </p>
+              <p>未找到与「{qTrim}」相关的节点。</p>
               <button type="button" className="cm-btn" onClick={() => setQueryAndUrl('')}>
                 清空搜索
               </button>
             </div>
           ) : null}
+
           <MapCanvas
             canvasRef={canvasRef}
             graph={graph}
@@ -573,26 +733,34 @@ export default function MapPage() {
             selectedId={selected?.id ?? null}
             selectedEdgeId={selectedEdge?.id ?? null}
             highlightPathIds={pathHighlight}
+            pathStepIndex={activePath ? pathStep : null}
+            showStructuralEdges={showStructural}
             onSelect={selectNode}
             onSelectEdge={selectEdge}
             onVisibleStats={setVisibleStats}
           />
+
           <div className="cm-view-controls">
-            <button
-              type="button"
-              className="cm-btn"
-              onClick={() => canvasRef.current?.fitView()}
-            >
+            <button type="button" className="cm-btn" onClick={() => canvasRef.current?.fitView()}>
               适配全部
             </button>
             <button
               type="button"
               className="cm-btn"
               onClick={() => canvasRef.current?.focusSelected()}
-              disabled={!selected}
+              disabled={!selected && !pathHighlight}
             >
-              聚焦选中
+              聚焦邻域
             </button>
+            {selected?.type === 'chapter' ? (
+              <button
+                type="button"
+                className="cm-btn"
+                onClick={() => focusChapter(selected.id)}
+              >
+                只看这一章
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -618,6 +786,34 @@ export default function MapPage() {
           />
         ) : null}
       </main>
+
+      {helpOpen ? (
+        <div className="cm-help" role="dialog" aria-label="快捷键">
+          <div className="cm-help__card">
+            <header>
+              <h2>快捷键</h2>
+              <button type="button" className="cm-icon-btn" onClick={() => setHelpOpen(false)}>
+                ×
+              </button>
+            </header>
+            <ul>
+              <li>
+                <kbd>/</kbd> 聚焦搜索
+              </li>
+              <li>
+                <kbd>?</kbd> 打开/关闭本说明
+              </li>
+              <li>
+                <kbd>Esc</kbd> 关闭抽屉 / 退出路径或章节聚焦
+              </li>
+              <li>
+                <kbd>←</kbd> <kbd>→</kbd> 路径上一步/下一步，或在结果间切换
+              </li>
+              <li>双击章节节点：只看这一章及其语义邻居</li>
+            </ul>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

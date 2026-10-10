@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedAt } from '../lib/graphUtils';
+import { formatGeneratedDate } from '../lib/graphUtils';
 import type { MapIndexEntry, MapsIndex } from '../types/graph';
 import { STATUS_LABEL } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
@@ -222,7 +222,7 @@ export default function HomePage() {
                         </>
                       ) : null}
                       {m.generatedAt ? (
-                        <span>{formatGeneratedAt(m.generatedAt)}</span>
+                        <span>{formatGeneratedDate(m.generatedAt)}</span>
                       ) : null}
                     </div>
                     <div className="cm-book-card__actions">

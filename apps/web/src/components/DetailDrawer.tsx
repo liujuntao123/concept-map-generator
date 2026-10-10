@@ -1,5 +1,11 @@
-import { useState } from 'react';
-import { dedupeTags, formatGeneratedAt, hasDistinctContent, relatedFor } from '../lib/graphUtils';
+import { useMemo, useState } from 'react';
+import {
+  dedupeTags,
+  formatGeneratedDate,
+  isStructuralEdge,
+  readerBody,
+  relatedFor,
+} from '../lib/graphUtils';
 import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
@@ -27,15 +33,27 @@ export default function DetailDrawer({
   onFocusChapter,
 }: Props) {
   const [copied, setCopied] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const typeLabel = NODE_TYPE_LABEL[node.type as NodeType] ?? node.type;
   const related = relatedFor(graph, node.id);
-  const anchor = node.source.anchor || node.source.file;
   const tags = dedupeTags(node.type, node.tags);
-  const showContent = hasDistinctContent(node);
+  const body = readerBody(node);
+  const excerpt = (node.source.excerpt || '').trim();
+  const sourceFile = node.source.anchor || node.source.file;
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof related>();
+    for (const r of related) {
+      const k = String(r.edge.type);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(r);
+    }
+    return [...map.entries()];
+  }, [related]);
 
   async function copyExcerpt() {
     try {
-      await navigator.clipboard.writeText(node.source.excerpt);
+      await navigator.clipboard.writeText(excerpt);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -67,15 +85,59 @@ export default function DetailDrawer({
         <p>{node.summary}</p>
       </section>
 
-      {showContent ? (
+      {body ? (
         <section className="cm-drawer__section">
-          <h3>详述</h3>
-          <p className="cm-drawer__content">{node.content}</p>
+          <h3>论述</h3>
+          <p className="cm-drawer__content">{body}</p>
+        </section>
+      ) : null}
+
+      {related.length > 0 ? (
+        <section className="cm-drawer__section">
+          <h3>相关节点（{related.length}）</h3>
+          {grouped.map(([etype, items]) => (
+            <div key={etype} className="cm-related-group">
+              <div className="cm-related-group__title">
+                {EDGE_TYPE_LABEL[etype] ?? etype}
+                {etype === 'contains' ? ' · 结构' : ''}
+              </div>
+              <div className="cm-related-list">
+                {items.map(({ node: rn, edge, direction }) => {
+                  const edgeType = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
+                  const edgeLabel =
+                    edge.label && edge.label !== edgeType && !isStructuralEdge(edge)
+                      ? edge.label
+                      : null;
+                  return (
+                    <button
+                      key={`${edge.id}-${rn.id}`}
+                      type="button"
+                      className="cm-related-item"
+                      onClick={() => onSelectRelated(rn)}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="cm-related-item__meta">
+                          {edgeLabel || edgeType}
+                          {direction === 'out' ? ' →' : ' ←'}
+                        </div>
+                        <div className="cm-related-item__label" title={rn.label}>
+                          {rn.label}
+                        </div>
+                      </div>
+                      <span className={`cm-pill cm-pill--${rn.type}`}>
+                        {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </section>
       ) : null}
 
       <section className="cm-drawer__section">
-        <h3>在书中定位</h3>
+        <h3>原文摘录</h3>
         <div className="cm-locate">
           <span>
             章节：
@@ -84,65 +146,65 @@ export default function DetailDrawer({
               className="cm-btn cm-btn--ghost"
               style={{ marginLeft: 6 }}
               onClick={() => onFocusChapter?.(node.source.chapter)}
+              title="只看这一章"
             >
               {node.source.chapter}
             </button>
           </span>
-          {anchor ? (
-            <span>
-              原文文件：<code title="epub 内路径">{anchor}</code>
-            </span>
-          ) : null}
         </div>
-        <div className="cm-excerpt-wrap">
-          <blockquote className="cm-excerpt">{node.source.excerpt}</blockquote>
-          <button type="button" className="cm-copy-btn" onClick={() => void copyExcerpt()}>
-            {copied ? '已复制摘录' : '复制原文摘录'}
-          </button>
-        </div>
+        {excerpt ? (
+          <div className="cm-excerpt-wrap">
+            <blockquote className="cm-excerpt">{excerpt}</blockquote>
+            <button type="button" className="cm-copy-btn" onClick={() => void copyExcerpt()}>
+              {copied ? '已复制摘录' : '复制原文摘录'}
+            </button>
+          </div>
+        ) : (
+          <p className="cm-muted">暂无摘录</p>
+        )}
       </section>
 
-      {related.length > 0 ? (
-        <section className="cm-drawer__section">
-          <h3>相关节点（{related.length}）</h3>
-          <div className="cm-related-list">
-            {related.map(({ node: rn, edge, direction }) => {
-              const edgeType = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
-              const edgeLabel =
-                edge.label && edge.label !== edgeType ? edge.label : null;
-              return (
-                <button
-                  key={`${edge.id}-${rn.id}`}
-                  type="button"
-                  className="cm-related-item"
-                  onClick={() => onSelectRelated(rn)}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="cm-related-item__meta">
-                      {edgeType}
-                      {edgeLabel ? ` · ${edgeLabel}` : ''}
-                      {direction === 'out' ? ' →' : ' ←'}
-                    </div>
-                    <div className="cm-related-item__label" title={rn.label}>
-                      {rn.label}
-                    </div>
-                  </div>
-                  <span className={`cm-pill cm-pill--${rn.type}`}>
-                    {NODE_TYPE_LABEL[rn.type as NodeType] ?? rn.type}
-                  </span>
-                </button>
-              );
-            })}
+      <details
+        className="cm-about"
+        open={aboutOpen}
+        onToggle={(e) => setAboutOpen((e.target as HTMLDetailsElement).open)}
+      >
+        <summary>关于这张图</summary>
+        <dl className="cm-dl cm-dl--stacked">
+          <div>
+            <dt>地图版本</dt>
+            <dd>{meta.version ?? '—'}</dd>
           </div>
-        </section>
-      ) : null}
-
-      <div className="cm-meta-footer">
-        地图版本 {meta.version ?? '—'} · 生成于 {formatGeneratedAt(meta.generatedAt ?? meta.createdAt)}
-        <br />
-        来源：{meta.source?.file ?? (typeof meta.ima?.file_name === 'string' ? meta.ima.file_name : undefined) ?? '未知'}
-        {meta.author ? ` · ${meta.author}` : ''}
-      </div>
+          <div>
+            <dt>生成日期</dt>
+            <dd>{formatGeneratedDate(meta.generatedAt ?? meta.createdAt)}</dd>
+          </div>
+          <div>
+            <dt>源书文件</dt>
+            <dd>{meta.source?.file ?? '—'}</dd>
+          </div>
+          {sourceFile ? (
+            <div>
+              <dt>本节点原文文件</dt>
+              <dd>
+                <code>{sourceFile}</code>
+              </dd>
+            </div>
+          ) : null}
+          {meta.schemaVersion ? (
+            <div>
+              <dt>数据版本</dt>
+              <dd>{meta.schemaVersion}</dd>
+            </div>
+          ) : null}
+          {meta.author ? (
+            <div>
+              <dt>作者</dt>
+              <dd>{meta.author}</dd>
+            </div>
+          ) : null}
+        </dl>
+      </details>
     </aside>
   );
 }

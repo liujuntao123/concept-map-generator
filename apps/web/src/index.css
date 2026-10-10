@@ -18,6 +18,10 @@
   --shadow: rgba(0, 0, 0, 0.35);
   --topbar-bg: rgba(12, 16, 23, 0.88);
   --rf-bg-dot: #243044;
+  --edge-contains: #5b8fd4;
+  --edge-contrasts: #e0a86a;
+  --edge-cites: #6bb8c9;
+  --edge-related: #8b9bb4;
 }
 
 [data-theme='light'] {
@@ -39,6 +43,10 @@
   --shadow: rgba(30, 50, 80, 0.12);
   --topbar-bg: rgba(255, 255, 255, 0.9);
   --rf-bg-dot: #c9d4e4;
+  --edge-contains: #3b6fb0;
+  --edge-contrasts: #c47a28;
+  --edge-cites: #2a8a9c;
+  --edge-related: #5c6b82;
 }
 
 * { box-sizing: border-box; }

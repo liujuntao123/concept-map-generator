@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedAt } from '../lib/graphUtils';
+import { formatGeneratedDate } from '../lib/graphUtils';
 import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
@@ -74,7 +74,7 @@ export default function BookDetailPage() {
 
   const edgeBreakdown = meta.edgeTypeBreakdown ?? {};
 
-  const coverText = meta.coverText || meta.title?.slice(0, 2) || '?';
+  const coverText = meta.coverText || meta.title?.trim().slice(0, 1) || '?';
 
   return (
     <div className="cm-shell">
@@ -145,24 +145,11 @@ export default function BookDetailPage() {
         <section className="cm-book-detail__grid">
           <div className="cm-panel">
             <h2>规模概览</h2>
-            <dl className="cm-dl">
-              <div>
-                <dt>节点</dt>
-                <dd>{meta.stats?.nodes ?? '—'}</dd>
-              </div>
-              <div>
-                <dt>关系</dt>
-                <dd>{meta.stats?.edges ?? '—'}</dd>
-              </div>
-              <div>
-                <dt>章节</dt>
-                <dd>{meta.stats?.chapters ?? '—'}</dd>
-              </div>
-              <div>
-                <dt>概念</dt>
-                <dd>{meta.stats?.concepts ?? '—'}</dd>
-              </div>
-            </dl>
+            <p className="cm-scale-line">
+              {meta.stats
+                ? `${meta.stats.nodes} 节点 · ${meta.stats.edges} 关系 · ${meta.stats.chapters} 章 · ${meta.stats.concepts} 概念`
+                : '暂无规模数据'}
+            </p>
           </div>
 
           <div className="cm-panel">
@@ -215,11 +202,11 @@ export default function BookDetailPage() {
               </div>
               <div>
                 <dt>生成时间</dt>
-                <dd>{formatGeneratedAt(meta.generatedAt)}</dd>
+                <dd>{formatGeneratedDate(meta.generatedAt)}</dd>
               </div>
               <div>
                 <dt>创建时间</dt>
-                <dd>{formatGeneratedAt(meta.createdAt)}</dd>
+                <dd>{formatGeneratedDate(meta.createdAt)}</dd>
               </div>
               {meta.isbn ? (
                 <div>
