@@ -102,7 +102,7 @@ export function cleanReaderContent(raw: string): string {
   let c = (raw || '').trim();
   if (!c) return '';
   for (const re of BOILERPLATE_RES) c = c.replace(re, '');
-  c = c.replace(/\s{2,}/g, ' ').replace(/^[：:，,、\s]+/, '').trim();
+  c = c.replace(/\s{2,}/g, ' ').replace(/^[。！？：:，,、\s]+/u, '').trim();
   c = c.replace(/^(核心说法是|作者进一步区分或展开|相关收束或转进)[：:]\s*$/u, '').trim();
   c = c.replace(/核心说法是[：:]\s*。/g, '').trim();
   c = c.replace(/^[。！？：:\s]+/u, '').trim();
@@ -132,11 +132,16 @@ export function readerBody(n: MapNode): string | null {
       // also strip near-duplicate first sentence of excerpt
       const first = excerpt.split(/[。！？]/)[0];
       if (first && first.length > 12) rest = rest.replace(first, '').trim();
-      rest = rest.replace(/^[：:，,、\s]+/, '').trim();
-      if (rest.length < 24) return null;
+      // Ux2-7: strip leading sentence punct left by excerpt splice (。！？：)
+      rest = rest.replace(/^[。！？：:，,、\s]+/u, '').trim();
+      // drop empty / punct-only leftovers
+      if (!rest || /^[。！？：:\s]*$/u.test(rest) || rest.length < 24) return null;
       return rest;
     }
   }
+  // final guard for any path
+  cleaned = cleaned.replace(/^[。！？：:\s]+/u, '').trim();
+  if (!cleaned || /^[。！？：:\s]*$/u.test(cleaned)) return null;
   return cleaned;
 }
 

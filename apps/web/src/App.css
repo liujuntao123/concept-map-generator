@@ -1125,3 +1125,42 @@ a.cm-btn:hover { text-decoration: none; }
 .react-flow__edge.is-path-edge path {
   stroke-width: 2.8 !important;
 }
+
+
+.cm-book-detail__cover--reader {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 16px;
+  min-height: 220px;
+}
+.cm-book-detail__seal {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #000 18%, transparent);
+}
+.cm-book-detail__cover-title {
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+.cm-book-detail__cover-quote {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+.cm-about-fold {
+  padding: 14px 16px;
+}
+.cm-about-fold > summary {
+  cursor: pointer;
+  font-weight: 650;
+  list-style: none;
+}
+.cm-about-fold > summary::-webkit-details-marker { display: none; }
+.cm-about-fold[open] > summary { margin-bottom: 10px; }
