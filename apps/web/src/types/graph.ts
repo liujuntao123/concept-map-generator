@@ -95,14 +95,18 @@ export interface MapMeta {
   source?: {
     file: string;
     kind?: string;
+    /** IMA knowledge-base name the book was pulled from */
     imaKb?: string;
     mediaId?: string;
+    /** IMA knowledge-base id */
+    kbId?: string;
+    /** IMA media type (epub = 21, pdf = 1, …) */
+    mediaType?: number;
   };
   stats?: MapStats;
   nodeTypeBreakdown?: Partial<Record<NodeType, number>>;
   edgeTypeBreakdown?: Record<string, number>;
   featuredPaths?: FeaturedPath[];
-  ima?: Record<string, unknown>;
 }
 
 export interface MapIndexEntry {

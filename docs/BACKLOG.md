@@ -25,7 +25,7 @@
 | ID | 项 | 状态 |
 |----|----|------|
 | 14 | 丰富节点/边类型（claim/person/work；related/contains/contrasts/cites） | ✅ |
-| 15 | AI 草稿「待审」`reviewStatus` | ❌ 已移除（读者端不展示） |
+| 15 | AI 草稿「待审」`reviewStatus`（作者流水线可选字段；读者端不渲染） | ✅ |
 | 16 | 「在书中定位」章节 + 摘录 + epub 文件锚点 | ✅ |
 | 17 | meta version / generatedAt / source | ✅ |
 

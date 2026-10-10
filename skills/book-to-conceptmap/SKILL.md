@@ -20,7 +20,7 @@ description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本
 ### 1. 定位知识库与书目媒体
 
 ```bash
-node /home/box/agent-data/workflows/ima-skill/ima_api.cjs \
+node ~/agent-data/workflows/ima-skill/ima_api.cjs \
   openapi/wiki/v1/search_knowledge_base '{"query":"<书名>","cursor":"","limit":20}'
 
 node .../ima_api.cjs openapi/wiki/v1/get_knowledge_list \
@@ -45,8 +45,8 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
 
 ### 3. 按章/篇分块
 
-- 优先用 epub TOC（`toc.ncx`）与各 HTML 的 `h1`/`h2` 作为篇名
-- 跳过封面、版权页、纯目录页
+- 以各 HTML 的 `h1`/`h2` 作为篇名（当前实现未解析 epub `toc.ncx`）
+- 封面、版权页、纯目录页仍会被抽出，结构化阶段忽略它们
 - 每块保留：`title`、`file`、`text`、字符数
 
 ### 4. 结构化为图（LLM / Agent）

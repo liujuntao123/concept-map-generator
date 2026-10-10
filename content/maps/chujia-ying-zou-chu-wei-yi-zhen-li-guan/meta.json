@@ -6,13 +6,6 @@
   "publisher": "上海文艺出版社",
   "isbn": "9787532175468",
   "language": "zh-CN",
-  "ima": {
-    "kb_id": "mn4_ylU4oKBdULI0gLMTNgvGe46Rr2PUh5e7PncPolo=",
-    "kb_name": "走出唯一真理观",
-    "media_id": "epub_2fabf5187bf33404addbb97d852bb3a7_bd310290e9d43d1396ff3824da687dcb7507361946149972",
-    "media_type": 21,
-    "file_name": "走出唯一真理观-陈嘉映.epub"
-  },
   "stats": {
     "nodes": 70,
     "edges": 108,
@@ -30,7 +23,9 @@
     "file": "走出唯一真理观-陈嘉映.epub",
     "kind": "epub",
     "imaKb": "走出唯一真理观",
-    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_bd310290e9d43d1396ff3824da687dcb7507361946149972"
+    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_bd310290e9d43d1396ff3824da687dcb7507361946149972",
+    "kbId": "mn4_ylU4oKBdULI0gLMTNgvGe46Rr2PUh5e7PncPolo=",
+    "mediaType": 21
   },
   "featuredPaths": [
     {
