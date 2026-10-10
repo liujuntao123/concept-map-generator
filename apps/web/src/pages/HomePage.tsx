@@ -6,7 +6,6 @@ import type { FeaturedPath, MapIndexEntry, MapMeta, MapsIndex } from '../types/g
 import { useTheme } from '../hooks/useTheme';
 import {
   IconBooks,
-  IconClock,
   IconEdges,
   IconMap,
   IconMoon,
