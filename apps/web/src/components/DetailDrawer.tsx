@@ -49,6 +49,14 @@ interface Props {
 
 type DrawerTab = 'detail' | 'notes' | 'related';
 
+function formatNextTip(label: string, rationale?: string | null): string {
+  const why = (rationale || '').replace(/\s+/g, ' ').trim();
+  const short = why.length > 32 ? `${why.slice(0, 32)}…` : why;
+  if (short) return `接下来看：${label}——因为${short}`;
+  return `接下来看：${label}`;
+}
+
+
 export default function DetailDrawer({
   node,
   graph,
@@ -119,7 +127,7 @@ export default function DetailDrawer({
 
   return (
     <aside
-      className={`cm-drawer${peek ? ' cm-drawer--peek' : ''}`}
+      className={`cm-drawer cm-drawer--dense${peek ? ' cm-drawer--peek' : ''}`}
       aria-label="节点详情"
       role="dialog"
     >
@@ -204,53 +212,27 @@ export default function DetailDrawer({
                 {pathContext.path.difficulty ? ` · ${pathContext.path.difficulty}` : ''}
                 {pathContext.path.durationMin ? ` · 约 ${pathContext.path.durationMin} 分钟` : ''}
               </p>
-              <p className="cm-scale-line">{stepLine}</p>
-              {pathContext.edgeInto || step?.edgeLabel ? (
-                <p className="cm-drawer__edge-keep">
-                  关系：
-                  {pathContext.edgeInto?.label ||
-                    step?.edgeLabel ||
-                    EDGE_TYPE_LABEL[String(pathContext.edgeInto?.type)] ||
-                    '相关'}
-                </p>
-              ) : null}
+              {stepLine ? <p className="cm-scale-line">{stepLine}</p> : null}
               {pathContext.nextLabel ? (
                 <p className="cm-muted">
-                  下一步预览：
-                  {pathContext.path.steps?.[pathContext.stepIndex + 1]?.edgeLabel
-                    ? `${pathContext.path.steps[pathContext.stepIndex + 1]!.edgeLabel} · `
-                    : ''}
-                  {pathContext.nextLabel}
+                  {formatNextTip(
+                    pathContext.nextLabel,
+                    pathContext.path.steps?.[pathContext.stepIndex + 1]?.rationale,
+                  )}
                 </p>
               ) : (
-                <p className="cm-muted">已到路径终点</p>
+                <p className="cm-muted">这条路径走完了</p>
               )}
             </section>
           ) : (
             <section className="cm-drawer__section">
-              <h3>
-                <IconInfo size={14} /> 概要
-              </h3>
               <p className="cm-drawer__clamp">{summary}</p>
             </section>
           )}
 
           {!peek ? (
             <>
-              {showDetail ? (
-                <section className="cm-drawer__section">
-                  <button
-                    type="button"
-                    className="cm-drawer__fold"
-                    onClick={() => setDetailOpen((v) => !v)}
-                  >
-                    <IconList size={14} /> {detailOpen ? '收起详述' : '展开详述'}
-                  </button>
-                  {detailOpen ? <p className="cm-drawer__content">{body}</p> : null}
-                </section>
-              ) : null}
-
-              <section className="cm-drawer__section">
+              <section className="cm-drawer__section cm-drawer__excerpt-first">
                 <h3>
                   <IconBook size={14} /> 原文摘录
                 </h3>
@@ -272,13 +254,26 @@ export default function DetailDrawer({
                   <div className="cm-excerpt-wrap">
                     <blockquote className="cm-excerpt">{excerpt}</blockquote>
                     <button type="button" className="cm-copy-btn" onClick={() => void copyExcerpt()}>
-                      {copied ? '已复制摘录' : '复制原文摘录'}
+                      {copied ? '已复制' : '复制摘录'}
                     </button>
                   </div>
                 ) : (
                   <p className="cm-muted">暂无摘录</p>
                 )}
               </section>
+
+              {showDetail ? (
+                <section className="cm-drawer__section">
+                  <button
+                    type="button"
+                    className="cm-drawer__fold"
+                    onClick={() => setDetailOpen((v) => !v)}
+                  >
+                    <IconList size={14} /> {detailOpen ? '收起详述' : '展开详述'}
+                  </button>
+                  {detailOpen ? <p className="cm-drawer__content">{body}</p> : null}
+                </section>
+              ) : null}
 
               <details
                 className="cm-about"

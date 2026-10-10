@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
 import {
-  Background,
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
@@ -577,7 +576,6 @@ function MapCanvasInner(
           else fitReadable(0);
         }}
       >
-        <Background gap={22} size={1} color="var(--rf-bg-dot)" />
         <MiniMap
           position="bottom-right"
           nodeColor={(n) => {

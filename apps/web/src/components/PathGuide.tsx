@@ -12,6 +12,14 @@ import {
 } from './icons';
 import type { FeaturedPath, MapNode } from '../types/graph';
 
+/** Natural Chinese tip — never concatenate edgeLabel + node label chips. */
+function formatNextTip(label: string, rationale?: string | null): string {
+  const why = (rationale || '').replace(/\s+/g, ' ').trim();
+  const short = why.length > 32 ? `${why.slice(0, 32)}…` : why;
+  if (short) return `接下来看：${label}——因为${short}`;
+  return `接下来看：${label}`;
+}
+
 interface Props {
   path: FeaturedPath;
   stepIndex: number;
@@ -52,7 +60,6 @@ export default function PathGuide({
   const nextStep = path.steps?.[stepIndex + 1];
   const difficulty = path.difficulty || null;
   const minutes = path.durationMin ?? null;
-  const edgeIntoNext = nextStep?.edgeLabel;
   const why = step?.rationale || path.description;
   const nextWhy = nextStep?.rationale;
 
@@ -60,7 +67,7 @@ export default function PathGuide({
     <section className="cm-path-guide cm-path-guide--card" aria-label="路径导读">
       <div className="cm-path-guide__head">
         <div className="cm-path-guide__theme-icon" aria-hidden>
-          {pathThemeIcon(path.theme || path.id || path.title, 32)}
+          {pathThemeIcon(path.theme || path.id || path.title, 26)}
         </div>
         <div className="cm-path-guide__head-main">
           <div className="cm-path-guide__meta">
@@ -84,14 +91,9 @@ export default function PathGuide({
             <strong className="cm-path-guide__now-title">{currentNode?.label ?? '…'}</strong>
             <p className="cm-path-guide__why">{why}</p>
             {nextNode ? (
-              <p className="cm-path-guide__next">
-                <span className="cm-path-guide__next-label">下一步</span>
-                {edgeIntoNext ? <span className="cm-path-guide__verb">{edgeIntoNext}</span> : null}
-                <span className="cm-path-guide__next-name">{nextNode.label}</span>
-                {nextWhy ? <span className="cm-path-guide__next-why">——{nextWhy}</span> : null}
-              </p>
+              <p className="cm-path-guide__next">{formatNextTip(nextNode.label, nextWhy)}</p>
             ) : (
-              <p className="cm-path-guide__next is-end">已到路径终点</p>
+              <p className="cm-path-guide__next is-end">这条路径走完了</p>
             )}
           </div>
         </div>

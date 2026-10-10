@@ -11,6 +11,7 @@ import SearchHits from '../components/SearchHits';
 import PathGuide from '../components/PathGuide';
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate, groupChapters, matchesQuery } from '../lib/graphUtils';
+import { coverOf } from '../lib/covers';
 import { useTheme } from '../hooks/useTheme';
 import {
   IconChapter,
@@ -26,7 +27,6 @@ import {
   IconSun,
   IconWork,
   pathThemeIcon,
-  IconBook,
 } from '../components/icons';
 import {
   type ConceptGraph,
@@ -741,8 +741,8 @@ export default function MapPage() {
     >
       <header className="cm-topbar cm-topbar--map">
         <div className="cm-brand cm-brand--map">
-          <div className="cm-brand__mark cm-brand__mark--book" aria-hidden>
-            <IconBook size={22} />
+          <div className="cm-brand__mark cm-brand__mark--cover" aria-hidden>
+            <img src={coverOf(meta.id)} alt="" width={40} height={52} />
           </div>
           <div className="cm-brand__text">
             <Link className="cm-back" to="/" aria-label="返回图书列表" title="返回图书列表">
