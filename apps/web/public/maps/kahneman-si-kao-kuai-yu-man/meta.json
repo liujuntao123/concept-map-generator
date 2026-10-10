@@ -1,0 +1,137 @@
+{
+  "id": "kahneman-si-kao-kuai-yu-man",
+  "title": "思考快与慢",
+  "subtitle": "卡尼曼：双系统、启发偏见、前景理论与两个自我",
+  "author": "丹尼尔·卡尼曼",
+  "publisher": "中信出版社",
+  "language": "zh-CN",
+  "ima": {
+    "kb_id": "6WDXdekvUwkewNAd4rwd_i48cdQXkHUOGlb-tlXL0V0=",
+    "kb_name": "思考快与慢",
+    "media_id": "epub_2fabf5187bf33404addbb97d852bb3a7_ccb57e9855cc047f9620e72b4b9350f97505191406415359",
+    "media_type": 21,
+    "file_name": "思考快与慢-丹尼尔·卡尼曼.epub"
+  },
+  "stats": {
+    "nodes": 95,
+    "edges": 167,
+    "chapters": 32,
+    "concepts": 51,
+    "claims": 6,
+    "persons": 3,
+    "works": 3
+  },
+  "createdAt": "2026-10-10T09:58:15+08:00",
+  "version": "1.0.1",
+  "description": "从《思考，快与慢》抽取可核对的核心机制与实验：系统1/2、WYSIATI、锚定/可得性/代表性、规划谬误与外部意见、前景理论与损失厌恶、峰终定律与聚焦错觉，并配置五条深度推荐路径。",
+  "generatedAt": "2026-10-10T09:59:10+08:00",
+  "source": {
+    "file": "思考快与慢-丹尼尔·卡尼曼.epub",
+    "kind": "epub",
+    "imaKb": "思考快与慢",
+    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_ccb57e9855cc047f9620e72b4b9350f97505191406415359"
+  },
+  "featuredPaths": [
+    {
+      "id": "path-dual-system",
+      "title": "入门：认识两个系统",
+      "description": "从系统1/系统2出发，理解努力、流畅感、WYSIATI与问题替换——全书其余偏见的总开关。",
+      "intent": "建立阅读框架",
+      "difficulty": "入门",
+      "nodeIds": [
+        "c-system1",
+        "c-system2",
+        "c-attention-effort",
+        "c-cognitive-ease",
+        "c-wysiati",
+        "c-substitution",
+        "c-affect-heuristic"
+      ]
+    },
+    {
+      "id": "path-heuristics",
+      "title": "启发法与偏见深潜",
+      "description": "锚定、可得性、代表性、合取谬误、小数定律与回归平均：判断捷径如何系统出错，以及如何用基率与回归校正。",
+      "intent": "提升统计直觉",
+      "difficulty": "进阶",
+      "nodeIds": [
+        "c-anchoring",
+        "c-availability",
+        "c-representativeness",
+        "c-conjunction-fallacy",
+        "c-base-rate",
+        "c-law-small-numbers",
+        "c-regression",
+        "c-intuitive-prediction"
+      ]
+    },
+    {
+      "id": "path-overconfidence",
+      "title": "过度自信与外部意见",
+      "description": "后见之明、叙事与技能错觉如何制造「我早就知道」；规划谬误的解药是外部意见与事前验尸。",
+      "intent": "改进预测与项目决策",
+      "difficulty": "进阶",
+      "nodeIds": [
+        "c-hindsight",
+        "c-narrative-fallacy",
+        "c-illusion-of-skill",
+        "c-planning-fallacy",
+        "c-outside-view",
+        "c-premortem",
+        "c-expert-intuition",
+        "c-algorithm-vs-expert"
+      ]
+    },
+    {
+      "id": "path-prospect",
+      "title": "前景理论与损失厌恶",
+      "description": "从批判伯努利到前景理论、损失厌恶、禀赋效应、四重模式与框架——理解真实人类的风险选择。",
+      "intent": "理解风险与交易行为",
+      "difficulty": "进阶",
+      "nodeIds": [
+        "c-bernoulli-critique",
+        "c-prospect-theory",
+        "c-loss-aversion",
+        "c-reference-point",
+        "c-endowment",
+        "c-fourfold",
+        "c-possibility-certainty",
+        "c-framing",
+        "c-mental-accounting"
+      ]
+    },
+    {
+      "id": "path-two-selves",
+      "title": "两个自我与幸福错觉",
+      "description": "经验自我与记忆自我、峰终定律、过程忽视与聚焦错觉：为什么「更好的故事」不等于「更好的体验」。",
+      "intent": "反思幸福与人生选择",
+      "difficulty": "入门",
+      "nodeIds": [
+        "c-experiencing-self",
+        "c-remembering-self",
+        "c-experienced-utility",
+        "c-peak-end",
+        "c-duration-neglect",
+        "c-focusing-illusion",
+        "c-econs-vs-humans"
+      ]
+    }
+  ],
+  "coverColor": "#1d3557",
+  "coverText": "快慢",
+  "status": "published",
+  "schemaVersion": "1.1",
+  "nodeTypeBreakdown": {
+    "person": 3,
+    "work": 3,
+    "chapter": 32,
+    "concept": 51,
+    "claim": 6
+  },
+  "edgeTypeBreakdown": {
+    "contains": 85,
+    "related": 64,
+    "contrasts": 10,
+    "cites": 8
+  }
+}

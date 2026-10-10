@@ -1,6 +1,30 @@
 {
-  "generatedAt": "2026-10-09T22:40:00+08:00",
+  "generatedAt": "2026-10-10T09:59:10+08:00",
   "maps": [
+    {
+      "id": "kahneman-si-kao-kuai-yu-man",
+      "title": "思考快与慢",
+      "subtitle": "卡尼曼：双系统、启发偏见、前景理论与两个自我",
+      "author": "丹尼尔·卡尼曼",
+      "description": "从《思考，快与慢》抽取可核对的核心机制与实验：系统1/2、WYSIATI、锚定/可得性/代表性、规划谬误与外部意见、前景理论与损失厌恶、峰终定律与聚焦错觉，并配置五条深度推荐路径。",
+      "version": "1.0.1",
+      "generatedAt": "2026-10-10T09:59:10+08:00",
+      "sourceFile": "思考快与慢-丹尼尔·卡尼曼.epub",
+      "coverColor": "#1d3557",
+      "coverText": "快慢",
+      "status": "published",
+      "schemaVersion": "1.1",
+      "stats": {
+        "nodes": 95,
+        "edges": 167,
+        "chapters": 32,
+        "concepts": 51,
+        "claims": 6,
+        "persons": 3,
+        "works": 3
+      },
+      "path": "/maps/kahneman-si-kao-kuai-yu-man"
+    },
     {
       "id": "chujia-ying-zou-chu-wei-yi-zhen-li-guan",
       "title": "走出唯一真理观",
