@@ -6,7 +6,6 @@ import type { FeaturedPath, MapIndexEntry, MapMeta, MapsIndex } from '../types/g
 import { useTheme } from '../hooks/useTheme';
 import {
   IconBooks,
-  IconClock,
   IconEdges,
   IconMap,
   IconMoon,
@@ -17,6 +16,13 @@ import {
   pathThemeIcon,
 } from '../components/icons';
 import { coverOf } from '../lib/covers';
+
+function shortDesc(m: MapIndexEntry): string {
+  const raw = (m.subtitle || m.description || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  if (raw.length <= 56) return raw;
+  return `${raw.slice(0, 54)}…`;
+}
 
 function BookCard({ m }: { m: MapIndexEntry }) {
   const [paths, setPaths] = useState<FeaturedPath[]>([]);
@@ -38,12 +44,16 @@ function BookCard({ m }: { m: MapIndexEntry }) {
   const year = m.generatedAt ? formatGeneratedDate(m.generatedAt).slice(0, 4) : '';
   const badge = [m.author, year].filter(Boolean).join(' · ');
   const chips = paths.slice(0, 3);
+  const desc = shortDesc(m);
 
   return (
-    <article className="cm-book-card cm-book-card--wide cm-book-card--v5" data-book={m.id}>
+    <article className="cm-book-card cm-book-card--home" data-book={m.id}>
       <div className="cm-book-card__accent" aria-hidden />
-      <div className="cm-book-card__cover cm-book-card__cover--art" aria-hidden>
-        <img src={coverOf(m.id)} alt="" width={120} height={156} />
+      <div className="cm-book-card__cover-wrap" aria-hidden>
+        <div className="cm-book-card__cover-glow" />
+        <div className="cm-book-card__cover cm-book-card__cover--art">
+          <img src={coverOf(m.id)} alt="" width={120} height={160} decoding="async" />
+        </div>
       </div>
       <div className="cm-book-card__body">
         {badge ? (
@@ -52,8 +62,8 @@ function BookCard({ m }: { m: MapIndexEntry }) {
           </div>
         ) : null}
         <h2>{m.title}</h2>
-        {m.subtitle ? <div className="cm-book-card__meta">{m.subtitle}</div> : null}
-        <div className="cm-book-card__stats cm-book-card__stats--icons">
+        {desc ? <p className="cm-book-card__desc">{desc}</p> : null}
+        <div className="cm-book-card__stats cm-book-card__stats--density">
           {m.stats ? (
             <>
               <span>
@@ -79,20 +89,16 @@ function BookCard({ m }: { m: MapIndexEntry }) {
               >
                 {pathThemeIcon(p.theme || p.id || p.title)}
                 <span>{p.theme || p.title}</span>
-                {p.durationMin ? (
-                  <em>
-                    <IconClock size={11} /> 约 {p.durationMin} 分钟
-                  </em>
-                ) : null}
+                {p.durationMin != null ? <em>· 约 {p.durationMin} 分钟</em> : null}
               </Link>
             ))}
           </div>
         ) : null}
         <div className="cm-book-card__actions">
-          <Link className="cm-btn cm-btn--primary" to={`/maps/${m.id}?view=all`}>
+          <Link className="cm-btn cm-btn--primary cm-btn--home-cta" to={`/maps/${m.id}?view=all`}>
             <IconMap size={14} /> 进入地图
           </Link>
-          <Link className="cm-btn cm-btn--ghost" to={`/books/${m.id}`}>
+          <Link className="cm-btn cm-btn--ghost cm-btn--home-secondary" to={`/books/${m.id}`}>
             简介
           </Link>
         </div>
@@ -161,12 +167,14 @@ export default function HomePage() {
   }
 
   const qTrim = query.trim();
+  const totalNodes = index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0);
+  const totalEdges = index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0);
 
   return (
-    <div className="cm-shell cm-shell--home">
+    <div className="cm-shell cm-shell--home cm-shell--home-v10">
       <header className="cm-topbar cm-topbar--home">
-        <div className="cm-brand">
-          <div className="cm-brand__mark" aria-hidden />
+        <div className="cm-brand cm-brand--home">
+          <div className="cm-brand__mark cm-brand__mark--tri" aria-hidden />
           <div>
             <h1>概念地图</h1>
             <p>从一本书读出可交互的思想结构</p>
@@ -182,27 +190,27 @@ export default function HomePage() {
         </button>
       </header>
 
-      <main className="cm-home cm-home--v5">
-        <section
-          className="cm-home__hero-panel cm-home__hero-panel--photo"
-          style={{ backgroundImage: 'url(/illustrations/bg-mountains-airy.jpg)' }}
-        >
+      <main className="cm-home cm-home--v10">
+        <section className="cm-home__hero-panel cm-home__hero-panel--mock">
           <div className="cm-home__hero-copy">
             <h1>
-              <IconNetwork size={22} /> 图书与地图
+              <IconNetwork size={26} /> 图书与地图
             </h1>
-            <p>沿路径读，或打开全图逛。节点旁有原文。</p>
+            <p>沿路径阅读，或打开全景图。节点旁有原文。</p>
             <div className="cm-home__stat-pill" aria-label="馆藏统计">
-              <span>
+              <span className="cm-home__stat">
                 <IconBooks size={14} /> {index.maps.length} 本
               </span>
-              <span>
-                <IconNodes size={14} /> {index.maps.reduce((s, m) => s + (m.stats?.nodes ?? 0), 0)} 节点
+              <span className="cm-home__stat">
+                <IconNodes size={14} /> {totalNodes} 节点
               </span>
-              <span>
-                <IconEdges size={14} /> {index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0)} 关系
+              <span className="cm-home__stat">
+                <IconEdges size={14} /> {totalEdges} 关系
               </span>
             </div>
+          </div>
+          <div className="cm-home__hero-art" aria-hidden>
+            <img src="/illustrations/bg-mountains-airy.jpg" alt="" width={420} height={236} />
           </div>
         </section>
 
