@@ -19,6 +19,9 @@ interface Props {
   node: MapNode;
   graph: ConceptGraph;
   meta: MapMeta;
+  peek?: boolean;
+  onExpand?: () => void;
+  onCollapse?: () => void;
   onClose: () => void;
   onSelectRelated: (node: MapNode) => void;
   onBack?: () => void;
@@ -29,6 +32,9 @@ export default function DetailDrawer({
   node,
   graph,
   meta,
+  peek = false,
+  onExpand,
+  onCollapse,
   onClose,
   onSelectRelated,
   onBack,
@@ -64,7 +70,17 @@ export default function DetailDrawer({
   }
 
   return (
-    <aside className="cm-drawer" aria-label="节点详情" role="dialog">
+    <aside
+      className={`cm-drawer${peek ? ' cm-drawer--peek' : ''}`}
+      aria-label="节点详情"
+      role="dialog"
+    >
+      <button
+        type="button"
+        className="cm-drawer__grip"
+        aria-label={peek ? '展开详情' : '收起详情'}
+        onClick={() => (peek ? onExpand?.() : onCollapse?.())}
+      />
       <header className="cm-drawer__header">
         <div>
           <div className="cm-drawer__badges">
@@ -76,15 +92,26 @@ export default function DetailDrawer({
             ))}
           </div>
           <h2 title={node.label}>{node.label}</h2>
-          {onBack ? (
+          {peek ? (
+            <button type="button" className="cm-btn cm-btn--ghost cm-drawer__back" onClick={() => onExpand?.()}>
+              展开详情
+            </button>
+          ) : onBack ? (
             <button type="button" className="cm-btn cm-btn--ghost cm-drawer__back" onClick={onBack}>
               ← 返回上一概念
             </button>
           ) : null}
         </div>
-        <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">
-          ×
-        </button>
+        <div className="cm-drawer__header-actions">
+          {!peek && onCollapse ? (
+            <button type="button" className="cm-btn cm-btn--ghost" onClick={() => onCollapse()}>
+              收起
+            </button>
+          ) : null}
+          <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">
+            ×
+          </button>
+        </div>
       </header>
 
       <section className="cm-drawer__section">

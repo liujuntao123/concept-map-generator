@@ -573,11 +573,22 @@
     border-top: 1px solid var(--border);
     width: 100%;
     max-width: none;
-    height: min(52vh, 520px);
-    max-height: 52vh;
+    height: min(36vh, 300px);
+    max-height: 36vh;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -8px 28px var(--shadow);
     animation: slideUp 180ms ease-out;
+  }
+  .cm-drawer.cm-drawer--peek,
+  .cm-edge-panel.cm-drawer--peek {
+    height: 88px;
+    max-height: 88px;
+    overflow: hidden;
+  }
+  .cm-drawer--peek .cm-drawer__section,
+  .cm-drawer--peek .cm-about,
+  .cm-drawer--peek .cm-related-group {
+    display: none !important;
   }
   @keyframes slideUp {
     from { transform: translateY(24px); opacity: 0.5; }
@@ -590,11 +601,44 @@
   .cm-chip, .cm-btn { padding: 8px 12px; min-height: 36px; }
   .cm-filters--chips { display: none !important; }
   .cm-filters--select { display: inline-block !important; min-width: 7.5rem; }
-  .cm-zoom-controls { bottom: calc(52vh + 8px); }
-  .cm-shell.has-drawer .cm-zoom-controls { bottom: calc(52vh + 8px); }
+  .cm-zoom-controls { bottom: 12px; }
+  .cm-shell.has-drawer .cm-zoom-controls { bottom: calc(36vh + 8px); }
+  .cm-shell.has-drawer-peek .cm-zoom-controls { bottom: 100px; }
   .cm-shell:not(.has-drawer) .cm-zoom-controls { bottom: 12px; }
-  .cm-chapter-filter { flex: 1; min-width: 0; }
-  .cm-chapter-filter .cm-select { width: 100%; max-width: 100%; }
+
+  /* Ux3-3: compress chrome so path map stays visible */
+  .cm-topbar {
+    padding: 6px 10px;
+    gap: 6px 8px;
+  }
+  .cm-brand__mark { width: 28px; height: 28px; border-radius: 8px; }
+  .cm-brand h1 { font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52vw; }
+  .cm-brand__sub { display: none; }
+  .cm-brand a.cm-back { font-size: 0.7rem; }
+  .cm-toolbar { gap: 6px; width: 100%; justify-content: flex-start; }
+  .cm-search { width: min(140px, 36vw); padding: 6px 8px; font-size: 0.85rem; }
+  .cm-btn--share { display: none !important; }
+  .cm-theme-toggle { width: 34px; height: 32px; }
+  .cm-subbar { padding: 4px 10px; gap: 6px; }
+  .cm-path-bar { gap: 4px; }
+  .cm-path-stepper { margin-left: 0; gap: 4px; }
+  .cm-path-stepper .cm-btn { padding: 4px 8px; min-height: 30px; font-size: 0.78rem; }
+  .cm-hide-narrow { display: none !important; }
+  .cm-chapter-filter { display: none; }
+  .cm-drawer__grip {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 8px auto 4px;
+    border: none;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--muted) 55%, transparent);
+    cursor: pointer;
+    padding: 0;
+  }
+  .cm-drawer__header { padding-top: 0; }
+  .cm-drawer__header h2 { font-size: 1rem; }
+
 }
 
 /* Library / book cards */
@@ -1204,3 +1248,10 @@ a.cm-btn:hover { text-decoration: none; }
   background: var(--bg-elev) !important;
 }
 .cm-edge-sentence { font-size: 1.02rem; line-height: 1.55; }
+
+.cm-drawer__grip { display: none; }
+.cm-drawer__header-actions { display: flex; gap: 4px; align-items: flex-start; }
+.cm-more-item--share { display: none; }
+@media (max-width: 860px) {
+  .cm-more-item--share { display: flex; }
+}

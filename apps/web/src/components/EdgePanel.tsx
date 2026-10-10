@@ -5,11 +5,23 @@ interface Props {
   edge: MapEdge;
   sourceNode?: MapNode;
   targetNode?: MapNode;
+  peek?: boolean;
+  onExpand?: () => void;
+  onCollapse?: () => void;
   onClose: () => void;
   onOpenNode: (id: string) => void;
 }
 
-export default function EdgePanel({ edge, sourceNode, targetNode, onClose, onOpenNode }: Props) {
+export default function EdgePanel({
+  edge,
+  sourceNode,
+  targetNode,
+  peek = false,
+  onExpand,
+  onCollapse,
+  onClose,
+  onOpenNode,
+}: Props) {
   const typeLabel = EDGE_TYPE_LABEL[edge.type] ?? edge.type;
   const a = sourceNode?.label ?? edge.source;
   const b = targetNode?.label ?? edge.target;
@@ -27,13 +39,28 @@ export default function EdgePanel({ edge, sourceNode, targetNode, onClose, onOpe
       : null;
 
   return (
-    <aside className="cm-edge-panel" aria-label="关系说明" role="dialog">
+    <aside
+      className={`cm-edge-panel${peek ? ' cm-drawer--peek' : ''}`}
+      aria-label="关系说明"
+      role="dialog"
+    >
+      <button
+        type="button"
+        className="cm-drawer__grip"
+        aria-label={peek ? '展开' : '收起'}
+        onClick={() => (peek ? onExpand?.() : onCollapse?.())}
+      />
       <header className="cm-drawer__header">
         <div>
           <div className="cm-drawer__badges">
             <span className="cm-pill">{typeLabel}</span>
           </div>
           <h2>关系说明</h2>
+          {peek ? (
+            <button type="button" className="cm-btn cm-btn--ghost cm-drawer__back" onClick={() => onExpand?.()}>
+              展开详情
+            </button>
+          ) : null}
         </div>
         <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">
           ×

@@ -37,6 +37,7 @@ export default function MapPage() {
   const { theme, toggle } = useTheme();
   const canvasRef = useRef<MapCanvasHandle>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const pathPeekOnce = useRef(false);
 
   const [graph, setGraph] = useState<ConceptGraph | null>(null);
   const [meta, setMeta] = useState<MapMeta | null>(null);
@@ -69,6 +70,16 @@ export default function MapPage() {
       return true;
     }
   });
+  /** Narrow path tour: peek sheet so map stays visible (Ux3-3) */
+  const [sheetExpanded, setSheetExpanded] = useState(true);
+
+  const isNarrow = useCallback(() => {
+    try {
+      return window.matchMedia('(max-width: 860px)').matches;
+    } catch {
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,6 +135,12 @@ export default function MapPage() {
       setPathId(firstPath.id);
       setPathStep(0);
       setSelected(n);
+      // Ux3-3: cold path on phone → peek sheet, keep map readable
+      try {
+        if (window.matchMedia('(max-width: 860px)').matches) setSheetExpanded(false);
+      } catch {
+        /* ignore */
+      }
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
@@ -168,6 +185,18 @@ export default function MapPage() {
     const s = Number(searchParams.get('step') ?? '0');
     setPathStep(Number.isFinite(s) && s >= 0 ? s : 0);
   }, [searchParams]);
+
+  // Ux3-3: URL cold-open with path on narrow → peek sheet once
+  useEffect(() => {
+    if (!graph || pathPeekOnce.current) return;
+    if (!searchParams.get('path')) return;
+    pathPeekOnce.current = true;
+    try {
+      if (window.matchMedia('(max-width: 860px)').matches) setSheetExpanded(false);
+    } catch {
+      /* ignore */
+    }
+  }, [graph, searchParams]);
 
   useEffect(() => {
     if (!graph) return;
@@ -367,6 +396,7 @@ export default function MapPage() {
       setChapterFocusId(null);
       setSelected(first);
       setSelectedEdge(null);
+      if (isNarrow()) setSheetExpanded(false);
       patchParams((next) => {
         next.set('path', p.id);
         next.set('step', String(safeStep));
@@ -375,8 +405,9 @@ export default function MapPage() {
         else next.delete('node');
         next.delete('edge');
       });
+      window.setTimeout(() => canvasRef.current?.focusSelected(), 100);
     },
-    [byId, patchParams],
+    [byId, patchParams, isNarrow],
   );
 
   const clearPath = useCallback(() => {
@@ -413,6 +444,7 @@ export default function MapPage() {
           if (prev && prev.id !== node.id) setNodeHistory((h) => [...h.slice(-19), prev.id]);
           return node;
         });
+        setSheetExpanded(true);
         patchParams((next) => {
           next.delete('path');
           next.delete('step');
@@ -422,6 +454,7 @@ export default function MapPage() {
         window.setTimeout(() => canvasRef.current?.focusSelected(), 80);
         return;
       }
+      setSheetExpanded(true);
       selectNode(node);
       window.setTimeout(() => canvasRef.current?.focusSelected(), 80);
     },
@@ -615,7 +648,9 @@ export default function MapPage() {
   const presentTypes = new Set(graph.nodes.map((n) => n.type));
 
   return (
-    <div className={`cm-shell${hasDrawer ? ' has-drawer' : ''}`}>
+    <div
+      className={`cm-shell${hasDrawer ? ' has-drawer' : ''}${hasDrawer && !sheetExpanded ? ' has-drawer-peek' : ''}`}
+    >
       <header className="cm-topbar">
         <div className="cm-brand">
           <div className="cm-brand__mark" aria-hidden />
@@ -624,7 +659,7 @@ export default function MapPage() {
               ← 图书列表
             </Link>
             <h1>{meta.title}</h1>
-            <p>
+            <p className="cm-brand__sub">
               {meta.author ? `${meta.author}` : '概念地图'}
               {meta.generatedAt ? ` · ${formatGeneratedDate(meta.generatedAt)}` : ''}
             </p>
@@ -719,7 +754,7 @@ export default function MapPage() {
 
           <button
             type="button"
-            className="cm-btn cm-btn--primary"
+            className="cm-btn cm-btn--primary cm-btn--share"
             onClick={() => void copyShareLink()}
             title="复制当前视图链接"
           >
@@ -754,6 +789,16 @@ export default function MapPage() {
                   />
                   显示收录/包含线
                 </label>
+                <button
+                  type="button"
+                  className="cm-more-item cm-more-item--share"
+                  onClick={() => {
+                    void copyShareLink();
+                    setMoreOpen(false);
+                  }}
+                >
+                  {copied ? '已复制链接' : '分享链接'}
+                </button>
                 <button type="button" className="cm-more-item" onClick={() => setHelpOpen(true)}>
                   键盘快捷键（?）
                 </button>
@@ -782,7 +827,7 @@ export default function MapPage() {
           ))}
           {activePath ? (
             <>
-              <span className="cm-path-blurb">{activePath.description}</span>
+              <span className="cm-path-blurb cm-hide-narrow">{activePath.description}</span>
               <div className="cm-path-stepper">
                 <button
                   type="button"
@@ -892,7 +937,13 @@ export default function MapPage() {
             node={selected}
             graph={graph}
             meta={meta}
-            onClose={() => selectNode(null)}
+            peek={!sheetExpanded}
+            onExpand={() => setSheetExpanded(true)}
+            onCollapse={() => setSheetExpanded(false)}
+            onClose={() => {
+              setSheetExpanded(true);
+              selectNode(null);
+            }}
             onSelectRelated={selectRelated}
             onBack={nodeHistory.length ? goBackNode : undefined}
             onFocusChapter={focusChapterByLabel}
@@ -902,10 +953,19 @@ export default function MapPage() {
             edge={selectedEdge}
             sourceNode={byId.get(selectedEdge.source)}
             targetNode={byId.get(selectedEdge.target)}
-            onClose={() => selectEdge(null)}
+            peek={!sheetExpanded}
+            onExpand={() => setSheetExpanded(true)}
+            onCollapse={() => setSheetExpanded(false)}
+            onClose={() => {
+              setSheetExpanded(true);
+              selectEdge(null);
+            }}
             onOpenNode={(id) => {
               const n = byId.get(id);
-              if (n) selectNode(n);
+              if (n) {
+                setSheetExpanded(true);
+                selectNode(n);
+              }
             }}
           />
         ) : null}

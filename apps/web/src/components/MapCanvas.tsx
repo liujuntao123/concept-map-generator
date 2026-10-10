@@ -404,9 +404,9 @@ function MapCanvasInner(
       }
       void fitView({
         nodes: present.map((id) => ({ id })),
-        padding: 0.42,
+        padding: 0.48,
         minZoom: READABLE_MIN_ZOOM,
-        maxZoom: 1.2,
+        maxZoom: 1.35,
         duration: 360,
       });
     },
@@ -462,7 +462,16 @@ function MapCanvasInner(
 
   useEffect(() => {
     if (pathSet && highlightPathIds?.length) {
-      const t = window.setTimeout(() => focusNeighborhood(highlightPathIds), 120);
+      // Ux3-3: frame current step (and adjacent) so phone + drawer leave map readable
+      const cur =
+        pathStepIndex != null && highlightPathIds[pathStepIndex]
+          ? highlightPathIds[pathStepIndex]
+          : highlightPathIds[0];
+      const ids = [cur];
+      if (pathStepIndex != null && pathStepIndex > 0) ids.unshift(highlightPathIds[pathStepIndex - 1]);
+      if (pathStepIndex != null && pathStepIndex < highlightPathIds.length - 1)
+        ids.push(highlightPathIds[pathStepIndex + 1]);
+      const t = window.setTimeout(() => focusNeighborhood(ids), 120);
       return () => window.clearTimeout(t);
     }
     if (selectedEdgeId) {
@@ -550,8 +559,13 @@ function MapCanvasInner(
         proOptions={{ hideAttribution: true }}
         className="cm-flow"
         onInit={() => {
-          if (highlightPathIds?.length) focusNeighborhood(highlightPathIds);
-          else if (selectedId)
+          if (highlightPathIds?.length) {
+            const cur =
+              pathStepIndex != null && highlightPathIds[pathStepIndex]
+                ? highlightPathIds[pathStepIndex]
+                : highlightPathIds[0];
+            focusNeighborhood([cur]);
+          } else if (selectedId)
             focusNeighborhood([selectedId, ...neighborsOf(adj, selectedId)]);
           else fitReadable(0);
         }}
