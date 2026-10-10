@@ -1,5 +1,7 @@
 import { snippetForQuery } from '../lib/graphUtils';
 import { NODE_TYPE_LABEL, type MapNode, type NodeType } from '../types/graph';
+import Pill from './ui/Pill';
+import { cn } from '../lib/cn';
 
 interface Props {
   hits: MapNode[];
@@ -19,7 +21,9 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, iq)}
-      <mark className="cm-hit-mark">{text.slice(iq, iq + q.length)}</mark>
+      <mark className="rounded-[3px] bg-claim/45 px-0.5 text-inherit">
+        {text.slice(iq, iq + q.length)}
+      </mark>
       {text.slice(iq + q.length)}
     </>
   );
@@ -37,8 +41,12 @@ export default function SearchHits({
 
   if (collapsed) {
     return (
-      <div className="cm-search-hits cm-search-hits--collapsed">
-        <button type="button" className="cm-search-hits__headbtn" onClick={onExpand}>
+      <div className="absolute top-14 left-3 z-[6] max-h-none w-auto max-w-[calc(100%-1.5rem)] overflow-auto rounded-inner border border-line bg-surface shadow-float max-[860px]:top-12">
+        <button
+          type="button"
+          className="cursor-pointer border-0 bg-transparent px-3 py-2 text-accent"
+          onClick={onExpand}
+        >
           命中 {hits.length} · 展开列表
         </button>
       </div>
@@ -46,26 +54,35 @@ export default function SearchHits({
   }
 
   return (
-    <div className="cm-search-hits" role="listbox" aria-label="搜索结果">
-      <div className="cm-search-hits__head">命中 {hits.length} 个节点</div>
+    <div
+      className="absolute top-14 left-3 z-[6] w-[min(320px,42vw)] max-h-[min(420px,55vh)] max-w-[calc(100%-1.5rem)] overflow-auto rounded-inner border border-line bg-surface shadow-float max-[860px]:top-12 max-[860px]:w-[min(280px,70vw)]"
+      role="listbox"
+      aria-label="搜索结果"
+    >
+      <div className="border-b border-line px-3 py-2 text-[0.75rem] text-muted">
+        命中 {hits.length} 个节点
+      </div>
       {hits.length === 0 ? (
-        <p className="cm-search-hits__empty">没有匹配结果</p>
+        <p className="m-0 p-3 text-muted">没有匹配结果</p>
       ) : (
-        <ul className="cm-search-hits__list">
+        <ul className="m-0 list-none p-1.5">
           {hits.map((n) => (
             <li key={n.id}>
               <button
                 type="button"
-                className={`cm-search-hits__item${selectedId === n.id ? ' is-active' : ''}`}
+                className={cn(
+                  'grid w-full cursor-pointer grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 rounded-lg border-0 bg-transparent p-2 text-left hover:bg-surface-2',
+                  selectedId === n.id && 'bg-surface-2',
+                )}
                 onClick={() => onSelect(n)}
               >
-                <span className={`cm-pill cm-pill--${n.type}`}>
+                <Pill tone={n.type as NodeType} className="row-span-2 self-start">
                   {NODE_TYPE_LABEL[n.type as NodeType] ?? n.type}
-                </span>
-                <strong>
+                </Pill>
+                <strong className="text-[0.88rem]">
                   <Highlight text={n.label} query={query} />
                 </strong>
-                <span className="cm-search-hits__snip">
+                <span className="col-start-2 text-[0.75rem] leading-[1.35] text-muted">
                   <Highlight text={snippetForQuery(n, query)} query={query} />
                 </span>
               </button>

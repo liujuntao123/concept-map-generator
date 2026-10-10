@@ -3,7 +3,6 @@ import HomePage from './pages/HomePage';
 import MapPage from './pages/MapPage';
 import BookDetailPage from './pages/BookDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
-import './App.css';
 
 export default function App() {
   return (

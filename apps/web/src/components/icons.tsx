@@ -13,7 +13,9 @@ function base({ size = 16, className, ...rest }: IconProps) {
     strokeWidth: 1.75,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
-    className: className ? `cm-icon ${className}` : 'cm-icon',
+    className: className
+      ? `inline-block shrink-0 align-[-0.15em] ${className}`
+      : 'inline-block shrink-0 align-[-0.15em]',
     'aria-hidden': true as const,
     ...rest,
   };

@@ -16,6 +16,8 @@ import '@xyflow/react/dist/style.css';
 import GraphNode from './GraphNode';
 import MapLegend from './MapLegend';
 import { IconFit, IconFocus, IconZoomIn, IconZoomOut } from './icons';
+import { iconButtonClass } from './ui/styles';
+import { cn } from '../lib/cn';
 import { layoutPathSpine, layoutWithDagre } from '../lib/layout';
 import {
   chapterSubgraphIds,
@@ -66,6 +68,8 @@ interface Props {
   pathStepIndex?: number | null;
   showStructuralEdges?: boolean;
   onVisibleStats?: (stats: VisibleStats) => void;
+  /** 移动端缩放条的落位：随侧栏展开/收起避让 */
+  dock?: 'default' | 'sheet' | 'peek';
 }
 
 function MapCanvasInner(
@@ -82,6 +86,7 @@ function MapCanvasInner(
     pathStepIndex = null,
     showStructuralEdges = false,
     onVisibleStats,
+    dock = 'default',
   }: Props,
   ref: React.Ref<MapCanvasHandle>,
 ) {
@@ -252,7 +257,6 @@ function MapCanvasInner(
             'is-path-edge',
             !existing ? 'is-path-missing' : '',
             isCurrentStep || selected ? 'is-hl' : 'is-path-dim',
-            `cm-edge--${raw.type}`,
           ]
             .filter(Boolean)
             .join(' '),
@@ -315,7 +319,6 @@ function MapCanvasInner(
             farFade ? 'is-far' : '',
             structural ? 'is-structural' : '',
             touchesSel || selected ? 'is-hl' : '',
-            `cm-edge--${e.type}`,
           ]
             .filter(Boolean)
             .join(' '),
@@ -563,7 +566,6 @@ function MapCanvasInner(
         elementsSelectable
         deleteKeyCode={null}
         proOptions={{ hideAttribution: true }}
-        className="cm-flow"
         onInit={() => {
           if (highlightPathIds?.length) {
             const cur =
@@ -588,22 +590,49 @@ function MapCanvasInner(
           maskColor="color-mix(in srgb, var(--bg) 55%, transparent)"
           pannable
           zoomable
-          className="cm-minimap"
         />
       </ReactFlow>
-      <div className="cm-zoom-controls" role="group" aria-label="缩放">
-        <button type="button" className="cm-icon-btn cm-zoom-btn" onClick={() => zoomTowardSelection('in')} aria-label="放大" title="放大">
+      <div
+        className={cn(
+          'absolute left-3.5 z-[6] flex flex-col gap-1',
+          'min-[861px]:bottom-[18px]',
+          dock === 'default' && 'max-[860px]:bottom-4',
+          dock === 'sheet' && 'max-[860px]:bottom-[calc(36vh+10px)]',
+          dock === 'peek' && 'max-[860px]:bottom-[108px]',
+        )}
+        role="group"
+        aria-label="缩放"
+      >
+        <button
+          type="button"
+          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+          onClick={() => zoomTowardSelection('in')}
+          aria-label="放大"
+          title="放大"
+        >
           <IconZoomIn />
         </button>
-        <button type="button" className="cm-icon-btn cm-zoom-btn" onClick={() => zoomTowardSelection('out')} aria-label="缩小" title="缩小">
+        <button
+          type="button"
+          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+          onClick={() => zoomTowardSelection('out')}
+          aria-label="缩小"
+          title="缩小"
+        >
           <IconZoomOut />
         </button>
-        <button type="button" className="cm-icon-btn cm-zoom-btn" onClick={() => fitReadable(300)} aria-label="适配" title="适配可见">
+        <button
+          type="button"
+          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+          onClick={() => fitReadable(300)}
+          aria-label="适配"
+          title="适配可见"
+        >
           <IconFit />
         </button>
         <button
           type="button"
-          className="cm-icon-btn cm-zoom-btn"
+          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
           aria-label="聚焦"
           title="聚焦邻域"
           onClick={() => {
