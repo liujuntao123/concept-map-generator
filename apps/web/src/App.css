@@ -1529,12 +1529,29 @@ a.cm-btn:hover { text-decoration: none; }
   .cm-home__hero-art { order: -1; }
 }
 
-/* Wider home search */
-.cm-library-toolbar--wide { max-width: 960px; }
-.cm-search--wide,
-.cm-library-toolbar--wide .cm-search {
-  width: min(520px, 100%);
-  min-width: min(420px, 100%);
+/* Wider home search — fill toolbar (avoid % width vs flex shrink loop) */
+.cm-home .cm-library-toolbar--wide {
+  display: flex;
+  width: 100%;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+.cm-home .cm-library-toolbar--wide .cm-library-search,
+.cm-home .cm-library-toolbar--wide .cm-search-wrap {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.cm-home .cm-library-toolbar--wide .cm-search.cm-search--wide,
+.cm-home .cm-library-toolbar--wide .cm-library-search .cm-search {
+  width: 100% !important;
+  min-width: 0;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 /* Book cards: cover illustrations + left accent */
