@@ -224,19 +224,6 @@
       var(--bg-elev-2);
   }
 
-  /* 首页 Hero：山景照片底图 */
-  .hero-photo {
-    background-color: #dce8f5;
-    background-image: url('/illustrations/bg-mountains-airy.jpg');
-    background-size: cover;
-    background-position: center 70%;
-    background-repeat: no-repeat;
-  }
-
-  [data-theme='dark'] .hero-photo {
-    background-color: #16202e;
-  }
-
   /* 地图页顶栏：雾山照片 + 主题渐变 */
   .topbar-map {
     border-bottom: 1px solid color-mix(in srgb, #7aa2c7 28%, var(--border));
@@ -260,48 +247,5 @@
         color-mix(in srgb, var(--bg-elev) 92%, transparent) 100%
       ),
       url('/illustrations/bg-map-header-mist.jpg');
-  }
-
-  /* 首页 Hero：可读性蒙层（桌面斜向、移动上下、深浅各一） */
-  .hero-scrim {
-    background: linear-gradient(
-      102deg,
-      rgba(255, 255, 255, 0.96) 0%,
-      rgba(255, 255, 255, 0.86) 34%,
-      rgba(255, 255, 255, 0.42) 58%,
-      rgba(255, 255, 255, 0.08) 78%,
-      rgba(255, 255, 255, 0) 100%
-    );
-  }
-
-  [data-theme='dark'] .hero-scrim {
-    background: linear-gradient(
-      102deg,
-      rgba(12, 16, 23, 0.92) 0%,
-      rgba(12, 16, 23, 0.74) 38%,
-      rgba(12, 16, 23, 0.42) 62%,
-      rgba(12, 16, 23, 0.18) 82%,
-      rgba(12, 16, 23, 0.08) 100%
-    );
-  }
-
-  @media (max-width: 760px) {
-    .hero-scrim {
-      background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.86) 0%,
-        rgba(255, 255, 255, 0.72) 56%,
-        rgba(255, 255, 255, 0.58) 100%
-      );
-    }
-
-    [data-theme='dark'] .hero-scrim {
-      background: linear-gradient(
-        180deg,
-        rgba(12, 16, 23, 0.82) 0%,
-        rgba(12, 16, 23, 0.64) 56%,
-        rgba(12, 16, 23, 0.5) 100%
-      );
-    }
   }
 }

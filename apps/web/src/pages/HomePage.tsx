@@ -58,27 +58,29 @@ function BookCard({ m }: { m: MapIndexEntry }) {
     <article
       className={cn(
         cardSurface,
-        'group relative overflow-hidden rounded-[20px] transition-[transform,border-color,box-shadow] duration-200 ease-soft hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-float',
+        'group relative isolate flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-[20px] transition-[transform,border-color,box-shadow] duration-200 ease-soft hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-float',
       )}
       data-book={m.id}
     >
-      {/* 封面铺满整卡作为底图：降低不透明度 + 模糊，退成色彩氛围而不是可读文字，
-          避免封面上的大字标题与卡片信息相互干扰；scale 用于吃掉模糊后的边缘 */}
+      {/* 封面铺满整卡作为底图。这两本书的封面都是白底大黑字、且图文集中在正中，
+          所以：① 用混合模式把「白底」吃掉，只让封面上的图画与字迹透出
+          （浅色 multiply，深色 invert + screen，同一批元素反过来发亮）；
+          ② 只做轻微模糊，保留封面的构图与比例，不糊成一团灰；
+          ③ 蒙层只压住底部信息条，让封面正中的内容能透出来 */}
       <img
         src={coverOf(m.id)}
         alt=""
         aria-hidden
         decoding="async"
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full scale-110 object-cover object-center opacity-60 blur-2xl dark:opacity-40 dark:brightness-[0.8]"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-60 mix-blend-multiply blur-[4px] dark:opacity-45 dark:invert dark:mix-blend-screen"
       />
-      {/* 蒙层：把封面压到不干扰阅读的程度；卡片信息整体叠在它上面。
-          深色下封面多为大面积白底，需压得更重，否则描述文字对比度不足 */}
+      {/* 蒙层：底部信息条压到实色保证对比度，向上快速让出整张封面 */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0 bg-surface/55 dark:bg-surface/72"
+        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-t from-surface from-0% via-surface/88 via-34% to-transparent to-62%"
       />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5 max-[860px]:p-4">
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5">
         {badge ? (
           <div className="flex flex-wrap gap-1.5">
             <span className="inline-flex items-center rounded-full border border-line bg-surface/60 px-2 py-0.5 text-[0.72rem] leading-[1.5] text-ink/75">
@@ -101,10 +103,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
         ) : null}
 
         {chips.length ? (
-          <div
-            className="flex flex-wrap gap-1.5 overflow-x-auto pt-0.5 pb-1 max-[860px]:flex-nowrap max-[860px]:[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            aria-label="推荐路径"
-          >
+          <div className="flex flex-wrap gap-1.5 pt-0.5 pb-1" aria-label="推荐路径">
             {chips.map((p, i) => (
               <Link
                 key={p.id}
@@ -125,7 +124,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
           </div>
         ) : null}
 
-        <div className="mt-1.5 flex gap-2.5 max-[860px]:flex-nowrap">
+        <div className="mt-1.5 flex flex-wrap gap-2.5">
           <Link
             className={buttonClass({
               variant: 'primary',
@@ -246,30 +245,26 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto w-full max-w-[920px] px-5 pt-2 pb-14">
-        <section className="hero-photo relative isolate mb-4 flex min-h-[88px] items-center overflow-hidden rounded-[22px] border border-[#c5d4e6]/55 shadow-card max-[760px]:min-h-[80px] dark:border-[#7aa2c7]/32">
-          <span className="hero-scrim absolute inset-0" aria-hidden />
-          <div
-            className="relative z-1 flex flex-wrap gap-2 px-6 py-5 max-[760px]:px-4 max-[760px]:py-4"
-            aria-label="馆藏统计"
-          >
-            <HeroStat icon={<IconBooks size={14} />} text={`${index.maps.length} 本`} />
-            <HeroStat icon={<IconNodes size={14} />} text={`${totalNodes} 节点`} />
-            <HeroStat icon={<IconEdges size={14} />} text={`${totalEdges} 关系`} />
+        {/* 三个统计标签直接作为页面工具条的一部分，不再包成 Hero 模块 */}
+        <div className="mb-5 flex flex-col gap-3 min-[720px]:flex-row min-[720px]:items-center">
+          <div className="flex flex-wrap items-center gap-2" aria-label="馆藏统计">
+            <StatBadge icon={<IconBooks size={14} />} text={`${index.maps.length} 本`} />
+            <StatBadge icon={<IconNodes size={14} />} text={`${totalNodes} 节点`} />
+            <StatBadge icon={<IconEdges size={14} />} text={`${totalEdges} 关系`} />
           </div>
-        </section>
-
-        <div className="relative mb-4">
-          <span className="pointer-events-none absolute top-1/2 left-3.5 flex -translate-y-1/2 text-muted" aria-hidden>
-            <IconSearch size={16} />
-          </span>
-          <input
-            className={cn(fieldClass, 'w-full rounded-full py-3 pr-3.5 pl-9 text-[0.95rem] shadow-soft')}
-            type="search"
-            placeholder="按书名、作者搜索…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="搜索图书"
-          />
+          <div className="relative min-[720px]:flex-1">
+            <span className="pointer-events-none absolute top-1/2 left-3.5 flex -translate-y-1/2 text-muted" aria-hidden>
+              <IconSearch size={16} />
+            </span>
+            <input
+              className={cn(fieldClass, 'h-10 w-full rounded-full pr-3.5 pl-9 text-[0.95rem] shadow-soft')}
+              type="search"
+              placeholder="按书名、作者搜索…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="搜索图书"
+            />
+          </div>
         </div>
 
         {filtered.length === 0 ? (
@@ -291,7 +286,7 @@ export default function HomePage() {
             ) : null}
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 min-[820px]:grid-cols-2">
             {filtered.map((m) => (
               <BookCard key={m.id} m={m} />
             ))}
@@ -302,10 +297,11 @@ export default function HomePage() {
   );
 }
 
-function HeroStat({ icon, text }: { icon: ReactNode; text: string }) {
+function StatBadge({ icon, text }: { icon: ReactNode; text: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/90 bg-white/62 px-3 py-1.5 text-[0.82rem] text-ink shadow-[0_2px_10px_rgba(30,50,80,0.08)] backdrop-blur-[8px] dark:border-[#94b2d6]/28 dark:bg-[#141b26]/55 dark:shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
-      {icon} {text}
+    <span className="inline-flex h-10 items-center gap-1.5 rounded-full border border-line bg-surface/85 px-3.5 text-[0.82rem] text-ink/80 shadow-soft backdrop-blur-sm">
+      <span className="text-accent">{icon}</span>
+      {text}
     </span>
   );
 }
