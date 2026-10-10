@@ -2444,3 +2444,154 @@ a.cm-btn:hover { text-decoration: none; }
   margin-top: 6px !important;
 }
 .cm-drawer--dense .cm-drawer__edge-keep { display: none; }
+
+/* ========== Ux-9: floating PathGuide + drawer collapse reflow ========== */
+
+/* Slim path tabs row — no full-width progress block */
+.cm-subbar--slim {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 6px 12px;
+}
+.cm-subbar--slim .cm-path-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cm-subbar--path {
+  /* legacy: neutralize column full-bleed from Ux-7 */
+  flex-direction: row;
+  align-items: center;
+}
+
+/* Floating progress card over canvas (top-left), capped width */
+.cm-path-float {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 7;
+  width: min(420px, calc(100% - 24px));
+  max-width: 420px;
+  pointer-events: none;
+}
+.cm-path-float .cm-path-guide,
+.cm-path-float .cm-path-guide--card {
+  pointer-events: auto;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--shadow) 90%, transparent);
+  backdrop-filter: blur(8px);
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--bg-elev) 92%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elev) 88%, transparent) 100%
+    ) !important;
+}
+/* Keep zoom clear of float card on desktop */
+@media (min-width: 861px) {
+  .cm-zoom-controls {
+    top: auto;
+    bottom: 18px !important;
+    transform: none;
+    left: 14px;
+  }
+}
+@media (max-width: 860px) {
+  .cm-path-float {
+    top: 8px;
+    left: 8px;
+    width: min(360px, calc(100% - 16px));
+    max-height: 42vh;
+    overflow: auto;
+  }
+}
+
+/* Desktop drawer collapse: narrow rail + canvas expands */
+@media (min-width: 861px) {
+  .cm-shell.has-drawer-peek .cm-main {
+    grid-template-columns: 1fr 76px;
+  }
+  .cm-drawer.cm-drawer--peek,
+  .cm-edge-panel.cm-drawer--peek {
+    width: 76px;
+    max-width: 76px;
+    padding: 10px 8px !important;
+    overflow: hidden;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .cm-drawer--peek .cm-drawer__grip { display: none; }
+  .cm-drawer--peek .cm-drawer__tabs,
+  .cm-drawer--peek .cm-drawer__section,
+  .cm-drawer--peek .cm-about,
+  .cm-drawer--peek .cm-related-group,
+  .cm-drawer--peek .cm-drawer__notes,
+  .cm-drawer--peek .cm-drawer__back,
+  .cm-drawer--peek .cm-drawer__badges,
+  .cm-edge-panel--peek .cm-drawer__section {
+    display: none !important;
+  }
+  .cm-drawer--peek .cm-drawer__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0 !important;
+  }
+  .cm-drawer--peek .cm-drawer__header > div:first-child {
+    min-width: 0;
+  }
+  .cm-drawer--peek .cm-drawer__header h2 {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 0.85rem !important;
+    margin: 0 auto !important;
+    max-height: 40vh;
+    overflow: hidden;
+    line-height: 1.25;
+  }
+  .cm-drawer--peek .cm-drawer__header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .cm-drawer--peek .cm-icon-btn {
+    width: 100%;
+  }
+}
+
+/* Collapse / expand control chrome */
+.cm-drawer__collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.cm-drawer__collapse-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elev));
+}
+.cm-drawer__expand-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 8px 6px !important;
+  font-size: 0.78rem !important;
+  min-height: 36px;
+}

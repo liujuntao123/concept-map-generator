@@ -159,9 +159,25 @@ export default function DetailDrawer({
           ) : null}
         </div>
         <div className="cm-drawer__header-actions">
+          {peek && onExpand ? (
+            <button
+              type="button"
+              className="cm-btn cm-btn--primary cm-drawer__expand-btn"
+              onClick={() => onExpand()}
+              title="展开侧栏"
+            >
+              展开
+            </button>
+          ) : null}
           {!peek && onCollapse ? (
-            <button type="button" className="cm-btn cm-btn--ghost" onClick={() => onCollapse()}>
-              收起
+            <button
+              type="button"
+              className="cm-drawer__collapse-btn"
+              onClick={() => onCollapse()}
+              title="收起侧栏，地图变宽"
+              aria-label="收起侧栏"
+            >
+              收起 ›
             </button>
           ) : null}
           <button type="button" className="cm-icon-btn" onClick={onClose} aria-label="关闭">

@@ -910,7 +910,7 @@ export default function MapPage() {
         </div>
       </header>
 
-      <div className={`cm-subbar${activePath ? ' cm-subbar--path' : ''}`}>
+      <div className="cm-subbar cm-subbar--slim">
         <div className="cm-path-tabs" role="tablist" aria-label="推荐路径">
           {featured.map((p) => (
             <button
@@ -947,33 +947,6 @@ export default function MapPage() {
             </span>
           ) : null}
         </div>
-
-        {activePath ? (
-          <PathGuide
-            path={activePath}
-            stepIndex={pathStep}
-            currentNode={byId.get(activePath.nodeIds[pathStep]) ?? selected}
-            nextNode={
-              pathStep < activePath.nodeIds.length - 1
-                ? byId.get(activePath.nodeIds[pathStep + 1]) ?? null
-                : null
-            }
-            completed={pathCompleted}
-            onToggleComplete={togglePathComplete}
-            onPrev={() => goPathStep(-1)}
-            onNext={() => goPathStep(1)}
-            onSkip={() => {
-              if (pathStep < activePath.nodeIds.length - 1) goPathStep(1);
-              else clearPath();
-            }}
-            onExit={clearPath}
-            onJump={(i) => activatePath(activePath, i)}
-            tableOpen={pathTableOpen}
-            onToggleTable={() => setPathTableOpen((v) => !v)}
-            labelOf={(id) => byId.get(id)?.label ?? id}
-            missingEdgeAt={missingEdgeAt}
-          />
-        ) : null}
       </div>
 
       <main className="cm-main">
@@ -1012,6 +985,35 @@ export default function MapPage() {
               <button type="button" className="cm-btn" onClick={() => setQueryAndUrl('')}>
                 清空搜索
               </button>
+            </div>
+          ) : null}
+
+          {activePath ? (
+            <div className="cm-path-float" role="region" aria-label="路径进度">
+              <PathGuide
+                path={activePath}
+                stepIndex={pathStep}
+                currentNode={byId.get(activePath.nodeIds[pathStep]) ?? selected}
+                nextNode={
+                  pathStep < activePath.nodeIds.length - 1
+                    ? byId.get(activePath.nodeIds[pathStep + 1]) ?? null
+                    : null
+                }
+                completed={pathCompleted}
+                onToggleComplete={togglePathComplete}
+                onPrev={() => goPathStep(-1)}
+                onNext={() => goPathStep(1)}
+                onSkip={() => {
+                  if (pathStep < activePath.nodeIds.length - 1) goPathStep(1);
+                  else clearPath();
+                }}
+                onExit={clearPath}
+                onJump={(i) => activatePath(activePath, i)}
+                tableOpen={pathTableOpen}
+                onToggleTable={() => setPathTableOpen((v) => !v)}
+                labelOf={(id) => byId.get(id)?.label ?? id}
+                missingEdgeAt={missingEdgeAt}
+              />
             </div>
           ) : null}
 
