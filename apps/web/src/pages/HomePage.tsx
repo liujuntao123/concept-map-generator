@@ -191,7 +191,7 @@ export default function HomePage() {
       </header>
 
       <main className="cm-home cm-home--v10">
-        <section className="cm-home__hero-panel cm-home__hero-panel--mock">
+        <section className="cm-home__hero-panel cm-home__hero-panel--bg">
           <div className="cm-home__hero-copy">
             <h1>
               <IconNetwork size={26} /> 图书与地图
@@ -208,9 +208,6 @@ export default function HomePage() {
                 <IconEdges size={14} /> {totalEdges} 关系
               </span>
             </div>
-          </div>
-          <div className="cm-home__hero-art" aria-hidden>
-            <img src="/illustrations/bg-mountains-airy.jpg" alt="" width={420} height={236} />
           </div>
         </section>
 
@@ -235,7 +232,7 @@ export default function HomePage() {
             <h2>{qTrim ? '没有匹配的图书' : '还没有图书'}</h2>
             <p>{qTrim ? '试试其他关键词。' : '生成第一本地图后会出现在这里。'}</p>
             {qTrim ? (
-              <button type="button" className="cm-btn" onClick={() => setQuery('')}>
+              <button type="button" className="cm-btn cm-btn--ghost" onClick={() => setQuery('')}>
                 清空搜索
               </button>
             ) : null}

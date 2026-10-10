@@ -11,7 +11,7 @@ import {
   type NodeType,
 } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
-import { IconMap, IconMoon, IconPath, IconSun } from '../components/icons';
+import { IconChevronLeft, IconMap, IconMoon, IconPath, IconSun } from '../components/icons';
 import type { ConceptGraph } from '../types/graph';
 
 export default function BookDetailPage() {
@@ -87,22 +87,19 @@ export default function BookDetailPage() {
   const year = meta.generatedAt ? formatGeneratedDate(meta.generatedAt).slice(0, 4) : '';
   const byline = [meta.author, meta.publisher, year].filter(Boolean).join(' · ');
   return (
-    <div className="cm-shell">
-      <header className="cm-topbar">
-        <div className="cm-brand">
+    <div className="cm-shell cm-shell--simple">
+      <header className="cm-topbar cm-topbar--detail">
+        <div className="cm-brand cm-brand--detail">
+          <Link className="cm-back-link" to="/">
+            <IconChevronLeft size={14} /> 图书列表
+          </Link>
           <div className="cm-brand__mark" aria-hidden />
-          <div>
-            <Link className="cm-back" to="/">
-              ← 图书列表
-            </Link>
+          <div className="cm-brand__text">
             <h1>图书简介</h1>
             <p>{meta.title}</p>
           </div>
         </div>
         <div className="cm-toolbar">
-          <Link className="cm-btn cm-btn--primary" to={`/maps/${meta.id}?view=all`}>
-            进入地图
-          </Link>
           <button
             type="button"
             className="cm-icon-btn cm-theme-toggle"
@@ -115,8 +112,8 @@ export default function BookDetailPage() {
       </header>
 
       <main className="cm-book-detail">
-        <section className="cm-book-detail__hero">
-          <div className="cm-book-detail__cover cm-book-detail__cover--photo" aria-hidden>
+        <section className="cm-book-detail__hero" data-book={meta.id}>
+          <div className="cm-book-detail__cover cm-book-detail__cover--plate" aria-hidden>
             <img src={coverOf(meta.id)} alt="" width={180} height={240} />
           </div>
           <div className="cm-book-detail__intro">
@@ -126,9 +123,9 @@ export default function BookDetailPage() {
               </div>
             ) : null}
             <h1>{meta.title}</h1>
-            <p className="cm-book-detail__byline">
-              {[meta.author, meta.publisher, meta.subtitle].filter(Boolean).join(' · ')}
-            </p>
+            {meta.subtitle && meta.subtitle !== meta.title ? (
+              <p className="cm-book-detail__subtitle">{meta.subtitle}</p>
+            ) : null}
             <p className="cm-book-detail__desc">
               {meta.description ||
                 '这本书被整理成可交互的概念地图：可从章节走进概念与主张，边旁有原文摘录。'}
@@ -178,10 +175,13 @@ export default function BookDetailPage() {
                       {p.nodeIds.length > 6 ? <li>…共 {p.nodeIds.length} 步</li> : null}
                     </ol>
                     <Link
-                      className="cm-btn cm-btn--primary"
+                      className="cm-btn cm-btn--primary cm-path-card__start"
                       to={`/maps/${meta.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(firstId)}`}
                     >
-                      从「{firstLabel.length > 12 ? firstLabel.slice(0, 11) + '…' : firstLabel}」开始 · {p.nodeIds.length} 步
+                      <span>
+                        从「{firstLabel.length > 12 ? firstLabel.slice(0, 11) + '…' : firstLabel}」开始
+                      </span>
+                      <em>{p.nodeIds.length} 步</em>
                     </Link>
                   </div>
                 );
@@ -197,7 +197,7 @@ export default function BookDetailPage() {
               ? `${meta.stats.nodes} 节点 · ${meta.stats.edges} 关系 · ${meta.stats.chapters} 章 · ${meta.stats.concepts} 概念`
               : '暂无规模数据'}
           </p>
-          <div className="cm-book-detail__grid" style={{ marginTop: 12 }}>
+          <div className="cm-book-detail__grid">
             <div>
               <h3>节点类型</h3>
               <ul className="cm-breakdown">
@@ -230,7 +230,7 @@ export default function BookDetailPage() {
               </ul>
             </div>
           </div>
-          <dl className="cm-dl cm-dl--stacked" style={{ marginTop: 12 }}>
+          <dl className="cm-meta-grid">
             <div>
               <dt>生成日期</dt>
               <dd>{formatGeneratedDate(meta.generatedAt)}</dd>
