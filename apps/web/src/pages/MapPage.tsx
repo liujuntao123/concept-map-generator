@@ -59,6 +59,8 @@ export default function MapPage() {
   const [copied, setCopied] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [hitsCollapsed, setHitsCollapsed] = useState(false);
+  const [defaultBootstrapped, setDefaultBootstrapped] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +94,55 @@ export default function MapPage() {
       cancelled = true;
     };
   }, [mapId]);
+
+  // Ux2-1: cold open defaults into first path (or 辑一) so map is readable
+  useEffect(() => {
+    if (!graph || !meta || defaultBootstrapped) return;
+    const hasDeep =
+      searchParams.get('node') ||
+      searchParams.get('path') ||
+      searchParams.get('focus') ||
+      searchParams.get('edge') ||
+      searchParams.get('q') ||
+      searchParams.get('type');
+    if (hasDeep) {
+      setDefaultBootstrapped(true);
+      return;
+    }
+    const firstPath = meta.featuredPaths?.[0];
+    if (firstPath) {
+      const n = graph.nodes.find((x) => x.id === firstPath.nodeIds[0]) ?? null;
+      setPathId(firstPath.id);
+      setPathStep(0);
+      setSelected(n);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('path', firstPath.id);
+          next.set('step', '0');
+          if (n) next.set('node', n.id);
+          return next;
+        },
+        { replace: true },
+      );
+    } else {
+      const ji1 = graph.nodes.find((x) => x.id === 'ch-ji1' || x.label === '辑一');
+      if (ji1) {
+        setChapterFocusId(ji1.id);
+        setSelected(ji1);
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('focus', ji1.id);
+            next.set('node', ji1.id);
+            return next;
+          },
+          { replace: true },
+        );
+      }
+    }
+    setDefaultBootstrapped(true);
+  }, [graph, meta, defaultBootstrapped, searchParams, setSearchParams]);
 
   useEffect(() => {
     const t = searchParams.get('type');
@@ -257,6 +308,7 @@ export default function MapPage() {
   const setQueryAndUrl = useCallback(
     (value: string) => {
       setQuery(value);
+      setHitsCollapsed(false);
       patchParams((next) => {
         const v = value.trim();
         if (v) next.set('q', v);
@@ -395,6 +447,10 @@ export default function MapPage() {
       if (typing) return;
 
       if (e.key === 'Escape') {
+        if (moreOpen) {
+          setMoreOpen(false);
+          return;
+        }
         if (helpOpen) {
           setHelpOpen(false);
           return;
@@ -440,6 +496,7 @@ export default function MapPage() {
     chapterFocusId,
     focusChapter,
     helpOpen,
+    moreOpen,
     pathId,
     clearPath,
     activePath,
@@ -557,6 +614,26 @@ export default function MapPage() {
             ))}
           </div>
 
+          <div className="cm-chapter-filter">
+            <select
+              className="cm-select"
+              aria-label="按章节筛选"
+              value={chapterFocusId ?? ''}
+              onChange={(e) => focusChapter(e.target.value || null)}
+            >
+              <option value="">全部章节</option>
+              {chapterGroups.map((g) => (
+                <optgroup key={g.group} label={g.group}>
+                  {g.items.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+
           <button
             type="button"
             className="cm-btn cm-btn--primary"
@@ -600,28 +677,6 @@ export default function MapPage() {
                 <Link className="cm-more-item" to={`/books/${mapId}`} onClick={() => setMoreOpen(false)}>
                   图书详情
                 </Link>
-                <div className="cm-chapter-filter cm-more-item">
-                  <select
-                    className="cm-select"
-                    aria-label="按章节筛选"
-                    value={chapterFocusId ?? ''}
-                    onChange={(e) => {
-                      focusChapter(e.target.value || null);
-                      setMoreOpen(false);
-                    }}
-                  >
-                    <option value="">全部章节</option>
-                    {chapterGroups.map((g) => (
-                      <optgroup key={g.group} label={g.group}>
-                        {g.items.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </div>
               </div>
             ) : null}
           </div>
@@ -643,30 +698,33 @@ export default function MapPage() {
             </button>
           ))}
           {activePath ? (
-            <div className="cm-path-stepper">
-              <button
-                type="button"
-                className="cm-btn"
-                disabled={pathStep <= 0}
-                onClick={() => goPathStep(-1)}
-              >
-                上一步
-              </button>
-              <span>
-                {pathStep + 1} / {activePath.nodeIds.length}
-              </span>
-              <button
-                type="button"
-                className="cm-btn"
-                disabled={pathStep >= activePath.nodeIds.length - 1}
-                onClick={() => goPathStep(1)}
-              >
-                下一步
-              </button>
-              <button type="button" className="cm-btn" onClick={clearPath}>
-                退出路径
-              </button>
-            </div>
+            <>
+              <span className="cm-path-blurb">{activePath.description}</span>
+              <div className="cm-path-stepper">
+                <button
+                  type="button"
+                  className="cm-btn"
+                  disabled={pathStep <= 0}
+                  onClick={() => goPathStep(-1)}
+                >
+                  上一步
+                </button>
+                <span>
+                  {pathStep + 1} / {activePath.nodeIds.length}
+                </span>
+                <button
+                  type="button"
+                  className="cm-btn"
+                  disabled={pathStep >= activePath.nodeIds.length - 1}
+                  onClick={() => goPathStep(1)}
+                >
+                  下一步
+                </button>
+                <button type="button" className="cm-btn" onClick={clearPath}>
+                  退出路径
+                </button>
+              </div>
+            </>
           ) : null}
         </div>
 
@@ -702,13 +760,16 @@ export default function MapPage() {
             </div>
           ) : null}
 
-          {qTrim ? (
+          {qTrim && searchHits.length > 0 ? (
             <SearchHits
               hits={searchHits}
               query={qTrim}
               selectedId={selected?.id ?? null}
+              collapsed={hitsCollapsed}
+              onExpand={() => setHitsCollapsed(false)}
               onSelect={(n) => {
                 selectNode(n);
+                setHitsCollapsed(true);
                 window.setTimeout(() => canvasRef.current?.focusSelected(), 50);
               }}
             />
@@ -741,8 +802,14 @@ export default function MapPage() {
           />
 
           <div className="cm-view-controls">
+            <button type="button" className="cm-btn" onClick={() => canvasRef.current?.zoomIn()}>
+              放大
+            </button>
+            <button type="button" className="cm-btn" onClick={() => canvasRef.current?.zoomOut()}>
+              缩小
+            </button>
             <button type="button" className="cm-btn" onClick={() => canvasRef.current?.fitView()}>
-              适配全部
+              适配可见
             </button>
             <button
               type="button"
@@ -786,6 +853,8 @@ export default function MapPage() {
           />
         ) : null}
       </main>
+
+      {copied ? <div className="cm-toast" role="status">已复制当前视图链接</div> : null}
 
       {helpOpen ? (
         <div className="cm-help" role="dialog" aria-label="快捷键">

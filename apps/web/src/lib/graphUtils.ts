@@ -55,7 +55,7 @@ export function matchesQuery(n: MapNode, q: string): boolean {
 /** Best snippet field for a search hit, with optional mark of query. */
 export function snippetForQuery(n: MapNode, q: string): string {
   const qq = q.trim().toLowerCase();
-  const fields = [n.summary, n.source?.excerpt ?? '', n.label, ...(n.tags ?? [])];
+  const fields = [n.label, ...(n.tags ?? []), n.summary, n.source?.excerpt ?? ''];
   for (const f of fields) {
     if (!f) continue;
     if (!qq || f.toLowerCase().includes(qq)) {
@@ -90,6 +90,11 @@ const BOILERPLATE_RES: RegExp[] = [
   /相关收束或转进[：:]/g,
   /概念「[^」]+」需要放回「[^」]+」的问题脉络里理解，而不是抽成词典义项。/g,
   /本篇「[^」]+」属于《[^》]+》的正式正文[^。]*。?/g,
+  /论证上，作者把这一主张放进更长的思想史与自我澄清之中[：:]/g,
+  /导读首先交代[：:]/g,
+  /随后进入问题结构[：:]/g,
+  /著作节点「[^」]+」对应书中导读所围绕的文本，而非简单书目条目。/g,
+  /主张「[^」]+」不是口号，而是作者用来组织全书问题意识的枢纽命题。/g,
 ];
 
 /** Strip generator UI instructions from node content for reader display. */
@@ -100,6 +105,9 @@ export function cleanReaderContent(raw: string): string {
   c = c.replace(/\s{2,}/g, ' ').replace(/^[：:，,、\s]+/, '').trim();
   c = c.replace(/^(核心说法是|作者进一步区分或展开|相关收束或转进)[：:]\s*$/u, '').trim();
   c = c.replace(/核心说法是[：:]\s*。/g, '').trim();
+  c = c.replace(/^[。！？：:\s]+/u, '').trim();
+  c = c.replace(/[。！？：:]\s*[。！？：:]+/gu, '。').trim();
+  if (/^[。！？：:\s]*$/u.test(c)) return '';
   return c;
 }
 
@@ -108,10 +116,13 @@ export function cleanReaderContent(raw: string): string {
  * Hide when empty, equal to summary, leftover template, or mostly repeating the excerpt.
  */
 export function readerBody(n: MapNode): string | null {
-  const cleaned = cleanReaderContent(n.content ?? '');
+  let cleaned = cleanReaderContent(n.content ?? '');
   if (!cleaned) return null;
+  cleaned = cleaned.replace(/^[。！？：:\s]+/u, '').trim();
+  if (!cleaned || /^[。！？：:\s]*$/u.test(cleaned)) return null;
   const summary = (n.summary ?? '').trim();
   if (cleaned === summary) return null;
+  if (summary && cleaned.includes(summary) && cleaned.length < summary.length + 12) return null;
   if (cleaned.includes('属于《') && cleaned.includes('正式正文')) return null;
   const excerpt = (n.source?.excerpt ?? '').trim();
   if (excerpt && excerpt.length > 20) {

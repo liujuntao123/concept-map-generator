@@ -30,6 +30,7 @@ function GraphNodeComponent({ data, selected }: NodeProps<Node<GraphNodeData>>) 
   return (
     <div className={cls} title={data.label}>
       <Handle type="target" position={Position.Top} className="cm-handle" />
+      {data.nodeType === 'chapter' ? <span className="cm-node__strip" aria-hidden /> : null}
       <span className="cm-node__badge">{typeLabel}</span>
       <span className="cm-node__label">{data.label}</span>
       {data.pathStep != null ? (

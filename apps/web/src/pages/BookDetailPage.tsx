@@ -6,9 +6,7 @@ import { formatGeneratedDate } from '../lib/graphUtils';
 import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
-  STATUS_LABEL,
   type MapMeta,
-  type MapPublishStatus,
   type NodeType,
 } from '../types/graph';
 import { useTheme } from '../hooks/useTheme';
@@ -62,8 +60,6 @@ export default function BookDetailPage() {
     );
   }
 
-  const status = (meta.status ?? 'draft') as MapPublishStatus;
-
   const nodeBreakdown = meta.nodeTypeBreakdown ?? {
     chapter: meta.stats?.chapters,
     concept: meta.stats?.concepts,
@@ -115,13 +111,11 @@ export default function BookDetailPage() {
           </div>
           <div className="cm-book-detail__intro">
             <div className="cm-book-card__badges">
-              <span className={`cm-pill cm-pill--status-${status}`} title="发布状态">
-                发布状态：{STATUS_LABEL[status]}
+              <span className="cm-pill">
+                {[meta.author, meta.publisher, meta.generatedAt ? formatGeneratedDate(meta.generatedAt).slice(0, 4) : '']
+                  .filter(Boolean)
+                  .join(' · ')}
               </span>
-              {meta.version ? <span className="cm-pill">v{meta.version}</span> : null}
-              {meta.schemaVersion ? (
-                <span className="cm-pill">schema {meta.schemaVersion}</span>
-              ) : null}
             </div>
             <h1>{meta.title}</h1>
             <p className="cm-book-detail__byline">
@@ -186,41 +180,27 @@ export default function BookDetailPage() {
           </div>
 
           <div className="cm-panel">
-            <h2>来源与溯源</h2>
-            <dl className="cm-dl cm-dl--stacked">
-              <div>
-                <dt>源文件</dt>
-                <dd>{meta.source?.file || meta.ima?.file_name?.toString() || '—'}</dd>
-              </div>
-              <div>
-                <dt>类型</dt>
-                <dd>{meta.source?.kind || '—'}</dd>
-              </div>
-              <div>
-                <dt>IMA 知识库</dt>
-                <dd>{meta.source?.imaKb || meta.ima?.kb_name?.toString() || '—'}</dd>
-              </div>
-              <div>
-                <dt>生成时间</dt>
-                <dd>{formatGeneratedDate(meta.generatedAt)}</dd>
-              </div>
-              <div>
-                <dt>创建时间</dt>
-                <dd>{formatGeneratedDate(meta.createdAt)}</dd>
-              </div>
-              {meta.isbn ? (
+            <h2>关于这本书</h2>
+            <p className="cm-book-detail__desc">{meta.description || '尚无简介。'}</p>
+            <details className="cm-about">
+              <summary>版本与来源</summary>
+              <dl className="cm-dl cm-dl--stacked">
                 <div>
-                  <dt>ISBN</dt>
-                  <dd>{meta.isbn}</dd>
+                  <dt>生成日期</dt>
+                  <dd>{formatGeneratedDate(meta.generatedAt)}</dd>
                 </div>
-              ) : null}
-              {meta.language ? (
                 <div>
-                  <dt>语言</dt>
-                  <dd>{meta.language}</dd>
+                  <dt>源文件</dt>
+                  <dd>{meta.source?.file || '—'}</dd>
                 </div>
-              ) : null}
-            </dl>
+                {meta.version ? (
+                  <div>
+                    <dt>地图版本</dt>
+                    <dd>{meta.version}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </details>
           </div>
         </section>
 

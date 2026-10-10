@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
 import {
   Background,
-  Controls,
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
@@ -36,7 +35,7 @@ const nodeTypes: NodeTypes = {
   work: GraphNode,
 };
 
-const READABLE_MIN_ZOOM = 0.75;
+const READABLE_MIN_ZOOM = 0.8;
 
 export type TypeFilter = 'all' | NodeType;
 
@@ -44,6 +43,8 @@ export interface MapCanvasHandle {
   fitView: () => void;
   focusSelected: () => void;
   focusNeighborhood: (ids: string[]) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
 }
 
 export interface VisibleStats {
@@ -84,7 +85,8 @@ function MapCanvasInner(
   }: Props,
   ref: React.Ref<MapCanvasHandle>,
 ) {
-  const { fitView, getNode, getZoom, setViewport, getViewport } = useReactFlow();
+  const { fitView, getNode, getZoom, setViewport, getViewport, zoomIn, zoomOut, setCenter } =
+    useReactFlow();
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
 
   const byId = useMemo(() => {
@@ -115,17 +117,27 @@ function MapCanvasInner(
 
   const pathIndex = useMemo(() => {
     const m = new Map<string, number>();
-    if (highlightPathIds) {
-      highlightPathIds.forEach((id, i) => m.set(id, i + 1));
-    }
+    highlightPathIds?.forEach((id, i) => m.set(id, i + 1));
     return m;
+  }, [highlightPathIds]);
+
+  /** Ordered consecutive pairs along the tour */
+  const pathEdgeKeys = useMemo(() => {
+    const s = new Set<string>();
+    if (!highlightPathIds || highlightPathIds.length < 2) return s;
+    for (let i = 0; i < highlightPathIds.length - 1; i++) {
+      const a = highlightPathIds[i];
+      const b = highlightPathIds[i + 1];
+      s.add(`${a}|${b}`);
+      s.add(`${b}|${a}`);
+    }
+    return s;
   }, [highlightPathIds]);
 
   const neighborhoodSet = useMemo(() => {
     if (pathSet) return pathSet;
     if (!selectedId) return null;
-    const s = new Set<string>([selectedId, ...neighborSet]);
-    return s;
+    return new Set<string>([selectedId, ...neighborSet]);
   }, [selectedId, neighborSet, pathSet]);
 
   const { initialNodes, initialEdges, hitIds, visibleIds } = useMemo(() => {
@@ -135,28 +147,28 @@ function MapCanvasInner(
       focusIds = chapterSubgraphIds(graph, chapterFocusId, adj);
     }
 
+    // Ux2-4: path mode → only path nodes
+    let candidate = graph.nodes;
+    if (pathSet) {
+      candidate = graph.nodes.filter((n) => pathSet.has(n.id));
+    }
+
     const hits = new Set(
-      graph.nodes
+      candidate
         .filter((n) => (filter === 'all' ? true : n.type === filter))
-        .filter((n) => (focusIds ? focusIds.has(n.id) : true))
+        .filter((n) => (focusIds && !pathSet ? focusIds.has(n.id) : true))
         .filter((n) => matchesQuery(n, q))
         .map((n) => n.id),
     );
 
     const visible = new Set(hits);
 
-    // Path nodes always visible when touring
     if (pathSet) {
-      for (const id of pathSet) {
-        if (byId.has(id)) {
-          if (filter === 'all' || byId.get(id)!.type === filter) visible.add(id);
-          else visible.add(id); // path overrides type filter for tour continuity
-        }
-      }
+      for (const id of pathSet) if (byId.has(id)) visible.add(id);
     }
 
     const contextIds = new Set<string>();
-    if (q) {
+    if (q && !pathSet) {
       for (const id of hits) {
         for (const nb of adj.get(id) ?? []) {
           if (filter !== 'all') {
@@ -199,19 +211,31 @@ function MapCanvasInner(
             searchContext: isCtx,
             pathStep: pathIndex.get(n.id) ?? null,
           },
-          selected: isSel || (pathStepIndex != null && highlightPathIds?.[pathStepIndex] === n.id),
+          selected:
+            isSel || (pathStepIndex != null && highlightPathIds?.[pathStepIndex] === n.id),
+          draggable: false,
+          connectable: false,
         };
       });
 
+    const showContains =
+      showStructuralEdges || Boolean(chapterFocusId) || Boolean(pathSet);
+
     const rfEdges: Edge[] = graph.edges
       .filter((e) => visible.has(e.source) && visible.has(e.target))
-      .filter((e) => showStructuralEdges || !isStructuralEdge(e))
+      .filter((e) => {
+        if (pathSet) {
+          // path mode: only consecutive tour edges (or any edge between consecutive pair)
+          return pathEdgeKeys.has(`${e.source}|${e.target}`);
+        }
+        if (isStructuralEdge(e)) return showContains;
+        return true;
+      })
       .map((e) => {
         const structural = isStructuralEdge(e);
         const touchesSel =
           selectedId != null && (e.source === selectedId || e.target === selectedId);
-        const inPath =
-          pathSet != null && pathSet.has(e.source) && pathSet.has(e.target);
+        const inPath = pathEdgeKeys.has(`${e.source}|${e.target}`);
         const inNbhd = Boolean(
           neighborhoodSet &&
             neighborhoodSet.has(e.source) &&
@@ -219,35 +243,41 @@ function MapCanvasInner(
         );
         const selected = e.id === selectedEdgeId;
         const hovered = e.id === hoveredEdgeId;
-        const showLabel = selected || hovered || inPath;
-        const farFade = Boolean(neighborhoodSet && !inNbhd && !inPath && !touchesSel);
+        // Ux2-5: show verb labels on selected neighborhood
+        const showLabel = selected || hovered || inPath || touchesSel;
+        const farFade = Boolean(
+          !pathSet && neighborhoodSet && !inNbhd && !inPath && !touchesSel,
+        );
         const dimmed = Boolean(
           structural ||
             (selectedId && !touchesSel && !inPath) ||
-            (pathSet && !inPath && !touchesSel) ||
+            (pathSet && !inPath) ||
             farFade,
         );
 
         const stroke =
-          selected || hovered
+          selected || hovered || touchesSel || inPath
             ? 'var(--accent)'
             : edgeTypeColor(String(e.type));
 
         const strokeDasharray =
-          e.type === 'contrasts' ? '7 5' : e.type === 'cites' ? '2 4' : undefined;
+          e.type === 'contrasts' ? '6 4' : e.type === 'cites' ? '2 3' : undefined;
 
         return {
           id: e.id,
           source: e.source,
           target: e.target,
           label: showLabel ? e.label : undefined,
-          type: 'default',
-          animated: e.type === 'contrasts' || e.type === 'cites',
-          zIndex: selected || hovered || inPath ? 20 : farFade ? 0 : 2,
+          type: 'smoothstep',
+          pathOptions: { borderRadius: 12, offset: 12 },
+          animated: false,
+          interactionWidth: 16,
+          zIndex: selected || hovered || inPath || touchesSel ? 20 : farFade ? 0 : 2,
           className: [
             dimmed ? 'is-dimmed' : '',
             farFade ? 'is-far' : '',
             structural ? 'is-structural' : '',
+            inPath ? 'is-path-edge' : '',
             touchesSel || selected || inPath ? 'is-hl' : '',
             `cm-edge--${e.type}`,
           ]
@@ -255,30 +285,31 @@ function MapCanvasInner(
             .join(' '),
           markerEnd: structural
             ? undefined
-            : { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+            : { type: MarkerType.ArrowClosed, width: 12, height: 12 },
           style: {
             stroke,
-            strokeWidth: selected || touchesSel || inPath ? 2.4 : structural ? 1 : 1.4,
+            strokeWidth: selected || touchesSel || inPath ? 2.6 : structural ? 1.2 : 1.5,
             strokeDasharray,
-            opacity: structural ? 0.18 : farFade ? 0.12 : dimmed ? 0.35 : 1,
+            opacity: structural ? 0.28 : farFade ? 0.1 : dimmed ? 0.32 : 1,
           },
           labelStyle: {
             fill: 'var(--text)',
             fontSize: 11,
-            fontWeight: 600,
+            fontWeight: 650,
           },
-          labelBgStyle: { fill: 'var(--bg-elev)', fillOpacity: 0.95 },
+          labelBgStyle: { fill: 'var(--bg-elev)', fillOpacity: 0.96 },
           labelBgPadding: [5, 3] as [number, number],
           labelBgBorderRadius: 4,
           data: { edge: e },
         };
       });
 
-    // Selected edge on top
     rfEdges.sort((a, b) => {
-      const as = a.id === selectedEdgeId ? 1 : 0;
-      const bs = b.id === selectedEdgeId ? 1 : 0;
-      return as - bs;
+      const score = (e: Edge) =>
+        (e.id === selectedEdgeId ? 4 : 0) +
+        ((e.className || '').includes('is-hl') ? 2 : 0) +
+        ((e.className || '').includes('is-path-edge') ? 1 : 0);
+      return score(a) - score(b);
     });
 
     const laid = layoutWithDagre(rfNodes, rfEdges, 'TB');
@@ -301,6 +332,7 @@ function MapCanvasInner(
     pathIndex,
     pathStepIndex,
     highlightPathIds,
+    pathEdgeKeys,
     neighborhoodSet,
     byId,
     showStructuralEdges,
@@ -326,13 +358,12 @@ function MapCanvasInner(
   const fitReadable = useCallback(
     (duration = 0) => {
       void fitView({
-        padding: 0.18,
+        padding: 0.22,
         minZoom: READABLE_MIN_ZOOM,
-        maxZoom: 1.2,
+        maxZoom: 1.15,
         duration,
       }).then(() => {
-        const z = getZoom();
-        if (z < READABLE_MIN_ZOOM) {
+        if (getZoom() < READABLE_MIN_ZOOM) {
           const vp = getViewport();
           void setViewport({ ...vp, zoom: READABLE_MIN_ZOOM }, { duration: 0 });
         }
@@ -350,35 +381,55 @@ function MapCanvasInner(
       }
       void fitView({
         nodes: present.map((id) => ({ id })),
-        padding: 0.35,
+        padding: 0.32,
         minZoom: READABLE_MIN_ZOOM,
-        maxZoom: 1.25,
-        duration: 380,
+        maxZoom: 1.2,
+        duration: 360,
       });
     },
     [fitView, getNode, fitReadable],
   );
 
+  const zoomTowardSelection = useCallback(
+    (dir: 'in' | 'out') => {
+      const factor = dir === 'in' ? 1.2 : 1 / 1.2;
+      if (selectedId) {
+        const n = getNode(selectedId);
+        if (n) {
+          const w = n.measured?.width ?? 180;
+          const h = n.measured?.height ?? 56;
+          const next = Math.min(2, Math.max(0.12, getZoom() * factor));
+          void setCenter(n.position.x + w / 2, n.position.y + h / 2, {
+            zoom: next,
+            duration: 180,
+          });
+          return;
+        }
+      }
+      if (dir === 'in') void zoomIn({ duration: 180 });
+      else void zoomOut({ duration: 180 });
+    },
+    [selectedId, getNode, getZoom, setCenter, zoomIn, zoomOut],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
-      fitView: () => {
-        void fitView({ padding: 0.15, duration: 300 });
-      },
+      fitView: () => fitReadable(300),
       focusSelected: () => {
         if (!selectedId) {
           fitReadable(300);
           return;
         }
-        const ids = [selectedId, ...neighborSet];
-        focusNeighborhood([...ids]);
+        focusNeighborhood([selectedId, ...neighborSet]);
       },
       focusNeighborhood,
+      zoomIn: () => zoomTowardSelection('in'),
+      zoomOut: () => zoomTowardSelection('out'),
     }),
-    [fitView, fitReadable, selectedId, neighborSet, focusNeighborhood],
+    [fitReadable, selectedId, neighborSet, focusNeighborhood, zoomTowardSelection],
   );
 
-  // Cold open default: readable full (or focused) fit
   useEffect(() => {
     if (selectedId || pathSet) return;
     const t = window.setTimeout(() => fitReadable(0), 80);
@@ -386,18 +437,14 @@ function MapCanvasInner(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph.mapId, filter, chapterFocusId, query, nodes.length]);
 
-  // U2: auto-fit neighborhood when selection / path changes
   useEffect(() => {
     if (pathSet && highlightPathIds?.length) {
-      const t = window.setTimeout(() => {
-        focusNeighborhood(highlightPathIds);
-      }, 120);
+      const t = window.setTimeout(() => focusNeighborhood(highlightPathIds), 120);
       return () => window.clearTimeout(t);
     }
     if (!selectedId) return;
     const t = window.setTimeout(() => {
-      const ids = [selectedId, ...neighborsOf(adj, selectedId)];
-      focusNeighborhood([...ids]);
+      focusNeighborhood([selectedId, ...neighborsOf(adj, selectedId)]);
     }, 120);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -458,19 +505,19 @@ function MapCanvasInner(
         minZoom={0.12}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: READABLE_MIN_ZOOM }}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable
+        deleteKeyCode={null}
         proOptions={{ hideAttribution: true }}
         onInit={() => {
-          if (selectedId) {
+          if (highlightPathIds?.length) focusNeighborhood(highlightPathIds);
+          else if (selectedId)
             focusNeighborhood([selectedId, ...neighborsOf(adj, selectedId)]);
-          } else if (highlightPathIds?.length) {
-            focusNeighborhood(highlightPathIds);
-          } else {
-            fitReadable(0);
-          }
+          else fitReadable(0);
         }}
       >
         <Background gap={22} size={1} color="var(--rf-bg-dot)" />
-        <Controls showInteractive={false} position="bottom-left" showFitView={false} />
         <MiniMap
           position="bottom-right"
           nodeColor={(n) => nodeTypeColor((n.type as string) || 'concept')}
@@ -479,6 +526,14 @@ function MapCanvasInner(
           zoomable
         />
       </ReactFlow>
+      <div className="cm-zoom-controls" role="group" aria-label="缩放">
+        <button type="button" className="cm-btn" onClick={() => zoomTowardSelection('in')}>
+          放大
+        </button>
+        <button type="button" className="cm-btn" onClick={() => zoomTowardSelection('out')}>
+          缩小
+        </button>
+      </div>
       <MapLegend />
     </>
   );

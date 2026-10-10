@@ -5,7 +5,9 @@ interface Props {
   hits: MapNode[];
   query: string;
   selectedId: string | null;
+  collapsed?: boolean;
   onSelect: (node: MapNode) => void;
+  onExpand?: () => void;
 }
 
 function Highlight({ text, query }: { text: string; query: string }) {
@@ -23,13 +25,29 @@ function Highlight({ text, query }: { text: string; query: string }) {
   );
 }
 
-export default function SearchHits({ hits, query, selectedId, onSelect }: Props) {
+export default function SearchHits({
+  hits,
+  query,
+  selectedId,
+  collapsed,
+  onSelect,
+  onExpand,
+}: Props) {
   if (!query.trim()) return null;
+
+  if (collapsed) {
+    return (
+      <div className="cm-search-hits cm-search-hits--collapsed">
+        <button type="button" className="cm-search-hits__headbtn" onClick={onExpand}>
+          命中 {hits.length} · 展开列表
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="cm-search-hits" role="listbox" aria-label="搜索结果">
-      <div className="cm-search-hits__head">
-        命中 {hits.length} 个节点
-      </div>
+      <div className="cm-search-hits__head">命中 {hits.length} 个节点</div>
       {hits.length === 0 ? (
         <p className="cm-search-hits__empty">没有匹配结果</p>
       ) : (

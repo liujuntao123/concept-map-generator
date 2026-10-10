@@ -11,7 +11,7 @@ export default function MapLegend() {
         <div className="cm-legend__subtitle">节点</div>
         {NODE_ORDER.map((t) => (
           <div key={t} className="cm-legend__row">
-            <span className={`cm-legend__swatch cm-legend__swatch--${t}`} aria-hidden />
+            <span className={`cm-legend__thumb cm-legend__thumb--${t}`} aria-hidden />
             <span>{NODE_TYPE_LABEL[t]}</span>
           </div>
         ))}
@@ -23,7 +23,7 @@ export default function MapLegend() {
             <span className={`cm-legend__line cm-legend__line--${t}`} aria-hidden />
             <span>
               {EDGE_TYPE_LABEL[t] ?? t}
-              {t === 'contains' ? '（默认隐藏）' : ''}
+              {t === 'contains' ? '（聚焦时短链）' : ''}
             </span>
           </div>
         ))}
