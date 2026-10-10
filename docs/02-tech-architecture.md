@@ -28,13 +28,16 @@
 |----|------|------|
 | 前端框架 | **Vite + React 18+ + TypeScript** | 生态成熟、Cloudflare 官方 Vite 插件友好 |
 | 图可视化 | **@xyflow/react（React Flow）** | 节点即 React 组件，详情卡片/中文排版/抽屉面板最自然；内置 MiniMap、Controls、Panel、Background |
-| UI | Tailwind CSS + 轻量 headless（如 Radix Dialog） | 详情抽屉、筛选条实现快 |
+| UI | **Tailwind CSS v4**（`@tailwindcss/vite`，CSS-first `@theme`；原语见 `apps/web/src/components/ui`） | 详情抽屉、筛选条实现快；token 化后主题切换与一致性成本低 |
 | 布局算法 | **ELK**（`elkjs`）或 `@dagrejs/dagre` | 自动排版；首版 dagre 即可，复杂层次升级 ELK |
 | 内容格式 | **JSON（graph）+ Markdown（说明）** 存于 `content/` | 与 Git Diff/PR 审校契合 |
 | 抽取流水线 | **book-to-conceptmap Skill** + Node 脚本 + LLM | 复用已装 ima-skill 1.1.10 |
 | 托管 | **Cloudflare Workers + Static Assets**（SPA 模式） | 平台当前推荐方向；静态资源免费、可同仓加 `/api` |
 | 备选托管 | Cloudflare Pages | 纯静态 + Git 连接仍可用；与 Workers 能力接近 |
 | CI | GitHub Actions → `wrangler deploy` 或 Cloudflare Git 集成 | |
+
+> 样式与交互的具体规范（token 表、组件原语、断点、无障碍要求）见
+> [03 · 视觉与交互规范](./03-visual-and-interaction-guidelines.md)。
 
 ### 为何不把 AntV X6 作为首选？
 

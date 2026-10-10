@@ -1,6 +1,15 @@
-:root,
-[data-theme='dark'] {
+@import 'tailwindcss';
+
+/* 第三方（React Flow）内部类覆盖 + 画布装饰背景，见 react-flow.css */
+@import './styles/react-flow.css';
+
+/* ============================================================
+   1. 主题变量
+   默认深色（与应用默认主题一致），[data-theme='light'] 覆盖。
+   ============================================================ */
+:root {
   color-scheme: dark;
+
   --bg: #0c1017;
   --bg-elev: #141b26;
   --bg-elev-2: #1a2332;
@@ -8,24 +17,23 @@
   --text: #e8eef7;
   --muted: #8b9bb4;
   --accent: #7eb8ff;
+  /* 深色下主按钮底色：白字对比度 4.88:1，满足 WCAG AA（旧值 #3d7ad6 仅 4.24:1） */
+  --accent-strong: #3570c8;
   --chapter: #5b8fd4;
   --concept: #6fbf86;
   --claim: #e0a86a;
   --person: #c59bdb;
   --work: #6bb8c9;
   --excerpt: #f0c674;
+  --danger: #e05a5a;
+
+  --shadow-color: rgba(0, 0, 0, 0.35);
   --dim-opacity: 0.22;
-  --shadow: rgba(0, 0, 0, 0.35);
-  --topbar-bg: rgba(12, 16, 23, 0.88);
-  --rf-bg-dot: #243044;
-  --edge-contains: #5b8fd4;
-  --edge-contrasts: #e0a86a;
-  --edge-cites: #6bb8c9;
-  --edge-related: #8b9bb4;
 }
 
 [data-theme='light'] {
   color-scheme: light;
+
   --bg: #f4f7fb;
   --bg-elev: #ffffff;
   --bg-elev-2: #f0f4fa;
@@ -33,34 +41,211 @@
   --text: #1a2433;
   --muted: #5c6b82;
   --accent: #2f6fed;
+  --accent-strong: #2f6fed;
   --chapter: #3b6fb0;
   --concept: #2f8f55;
   --claim: #c47a28;
   --person: #8b5bb5;
   --work: #2a8a9c;
   --excerpt: #a67c1a;
+  --danger: #d14545;
+
+  --shadow-color: rgba(30, 50, 80, 0.12);
   --dim-opacity: 0.28;
-  --shadow: rgba(30, 50, 80, 0.12);
-  --topbar-bg: rgba(255, 255, 255, 0.9);
-  --rf-bg-dot: #c9d4e4;
-  --edge-contains: #3b6fb0;
-  --edge-contrasts: #c47a28;
-  --edge-cites: #2a8a9c;
-  --edge-related: #5c6b82;
 }
 
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
-body {
-  font-family: "Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
-  line-height: 1.55;
-  font-weight: 400;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+/* ============================================================
+   2. 设计 token → Tailwind 主题
+   inline：utilities 直接引用上面的运行时变量，主题切换即时生效。
+   ============================================================ */
+@theme inline {
+  --font-sans: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+
+  /* 语义色 */
+  --color-canvas: var(--bg);
+  --color-surface: var(--bg-elev);
+  --color-surface-2: var(--bg-elev-2);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-danger: var(--danger);
+  --color-on-accent: #fff;
+
+  /* 节点/边类型色 */
+  --color-chapter: var(--chapter);
+  --color-concept: var(--concept);
+  --color-claim: var(--claim);
+  --color-person: var(--person);
+  --color-work: var(--work);
+  --color-excerpt: var(--excerpt);
+
+  /* 圆角 */
+  --radius-inner: 12px;
+  --radius-panel: 14px;
+  --radius-card: 16px;
+
+  /* 阴影 */
+  --shadow-soft: 0 6px 18px color-mix(in srgb, var(--shadow-color) 70%, transparent);
+  --shadow-card: 0 10px 28px color-mix(in srgb, var(--shadow-color) 85%, transparent);
+  --shadow-float: 0 12px 32px color-mix(in srgb, var(--shadow-color) 90%, transparent);
+  --shadow-accent: 0 4px 14px color-mix(in srgb, var(--accent-strong) 30%, transparent);
+
+  /* 动效 */
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-button, input, select { font: inherit; color: inherit; }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+
+/* dark: 变体绑定到 data-theme 属性而不是系统偏好 */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ============================================================
+   3. 基础层
+   ============================================================ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  /* 地图页依赖这条 100% 高度链，勿改为 min-h */
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    font-weight: 400;
+    color: var(--color-ink);
+    background: var(--color-canvas);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* 统一键盘焦点环，兼顾可访问性与品牌色 */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* 尊重系统的「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   4. 装饰性多层背景
+   「多层渐变 + 收尾颜色」的写法在 utilities 里既冗长又存在类型歧义，
+   统一收在这一层（约 60 行），其余样式一律使用 Tailwind utilities。
+   ============================================================ */
+@layer components {
+  /* 页面底色：首页 */
+  .page-wash-home {
+    background:
+      radial-gradient(1100px 460px at 10% -8%, #d7e6f6 0%, transparent 58%),
+      radial-gradient(900px 400px at 92% 0%, #e7eef7 0%, transparent 52%),
+      linear-gradient(180deg, #eef3f8 0%, #f5f7fa 38%, #f7f8fa 100%);
+  }
+
+  [data-theme='dark'] .page-wash-home {
+    background:
+      radial-gradient(1000px 420px at 18% -8%, #1a2a3d 0%, transparent 55%),
+      linear-gradient(180deg, #121820 0%, var(--bg) 50%);
+  }
+
+  /* 页面底色：详情页等普通页 */
+  .page-wash {
+    background:
+      radial-gradient(
+        1200px 600px at 10% -10%,
+        color-mix(in srgb, var(--accent) 12%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at 90% 0%,
+        color-mix(in srgb, var(--concept) 10%, transparent),
+        transparent 55%
+      ),
+      var(--bg);
+  }
+
+  /* 品牌标记：三色原点（首页） */
+  .brand-mark-tri {
+    background:
+      radial-gradient(circle at 30% 38%, #4f8fe8 0 34%, transparent 35%),
+      radial-gradient(circle at 68% 30%, #7eb8ff 0 30%, transparent 31%),
+      radial-gradient(circle at 58% 70%, #7fbf6a 0 32%, transparent 33%),
+      color-mix(in srgb, #fff 70%, transparent);
+  }
+
+  [data-theme='dark'] .brand-mark-tri {
+    background:
+      radial-gradient(circle at 30% 38%, #4f8fe8 0 34%, transparent 35%),
+      radial-gradient(circle at 68% 30%, #7eb8ff 0 30%, transparent 31%),
+      radial-gradient(circle at 58% 70%, #7fbf6a 0 32%, transparent 33%),
+      #1a2433;
+  }
+
+  /* 品牌标记：双色原点（详情页等） */
+  .brand-mark {
+    background:
+      radial-gradient(circle at 35% 35%, var(--accent) 0 28%, transparent 30%),
+      radial-gradient(circle at 70% 70%, var(--concept) 0 20%, transparent 22%),
+      var(--bg-elev-2);
+  }
+
+  /* 地图页顶栏：雾山照片 + 主题渐变 */
+  .topbar-map {
+    border-bottom: 1px solid color-mix(in srgb, #7aa2c7 28%, var(--border));
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, #eaf3fb 72%, transparent) 0%,
+        color-mix(in srgb, var(--bg-elev) 88%, transparent) 100%
+      ),
+      url('/illustrations/bg-map-header-mist.jpg');
+    background-size: auto, cover;
+    background-position: center, center 60%;
+    background-repeat: no-repeat, no-repeat;
+  }
+
+  [data-theme='dark'] .topbar-map {
+    background-image:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, #1a2738 82%, transparent) 0%,
+        color-mix(in srgb, var(--bg-elev) 92%, transparent) 100%
+      ),
+      url('/illustrations/bg-map-header-mist.jpg');
+  }
+}

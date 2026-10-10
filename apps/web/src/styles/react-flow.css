@@ -1,0 +1,125 @@
+/* ============================================================
+   React Flow 第三方内部类覆盖 + 画布装饰背景
+
+   这些元素由 @xyflow/react 自行渲染（controls / minimap / edges /
+   handles），无法挂 Tailwind 工具类，因此保留少量 CSS。
+   其余界面样式一律使用 Tailwind utilities。
+   ============================================================ */
+
+/* ---- 画布：真实山景 + 主题蒙层（多层背景难以用 utilities 表达） ---- */
+.cm-canvas-mist {
+  background-color: #d9e4f0;
+  background-image:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg) 42%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 58%, transparent) 100%
+    ),
+    url('/illustrations/bg-map-header-mist.jpg');
+  background-size: auto, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+[data-theme='dark'] .cm-canvas-mist {
+  background-color: #121820;
+  background-image:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #0e141c 55%, transparent) 0%,
+      color-mix(in srgb, #121820 70%, transparent) 100%
+    ),
+    url('/illustrations/bg-map-header-mist.jpg');
+}
+
+/* React Flow 自带背景层让位给上面的山景 */
+.react-flow {
+  background: transparent !important;
+}
+
+.react-flow__renderer,
+.react-flow__viewport,
+.react-flow__container {
+  background: transparent !important;
+}
+
+.react-flow__background {
+  display: none !important;
+}
+
+/* ---- 连接点：隐藏但保留连线计算 ---- */
+.cm-handle {
+  width: 6px !important;
+  height: 6px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ---- 缩放控件 ---- */
+.react-flow__controls {
+  margin: 12px !important;
+  overflow: hidden;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px var(--shadow-color) !important;
+  z-index: 6 !important;
+}
+
+.react-flow__controls-button {
+  background: var(--bg-elev) !important;
+  border-bottom: 1px solid var(--border) !important;
+  fill: var(--text) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--bg-elev-2) !important;
+}
+
+/* ---- 缩略图 ---- */
+.react-flow__minimap,
+.cm-minimap {
+  margin: 12px !important;
+  overflow: hidden;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: var(--bg-elev) !important;
+  box-shadow: 0 4px 16px var(--shadow-color);
+  z-index: 5 !important;
+}
+
+@media (max-width: 860px) {
+  .react-flow__minimap {
+    display: none !important;
+  }
+}
+
+/* ---- 边：状态类由 MapCanvas 动态添加 ---- */
+.react-flow__edge.is-dimmed {
+  opacity: var(--dim-opacity);
+}
+
+.react-flow__edge.is-far {
+  opacity: 0.12 !important;
+}
+
+.react-flow__edge.is-hl path {
+  stroke-width: 2.2 !important;
+}
+
+.react-flow__edge.is-path-edge path {
+  stroke-width: 2.8 !important;
+}
+
+.react-flow__edge.is-path-missing path {
+  stroke: var(--danger) !important;
+}
+
+.react-flow__edge.is-structural {
+  pointer-events: none;
+}
+
+.react-flow__edge-text {
+  font-size: 11px !important;
+}

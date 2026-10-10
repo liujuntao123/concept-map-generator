@@ -11,13 +11,14 @@ import SearchHits from '../components/SearchHits';
 import PathGuide from '../components/PathGuide';
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate, groupChapters, matchesQuery } from '../lib/graphUtils';
-import { coverOf } from '../lib/covers';
 import { useTheme } from '../hooks/useTheme';
 import {
   IconChapter,
   IconStructure,
   IconClaim,
+  IconChevronLeft,
   IconConcept,
+  IconClose,
   IconMap,
   IconMore,
   IconMoon,
@@ -36,6 +37,8 @@ import {
   type MapNode,
   type NodeType,
 } from '../types/graph';
+import { buttonClass, fieldClass, iconButtonClass } from '../components/ui/styles';
+import { cn } from '../lib/cn';
 
 const TYPE_FILTERS: Array<{ key: TypeFilter; label: string; short: string }> = [
   { key: 'all', label: '全部', short: '全部' },
@@ -55,8 +58,18 @@ function TypeIcon({ k, size = 14 }: { k: TypeFilter; size?: number }) {
   return <IconMap size={size} />;
 }
 
-
 const ALLOWED_TYPES = new Set(['chapter', 'concept', 'claim', 'person', 'work']);
+
+const SELECT_CLASS = cn(
+  fieldClass,
+  'max-w-[min(180px,40vw)] rounded-[10px] px-2.5 py-1.5 max-[860px]:w-auto',
+);
+
+const MORE_ITEM =
+  'flex cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent px-2.5 py-2 text-[0.85rem] text-inherit no-underline hover:bg-surface-2 hover:no-underline';
+
+const KBD =
+  'inline-block min-w-[1.4em] rounded-md border border-line bg-surface-2 px-1.5 py-0.5 text-[0.8rem] text-ink';
 
 export default function MapPage() {
   const { mapId = '' } = useParams();
@@ -713,8 +726,10 @@ export default function MapPage() {
 
   if (error) {
     return (
-      <div className="cm-shell cm-shell--center">
-        <p className="cm-error">{error}</p>
+      <div className="grid min-h-screen place-content-center justify-items-center gap-3.5 bg-canvas p-6">
+        <p className="rounded-panel border border-line bg-surface px-7 py-5 text-danger shadow-card">
+          {error}
+        </p>
         <Link to="/">返回目录</Link>
       </div>
     );
@@ -722,8 +737,10 @@ export default function MapPage() {
 
   if (!graph || !meta) {
     return (
-      <div className="cm-shell cm-shell--center">
-        <p className="cm-loading">正在加载概念地图…</p>
+      <div className="grid min-h-screen place-content-center bg-canvas p-6">
+        <p className="rounded-panel border border-line bg-surface px-7 py-5 text-muted shadow-card">
+          正在加载概念地图…
+        </p>
       </div>
     );
   }
@@ -731,39 +748,49 @@ export default function MapPage() {
   const focusChapterNode = chapterFocusId ? byId.get(chapterFocusId) : null;
   const showSuggest = searchOpen && !query.trim();
   const hasDrawer = Boolean(selected || selectedEdge);
+  const peek = hasDrawer && !sheetExpanded;
   const qTrim = query.trim();
   const zeroSearch = Boolean(qTrim && visibleStats && visibleStats.hitCount === 0);
   const presentTypes = new Set(graph.nodes.map((n) => n.type));
+  const dockState = !hasDrawer ? 'default' : sheetExpanded ? 'hidden' : 'peek';
 
   return (
-    <div
-      className={`cm-shell${hasDrawer ? ' has-drawer' : ''}${hasDrawer && !sheetExpanded ? ' has-drawer-peek' : ''}`}
-    >
-      <header className="cm-topbar cm-topbar--map">
-        <div className="cm-brand cm-brand--map">
-          <div className="cm-brand__mark cm-brand__mark--cover" aria-hidden>
-            <img src={coverOf(meta.id)} alt="" width={40} height={52} />
-          </div>
-          <div className="cm-brand__text">
-            <Link className="cm-back" to="/" aria-label="返回图书列表" title="返回图书列表">
-              ←
-            </Link>
-            <h1>{meta.title}</h1>
-            <p className="cm-brand__sub">
+    <div className="page-wash grid h-full grid-rows-[auto_auto_1fr]">
+      <header className="topbar-map z-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 px-4 py-3 max-[860px]:gap-x-2 max-[860px]:gap-y-1.5 max-[860px]:px-2.5 max-[860px]:py-1.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            className={cn(iconButtonClass(), 'shrink-0 rounded-full')}
+            to="/"
+            aria-label="返回图书列表"
+            title="返回图书列表"
+          >
+            <IconChevronLeft />
+          </Link>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h1 className="text-[1.18rem] leading-tight font-bold max-[860px]:max-w-[52vw] max-[860px]:truncate max-[860px]:text-[0.92rem]">
+              {meta.title}
+            </h1>
+            <p className="text-[0.8rem] text-muted max-[860px]:hidden">
               {meta.author ? meta.author : '概念地图'}
               {meta.generatedAt ? ` · ${formatGeneratedDate(meta.generatedAt)}` : ''}
             </p>
           </div>
         </div>
 
-        <div className="cm-toolbar">
-          <div className="cm-search-wrap">
-            <span className="cm-search-icon" aria-hidden>
+        <div className="flex flex-wrap items-center justify-end gap-2 max-[860px]:w-full max-[860px]:justify-start max-[860px]:gap-1.5">
+          <div className="relative">
+            <span
+              className="pointer-events-none absolute top-1/2 left-2.5 flex -translate-y-1/2 text-muted"
+              aria-hidden
+            >
               <IconSearch size={14} />
             </span>
             <input
               ref={searchRef}
-              className="cm-search"
+              className={cn(
+                fieldClass,
+                'w-[min(240px,48vw)] rounded-[10px] py-2 pr-3 pl-7.5 text-[0.95rem] max-[860px]:w-[min(140px,36vw)] max-[860px]:py-1.5 max-[860px]:pl-7 max-[860px]:text-[0.85rem]',
+              )}
               type="search"
               placeholder="搜索…"
               value={query}
@@ -773,21 +800,26 @@ export default function MapPage() {
               aria-label="搜索节点"
             />
             {showSuggest ? (
-              <div className="cm-suggest" role="listbox">
-                <div className="cm-suggest__title">推荐路径</div>
+              <div
+                className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 max-h-[320px] min-w-[min(320px,80vw)] overflow-auto rounded-inner border border-line bg-surface p-2 shadow-float"
+                role="listbox"
+              >
+                <div className="px-2 pt-1.5 pb-1 text-[0.72rem] tracking-[0.06em] text-muted uppercase">
+                  推荐路径
+                </div>
                 {featured.map((p) => (
                   <button
                     key={p.id}
                     type="button"
-                    className="cm-suggest__item"
+                    className="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-2 text-left hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       activatePath(p, 0);
                       setSearchOpen(false);
                     }}
                   >
-                    <strong>{p.title}</strong>
-                    <span>
+                    <strong className="block text-[0.9rem]">{p.title}</strong>
+                    <span className="mt-0.5 block text-[0.78rem] text-muted">
                       {p.description} · {p.nodeIds.length} 步
                     </span>
                   </button>
@@ -796,14 +828,23 @@ export default function MapPage() {
             ) : null}
           </div>
 
-          <div className="cm-filters cm-filters--chips" role="group" aria-label="节点类型筛选">
+          <div
+            className="flex flex-wrap items-center gap-1.5 max-[860px]:hidden"
+            role="group"
+            aria-label="节点类型筛选"
+          >
             {TYPE_FILTERS.filter(
               (f) => f.key === 'all' || presentTypes.has(f.key as NodeType),
             ).map((f) => (
               <button
                 key={f.key}
                 type="button"
-                className={`cm-chip cm-chip--type${filter === f.key ? ' is-active' : ''}`}
+                className={cn(
+                  'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-[5px] text-[0.8rem] transition-colors ease-soft',
+                  filter === f.key
+                    ? 'border-accent/50 bg-accent/14 text-ink'
+                    : 'border-line bg-surface text-muted hover:border-accent hover:text-ink',
+                )}
                 onClick={() => setFilterAndUrl(f.key)}
                 title={f.label}
               >
@@ -812,8 +853,9 @@ export default function MapPage() {
               </button>
             ))}
           </div>
+
           <select
-            className="cm-select cm-filters--select"
+            className={cn(SELECT_CLASS, 'hidden max-[860px]:inline-block max-[860px]:min-w-[7.5rem]')}
             aria-label="节点类型"
             value={filter}
             onChange={(e) => setFilterAndUrl(e.target.value as TypeFilter)}
@@ -827,9 +869,9 @@ export default function MapPage() {
             ))}
           </select>
 
-          <div className="cm-chapter-filter">
+          <div className="max-[860px]:hidden">
             <select
-              className="cm-select"
+              className={SELECT_CLASS}
               aria-label="按章节筛选"
               value={chapterFocusId ?? ''}
               onChange={(e) => focusChapter(e.target.value || null)}
@@ -849,7 +891,7 @@ export default function MapPage() {
 
           <button
             type="button"
-            className="cm-icon-btn cm-btn--share"
+            className={iconButtonClass({ className: 'max-[860px]:hidden' })}
             onClick={() => void copyShareLink()}
             title="分享链接"
             aria-label="分享链接"
@@ -859,7 +901,7 @@ export default function MapPage() {
 
           <button
             type="button"
-            className="cm-icon-btn cm-theme-toggle"
+            className={iconButtonClass()}
             onClick={toggle}
             aria-label={theme === 'dark' ? '切换浅色' : '切换深色'}
             title={theme === 'dark' ? '浅色' : '深色'}
@@ -867,10 +909,10 @@ export default function MapPage() {
             {theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
 
-          <div className="cm-more-wrap">
+          <div className="relative">
             <button
               type="button"
-              className="cm-icon-btn"
+              className={iconButtonClass()}
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
               aria-label="更多"
@@ -879,8 +921,8 @@ export default function MapPage() {
               <IconMore />
             </button>
             {moreOpen ? (
-              <div className="cm-more-menu">
-                <label className="cm-more-item">
+              <div className="absolute top-[calc(100%+6px)] right-0 z-30 flex min-w-[220px] flex-col gap-1 rounded-inner border border-line bg-surface p-2 shadow-float">
+                <label className={cn(MORE_ITEM, 'font-normal')}>
                   <input
                     type="checkbox"
                     checked={showStructural}
@@ -890,7 +932,7 @@ export default function MapPage() {
                 </label>
                 <button
                   type="button"
-                  className="cm-more-item cm-more-item--share"
+                  className={cn(MORE_ITEM, 'hidden max-[860px]:flex')}
                   onClick={() => {
                     void copyShareLink();
                     setMoreOpen(false);
@@ -898,10 +940,10 @@ export default function MapPage() {
                 >
                   {copied ? '已复制链接' : '分享链接'}
                 </button>
-                <button type="button" className="cm-more-item" onClick={() => setHelpOpen(true)}>
+                <button type="button" className={MORE_ITEM} onClick={() => setHelpOpen(true)}>
                   键盘快捷键（?）
                 </button>
-                <Link className="cm-more-item" to={`/books/${mapId}`} onClick={() => setMoreOpen(false)}>
+                <Link className={MORE_ITEM} to={`/books/${mapId}`} onClick={() => setMoreOpen(false)}>
                   图书详情
                 </Link>
               </div>
@@ -910,54 +952,79 @@ export default function MapPage() {
         </div>
       </header>
 
-      <div className="cm-subbar cm-subbar--slim">
-        <div className="cm-path-tabs" role="tablist" aria-label="推荐路径">
+      <div className="z-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line bg-surface px-3 py-1.5 max-[860px]:gap-x-1.5 max-[860px]:px-2.5 max-[860px]:py-1">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5" role="tablist" aria-label="推荐路径">
           {featured.map((p) => (
             <button
               key={p.id}
               type="button"
               role="tab"
               aria-selected={pathId === p.id}
-              className={`cm-path-tab${pathId === p.id ? ' is-active' : ''}`}
+              className={cn(
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.82rem] transition-[border-color,background-color,box-shadow] duration-150 ease-soft',
+                pathId === p.id
+                  ? 'border-transparent bg-accent-strong text-on-accent shadow-accent'
+                  : 'border-line bg-surface text-ink hover:border-accent/45',
+              )}
               onClick={() => activatePath(p, 0)}
               title={p.description}
             >
               {pathThemeIcon(p.theme || p.id || p.title, 15)}
               <span>{p.theme || p.title}</span>
-              {p.durationMin ? <em title={`${p.durationMin}′`}>约 {p.durationMin} 分钟</em> : null}
+              {p.durationMin ? (
+                <em className="text-[0.72rem] not-italic opacity-75" title={`${p.durationMin}′`}>
+                  约 {p.durationMin} 分钟
+                </em>
+              ) : null}
             </button>
           ))}
         </div>
 
-        <div className="cm-stats">
+        <div className="flex flex-wrap gap-2 text-[0.78rem] text-muted max-[860px]:hidden">
           {activePath ? (
-            <span>{activePath.nodeIds.length} 步</span>
+            <span className="rounded-lg border border-line bg-surface px-2 py-1">
+              {activePath.nodeIds.length} 步
+            </span>
           ) : qTrim && visibleStats ? (
             <>
-              <span>命中 {visibleStats.hitCount}</span>
-              <span>全库 {visibleStats.totalCount}</span>
+              <span className="rounded-lg border border-line bg-surface px-2 py-1">
+                命中 {visibleStats.hitCount}
+              </span>
+              <span className="rounded-lg border border-line bg-surface px-2 py-1">
+                全库 {visibleStats.totalCount}
+              </span>
             </>
           ) : chapterFocusId && visibleStats ? (
-            <span>本章可见 {visibleStats.visibleCount} 节点</span>
+            <span className="rounded-lg border border-line bg-surface px-2 py-1">
+              本章可见 {visibleStats.visibleCount} 节点
+            </span>
           ) : filter !== 'all' && visibleStats ? (
-            <span>可见 {visibleStats.visibleCount}</span>
+            <span className="rounded-lg border border-line bg-surface px-2 py-1">
+              可见 {visibleStats.visibleCount}
+            </span>
           ) : meta.stats ? (
-            <span>
+            <span className="rounded-lg border border-line bg-surface px-2 py-1">
               {meta.stats.nodes} 节点 · {meta.stats.edges} 关系 · {meta.stats.chapters} 章
             </span>
           ) : null}
         </div>
       </div>
 
-      <main className="cm-main">
-        <div className="cm-canvas">
+      <main
+        className={cn(
+          'relative grid h-full min-h-0 overflow-hidden',
+          hasDrawer && sheetExpanded && 'min-[861px]:grid-cols-[1fr_min(420px,44vw)]',
+          peek && 'min-[861px]:grid-cols-[1fr_76px]',
+        )}
+      >
+        <div className="cm-canvas-mist relative h-full min-h-0 overflow-hidden">
           {focusChapterNode ? (
-            <div className="cm-focus-banner">
+            <div className="absolute top-3 left-1/2 z-4 flex max-w-[90%] -translate-x-1/2 items-center gap-2.5 rounded-full border border-line bg-surface px-3 py-2 text-[0.85rem] shadow-soft">
               <span>
                 只看这一章：{focusChapterNode.label}
-                <em className="cm-hint">（双击章节节点也可聚焦）</em>
+                <em className="ml-1.5 text-[0.78rem] text-muted not-italic">（双击章节节点也可聚焦）</em>
               </span>
-              <button type="button" className="cm-btn" onClick={() => focusChapter(null)}>
+              <button type="button" className={buttonClass({ size: 'sm' })} onClick={() => focusChapter(null)}>
                 显示全部
               </button>
             </div>
@@ -979,17 +1046,28 @@ export default function MapPage() {
           ) : null}
 
           {zeroSearch ? (
-            <div className="cm-empty-search" role="status">
-              <h2>没有匹配的节点</h2>
-              <p>未找到与「{qTrim}」相关的节点。</p>
-              <button type="button" className="cm-btn" onClick={() => setQueryAndUrl('')}>
+            <div
+              className="absolute inset-0 z-3 grid place-content-center gap-2 bg-canvas/72 p-6 text-center backdrop-blur-[2px]"
+              role="status"
+            >
+              <h2 className="text-[1.15rem] font-semibold">没有匹配的节点</h2>
+              <p className="max-w-[360px] text-muted">未找到与「{qTrim}」相关的节点。</p>
+              <button
+                type="button"
+                className={buttonClass({ className: 'justify-self-center' })}
+                onClick={() => setQueryAndUrl('')}
+              >
                 清空搜索
               </button>
             </div>
           ) : null}
 
           {activePath ? (
-            <div className="cm-path-float" role="region" aria-label="路径进度">
+            <div
+              className="pointer-events-none absolute top-3 left-3 z-7 w-[min(420px,calc(100%-24px))] max-w-[420px] max-[860px]:top-2 max-[860px]:left-2 max-[860px]:max-h-[42vh] max-[860px]:w-[min(360px,calc(100%-16px))] max-[860px]:overflow-auto"
+              role="region"
+              aria-label="路径进度"
+            >
               <PathGuide
                 path={activePath}
                 stepIndex={pathStep}
@@ -1031,6 +1109,7 @@ export default function MapPage() {
             onSelect={onCanvasSelect}
             onSelectEdge={selectEdge}
             onVisibleStats={setVisibleStats}
+            dock={dockState}
           />
         </div>
 
@@ -1086,13 +1165,24 @@ export default function MapPage() {
         ) : null}
       </main>
 
-      {copied ? <div className="cm-toast" role="status">已复制当前视图链接</div> : null}
+      {copied ? (
+        <div
+          className="fixed right-4 bottom-4 z-60 rounded-[10px] border border-line bg-surface px-3.5 py-2.5 text-[0.88rem] shadow-card"
+          role="status"
+        >
+          已复制当前视图链接
+        </div>
+      ) : null}
 
       {tipsOpen ? (
-        <div className="cm-tips" role="dialog" aria-label="快速提示">
-          <div className="cm-tips__card">
-            <h2>怎么读这张图</h2>
-            <ol>
+        <div
+          className="fixed inset-0 z-80 grid place-items-center bg-canvas/55 p-4"
+          role="dialog"
+          aria-label="快速提示"
+        >
+          <div className="w-[min(420px,94vw)] rounded-panel border border-line bg-surface px-4.5 pt-4.5 pb-4 shadow-float">
+            <h2 className="mb-2.5 text-[1.1rem] font-semibold">怎么读这张图</h2>
+            <ol className="mb-3.5 list-decimal pl-5 text-[0.92rem] leading-relaxed">
               <li>顶栏路径主题带你一步步走完一条思路。</li>
               <li>点「下一步」或进度点；可用「跳过」略过当前步。</li>
               <li>点选节点打开详情；滚轮/按钮缩放（节点不可拖拽）。</li>
@@ -1100,7 +1190,7 @@ export default function MapPage() {
             </ol>
             <button
               type="button"
-              className="cm-btn cm-btn--primary"
+              className={buttonClass({ variant: 'primary' })}
               onClick={() => {
                 try {
                   localStorage.setItem('cm-tips-v1', '1');
@@ -1117,28 +1207,33 @@ export default function MapPage() {
       ) : null}
 
       {helpOpen ? (
-        <div className="cm-help" role="dialog" aria-label="快捷键">
-          <div className="cm-help__card">
-            <header>
-              <h2>快捷键</h2>
-              <button type="button" className="cm-icon-btn" onClick={() => setHelpOpen(false)}>
-                ×
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-canvas/55 p-5"
+          role="dialog"
+          aria-label="快捷键"
+        >
+          <div className="w-[min(420px,92vw)] rounded-card border border-line bg-surface px-4.5 pt-4 pb-5 shadow-float">
+            <header className="flex items-center justify-between">
+              <h2 className="text-[1.1rem] font-semibold">快捷键</h2>
+              <button type="button" className={iconButtonClass()} onClick={() => setHelpOpen(false)}>
+                <IconClose />
               </button>
             </header>
-            <ul>
-              <li>
-                <kbd>/</kbd> 聚焦搜索
+            <ul className="mt-3 list-none p-0">
+              <li className="my-2 text-[0.9rem] text-muted">
+                <kbd className={KBD}>/</kbd> 聚焦搜索
               </li>
-              <li>
-                <kbd>?</kbd> 打开/关闭本说明
+              <li className="my-2 text-[0.9rem] text-muted">
+                <kbd className={KBD}>?</kbd> 打开/关闭本说明
               </li>
-              <li>
-                <kbd>Esc</kbd> 关闭抽屉 / 退出路径或章节聚焦
+              <li className="my-2 text-[0.9rem] text-muted">
+                <kbd className={KBD}>Esc</kbd> 关闭抽屉 / 退出路径或章节聚焦
               </li>
-              <li>
-                <kbd>←</kbd> <kbd>→</kbd> 路径上一步/下一步，或在结果间切换
+              <li className="my-2 text-[0.9rem] text-muted">
+                <kbd className={KBD}>←</kbd> <kbd className={KBD}>→</kbd>{' '}
+                路径上一步/下一步，或在结果间切换
               </li>
-              <li>双击章节节点：只看这一章及其语义邻居</li>
+              <li className="my-2 text-[0.9rem] text-muted">双击章节节点：只看这一章及其语义邻居</li>
             </ul>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate } from '../lib/graphUtils';
@@ -9,13 +9,14 @@ import {
   IconEdges,
   IconMap,
   IconMoon,
-  IconNetwork,
   IconNodes,
   IconSearch,
   IconSun,
   pathThemeIcon,
 } from '../components/icons';
 import { coverOf } from '../lib/covers';
+import { buttonClass, cardSurface, fieldClass, iconButtonClass } from '../components/ui/styles';
+import { cn } from '../lib/cn';
 
 function shortDesc(m: MapIndexEntry): string {
   const raw = (m.subtitle || m.description || '').replace(/\s+/g, ' ').trim();
@@ -23,6 +24,13 @@ function shortDesc(m: MapIndexEntry): string {
   if (raw.length <= 56) return raw;
   return `${raw.slice(0, 54)}…`;
 }
+
+/* 路径 chip 三色轮转 */
+const PATH_CHIP_TONES = [
+  'border-[#4f8fe8]/50 bg-[#4f8fe8]/10 dark:bg-[#4f8fe8]/18',
+  'border-[#7fbf6a]/50 bg-[#7fbf6a]/10 dark:bg-[#7fbf6a]/16',
+  'border-[#c678dd]/50 bg-[#c678dd]/10 dark:bg-[#c678dd]/18',
+];
 
 function BookCard({ m }: { m: MapIndexEntry }) {
   const [paths, setPaths] = useState<FeaturedPath[]>([]);
@@ -47,63 +55,105 @@ function BookCard({ m }: { m: MapIndexEntry }) {
   const desc = shortDesc(m);
 
   return (
-    <article className="cm-book-card cm-book-card--home" data-book={m.id}>
-      <div className="cm-book-card__accent" aria-hidden />
-      <div className="cm-book-card__cover-wrap" aria-hidden>
-        <div className="cm-book-card__cover-glow" />
-        <div className="cm-book-card__cover cm-book-card__cover--art">
-          <img src={coverOf(m.id)} alt="" width={120} height={160} decoding="async" />
-        </div>
-      </div>
-      <div className="cm-book-card__body">
+    <article
+      className={cn(
+        cardSurface,
+        'group relative isolate flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-[20px] transition-[transform,border-color,box-shadow] duration-200 ease-soft hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-float',
+      )}
+      data-book={m.id}
+    >
+      {/* 封面铺满整卡作为底图。这两本书的封面都是白底大黑字、且图文集中在正中，
+          所以：① 用混合模式把「白底」吃掉，只让封面上的图画与字迹透出
+          （浅色 multiply，深色 invert + screen，同一批元素反过来发亮）；
+          ② 只做轻微模糊，保留封面的构图与比例，不糊成一团灰；
+          ③ 蒙层只压住底部信息条，让封面正中的内容能透出来 */}
+      <img
+        src={coverOf(m.id)}
+        alt=""
+        aria-hidden
+        decoding="async"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-60 mix-blend-multiply blur-[4px] dark:opacity-45 dark:invert dark:mix-blend-screen"
+      />
+      {/* 蒙层：底部信息条压到实色保证对比度，向上快速让出整张封面 */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-t from-surface from-0% via-surface/88 via-34% to-transparent to-62%"
+      />
+
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5">
         {badge ? (
-          <div className="cm-book-card__badges">
-            <span className="cm-pill">{badge}</span>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center rounded-full border border-line bg-surface/60 px-2 py-0.5 text-[0.72rem] leading-[1.5] text-ink/75">
+              {badge}
+            </span>
           </div>
         ) : null}
-        <h2>{m.title}</h2>
-        {desc ? <p className="cm-book-card__desc">{desc}</p> : null}
-        <div className="cm-book-card__stats cm-book-card__stats--density">
-          {m.stats ? (
-            <>
-              <span>
-                <IconNodes size={13} /> {m.stats.nodes} 节点
-              </span>
-              <span>
-                <IconEdges size={13} /> {m.stats.edges} 关系
-              </span>
-              <span>
-                <IconBooks size={13} /> {m.stats.chapters} 章
-              </span>
-            </>
-          ) : null}
-        </div>
+
+        <h2 className="text-[1.2rem] leading-tight font-bold">{m.title}</h2>
+        {desc ? (
+          <p className="line-clamp-2 text-[0.88rem] leading-snug text-ink/85">{desc}</p>
+        ) : null}
+
+        {m.stats ? (
+          <div className="flex flex-wrap gap-1.5">
+            <StatPill icon={<IconNodes size={13} />} text={`${m.stats.nodes} 节点`} />
+            <StatPill icon={<IconEdges size={13} />} text={`${m.stats.edges} 关系`} />
+            <StatPill icon={<IconBooks size={13} />} text={`${m.stats.chapters} 章`} />
+          </div>
+        ) : null}
+
         {chips.length ? (
-          <div className="cm-book-card__paths" aria-label="推荐路径">
-            {chips.map((p) => (
+          <div className="flex flex-wrap gap-1.5 pt-0.5 pb-1" aria-label="推荐路径">
+            {chips.map((p, i) => (
               <Link
                 key={p.id}
-                className="cm-chip cm-chip--path"
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-[5px] text-[0.78rem] text-ink transition-colors ease-soft hover:text-accent',
+                  PATH_CHIP_TONES[i % PATH_CHIP_TONES.length],
+                )}
                 to={`/maps/${m.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(p.nodeIds[0] || '')}`}
                 title={p.description}
               >
                 {pathThemeIcon(p.theme || p.id || p.title)}
                 <span>{p.theme || p.title}</span>
-                {p.durationMin != null ? <em>· 约 {p.durationMin} 分钟</em> : null}
+                {p.durationMin != null ? (
+                  <em className="text-[0.72rem] text-muted not-italic">· 约 {p.durationMin} 分钟</em>
+                ) : null}
               </Link>
             ))}
           </div>
         ) : null}
-        <div className="cm-book-card__actions">
-          <Link className="cm-btn cm-btn--primary cm-btn--home-cta" to={`/maps/${m.id}?view=all`}>
+
+        <div className="mt-1.5 flex flex-wrap gap-2.5">
+          <Link
+            className={buttonClass({
+              variant: 'primary',
+              className: 'h-[38px] shrink-0 px-4 text-[0.85rem] font-semibold',
+            })}
+            to={`/maps/${m.id}?view=all`}
+          >
             <IconMap size={14} /> 进入地图
           </Link>
-          <Link className="cm-btn cm-btn--ghost cm-btn--home-secondary" to={`/books/${m.id}`}>
+          <Link
+            className={buttonClass({
+              variant: 'ghost',
+              className: 'h-[38px] shrink-0 px-4 text-[0.85rem] font-semibold',
+            })}
+            to={`/books/${m.id}`}
+          >
             简介
           </Link>
         </div>
       </div>
     </article>
+  );
+}
+
+function StatPill({ icon, text }: { icon: ReactNode; text: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#5b8fd9]/25 bg-[#5b8fd9]/10 px-2.5 py-1 text-[0.75rem] text-[#2a5f9e] dark:bg-[#5b8fd9]/16 dark:text-ink">
+      {icon} {text}
+    </span>
   );
 }
 
@@ -152,16 +202,20 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="cm-shell cm-shell--center">
-        <p className="cm-error">{error}</p>
+      <div className="grid min-h-screen place-content-center bg-canvas p-6">
+        <p className="rounded-panel border border-line bg-surface px-7 py-5 text-center text-danger shadow-card">
+          {error}
+        </p>
       </div>
     );
   }
 
   if (!index) {
     return (
-      <div className="cm-shell cm-shell--center">
-        <p className="cm-loading">正在加载图书目录…</p>
+      <div className="grid min-h-screen place-content-center bg-canvas p-6">
+        <p className="rounded-panel border border-line bg-surface px-7 py-5 text-center text-muted shadow-card">
+          正在加载图书目录…
+        </p>
       </div>
     );
   }
@@ -171,18 +225,18 @@ export default function HomePage() {
   const totalEdges = index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0);
 
   return (
-    <div className="cm-shell cm-shell--home cm-shell--home-v10">
-      <header className="cm-topbar cm-topbar--home">
-        <div className="cm-brand cm-brand--home">
-          <div className="cm-brand__mark cm-brand__mark--tri" aria-hidden />
-          <div>
-            <h1>概念地图</h1>
-            <p>从一本书读出可交互的思想结构</p>
+    <div className="page-wash-home grid min-h-screen grid-rows-[auto_1fr]">
+      <header className="z-5 flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <div className="brand-mark-tri h-10 w-10 shrink-0 rounded-inner shadow-[0_4px_14px_rgba(91,143,217,0.22)]" aria-hidden />
+          <div className="min-w-0">
+            <h1 className="text-[1.15rem] font-bold">概念地图</h1>
+            <p className="text-[0.8rem] text-muted">从一本书读出可交互的思想结构</p>
           </div>
         </div>
         <button
           type="button"
-          className="cm-icon-btn cm-theme-toggle"
+          className={iconButtonClass()}
           onClick={toggle}
           aria-label={theme === 'dark' ? '切换浅色' : '切换深色'}
         >
@@ -190,37 +244,20 @@ export default function HomePage() {
         </button>
       </header>
 
-      <main className="cm-home cm-home--v10">
-        <section className="cm-home__hero-panel cm-home__hero-panel--mock">
-          <div className="cm-home__hero-copy">
-            <h1>
-              <IconNetwork size={26} /> 图书与地图
-            </h1>
-            <p>沿路径阅读，或打开全景图。节点旁有原文。</p>
-            <div className="cm-home__stat-pill" aria-label="馆藏统计">
-              <span className="cm-home__stat">
-                <IconBooks size={14} /> {index.maps.length} 本
-              </span>
-              <span className="cm-home__stat">
-                <IconNodes size={14} /> {totalNodes} 节点
-              </span>
-              <span className="cm-home__stat">
-                <IconEdges size={14} /> {totalEdges} 关系
-              </span>
-            </div>
+      <main className="mx-auto w-full max-w-[920px] px-5 pt-2 pb-14">
+        {/* 三个统计标签直接作为页面工具条的一部分，不再包成 Hero 模块 */}
+        <div className="mb-5 flex flex-col gap-3 min-[720px]:flex-row min-[720px]:items-center">
+          <div className="flex flex-wrap items-center gap-2" aria-label="馆藏统计">
+            <StatBadge icon={<IconBooks size={14} />} text={`${index.maps.length} 本`} />
+            <StatBadge icon={<IconNodes size={14} />} text={`${totalNodes} 节点`} />
+            <StatBadge icon={<IconEdges size={14} />} text={`${totalEdges} 关系`} />
           </div>
-          <div className="cm-home__hero-art" aria-hidden>
-            <img src="/illustrations/bg-mountains-airy.jpg" alt="" width={420} height={236} />
-          </div>
-        </section>
-
-        <div className="cm-library-toolbar cm-library-toolbar--wide">
-          <div className="cm-search-wrap cm-library-search">
-            <span className="cm-search-icon" aria-hidden>
+          <div className="relative min-[720px]:flex-1">
+            <span className="pointer-events-none absolute top-1/2 left-3.5 flex -translate-y-1/2 text-muted" aria-hidden>
               <IconSearch size={16} />
             </span>
             <input
-              className="cm-search cm-search--wide"
+              className={cn(fieldClass, 'h-10 w-full rounded-full pr-3.5 pl-9 text-[0.95rem] shadow-soft')}
               type="search"
               placeholder="按书名、作者搜索…"
               value={query}
@@ -231,17 +268,25 @@ export default function HomePage() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="cm-empty-books">
-            <h2>{qTrim ? '没有匹配的图书' : '还没有图书'}</h2>
-            <p>{qTrim ? '试试其他关键词。' : '生成第一本地图后会出现在这里。'}</p>
+          <div className="mt-6 rounded-card border border-dashed border-line bg-surface px-6 py-10 text-center">
+            <h2 className="mb-2 text-lg font-semibold">
+              {qTrim ? '没有匹配的图书' : '还没有图书'}
+            </h2>
+            <p className="mb-4 text-sm text-muted">
+              {qTrim ? '试试其他关键词。' : '生成第一本地图后会出现在这里。'}
+            </p>
             {qTrim ? (
-              <button type="button" className="cm-btn" onClick={() => setQuery('')}>
+              <button
+                type="button"
+                className={buttonClass()}
+                onClick={() => setQuery('')}
+              >
                 清空搜索
               </button>
             ) : null}
           </div>
         ) : (
-          <div className="cm-home__grid cm-home__grid--wide">
+          <div className="grid grid-cols-1 gap-4 min-[820px]:grid-cols-2">
             {filtered.map((m) => (
               <BookCard key={m.id} m={m} />
             ))}
@@ -249,5 +294,14 @@ export default function HomePage() {
         )}
       </main>
     </div>
+  );
+}
+
+function StatBadge({ icon, text }: { icon: ReactNode; text: string }) {
+  return (
+    <span className="inline-flex h-10 items-center gap-1.5 rounded-full border border-line bg-surface/85 px-3.5 text-[0.82rem] text-ink/80 shadow-soft backdrop-blur-sm">
+      <span className="text-accent">{icon}</span>
+      {text}
+    </span>
   );
 }
