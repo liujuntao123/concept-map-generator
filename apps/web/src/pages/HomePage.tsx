@@ -9,7 +9,6 @@ import {
   IconEdges,
   IconMap,
   IconMoon,
-  IconNetwork,
   IconNodes,
   IconSearch,
   IconSun,
@@ -24,23 +23,6 @@ function shortDesc(m: MapIndexEntry): string {
   if (!raw) return '';
   if (raw.length <= 56) return raw;
   return `${raw.slice(0, 54)}…`;
-}
-
-/* 每本书的强调色与封面媒体区底色（沿用原设计的配色映射） */
-function accentBar(id: string): string {
-  if (id.includes('kahneman')) return 'bg-linear-to-b from-[#3d7ad6] via-[#5b8fd9] to-[#98c379]';
-  if (id.includes('chujia')) return 'bg-linear-to-b from-[#8b6cc9] via-[#c678dd] to-[#e06c75]';
-  return 'bg-linear-to-b from-[#4f8fe8] via-[#7aa2c7] to-[#6a9fd8]';
-}
-
-function coverMedia(id: string): string {
-  if (id.includes('kahneman')) {
-    return 'bg-linear-to-b from-[#e7f0fb] to-[#f5f9fe] dark:from-[#182433] dark:to-[#151d2a]';
-  }
-  if (id.includes('chujia')) {
-    return 'bg-linear-to-b from-[#f0ebf8] to-[#f8f5fc] dark:from-[#221d30] dark:to-[#1a1626]';
-  }
-  return 'bg-linear-to-b from-[#edf3fa] to-[#f7fafc] dark:from-[#182230] dark:to-[#151d29]';
 }
 
 /* 路径 chip 三色轮转 */
@@ -76,33 +58,24 @@ function BookCard({ m }: { m: MapIndexEntry }) {
     <article
       className={cn(
         cardSurface,
-        'group grid grid-cols-[6px_132px_1fr] overflow-hidden rounded-[20px] transition-[transform,border-color,box-shadow] duration-200 ease-soft hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-float max-[860px]:grid-cols-[5px_96px_1fr]',
+        'group relative overflow-hidden rounded-[20px] transition-[transform,border-color,box-shadow] duration-200 ease-soft hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-float',
       )}
       data-book={m.id}
     >
-      <div className={cn('w-1.5 rounded-l-[20px]', accentBar(m.id))} aria-hidden />
-
-      <div
-        className={cn(
-          'flex w-[132px] flex-col items-center justify-center px-2.5 py-3.5 max-[860px]:w-24 max-[860px]:px-2',
-          coverMedia(m.id),
-        )}
+      {/* 封面作为卡片背景：右侧透出封面，文字所在的左侧保持实体底色以保证可读性 */}
+      <img
+        src={coverOf(m.id)}
+        alt=""
         aria-hidden
-      >
-        <div className="relative flex w-full justify-center">
-          <span className="absolute inset-[10%_-8%_-2%_-8%] rounded-card bg-[radial-gradient(ellipse_at_center,rgba(91,143,217,0.35),transparent_70%)] opacity-85 blur-[10px]" />
-          <img
-            src={coverOf(m.id)}
-            alt=""
-            width={120}
-            height={160}
-            decoding="async"
-            className="relative aspect-3/4 w-28 rounded-[10px] border border-[#7aa2c7]/35 bg-[#eef3f8] object-contain shadow-[0_6px_16px_rgba(26,42,61,0.12)] dark:border-[#7aa2c7]/40 dark:bg-[#1a2433] max-[860px]:w-[78px]"
-          />
-        </div>
-      </div>
+        decoding="async"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center dark:brightness-[0.82] dark:contrast-[1.05]"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-r from-surface from-0% via-surface via-65% to-surface/25 max-[860px]:to-surface/95"
+      />
 
-      <div className="flex min-w-0 flex-col gap-2 py-4 pr-5 pl-1 max-[860px]:py-3 max-[860px]:pr-3.5 max-[860px]:pl-0">
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5 min-[861px]:max-w-[62%] max-[860px]:p-4">
         {badge ? (
           <div className="flex flex-wrap gap-1.5">
             <span className="inline-flex items-center rounded-full border border-line px-2 py-0.5 text-[0.72rem] leading-[1.5] text-muted">
@@ -268,20 +241,15 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto w-full max-w-[920px] px-5 pt-2 pb-14">
-        <section className="hero-photo relative isolate mb-4 flex min-h-[248px] items-center overflow-hidden rounded-[22px] border border-[#c5d4e6]/55 shadow-card max-[760px]:min-h-[212px] dark:border-[#7aa2c7]/32">
+        <section className="hero-photo relative isolate mb-4 flex min-h-[88px] items-center overflow-hidden rounded-[22px] border border-[#c5d4e6]/55 shadow-card max-[760px]:min-h-[80px] dark:border-[#7aa2c7]/32">
           <span className="hero-scrim absolute inset-0" aria-hidden />
-          <div className="relative z-1 max-w-[60%] px-10 py-9 max-[760px]:max-w-full max-[760px]:px-5.5 max-[760px]:py-6.5">
-            <h1 className="mb-2.5 flex items-center gap-2.5 text-[1.7rem] leading-tight font-bold max-[760px]:text-[1.4rem]">
-              <IconNetwork size={26} className="text-accent" /> 图书与地图
-            </h1>
-            <p className="mb-4 max-w-[26em] text-[0.98rem] leading-relaxed text-ink/76">
-              沿路径阅读，或打开全景图。节点旁有原文。
-            </p>
-            <div className="flex flex-wrap gap-2" aria-label="馆藏统计">
-              <HeroStat icon={<IconBooks size={14} />} text={`${index.maps.length} 本`} />
-              <HeroStat icon={<IconNodes size={14} />} text={`${totalNodes} 节点`} />
-              <HeroStat icon={<IconEdges size={14} />} text={`${totalEdges} 关系`} />
-            </div>
+          <div
+            className="relative z-1 flex flex-wrap gap-2 px-6 py-5 max-[760px]:px-4 max-[760px]:py-4"
+            aria-label="馆藏统计"
+          >
+            <HeroStat icon={<IconBooks size={14} />} text={`${index.maps.length} 本`} />
+            <HeroStat icon={<IconNodes size={14} />} text={`${totalNodes} 节点`} />
+            <HeroStat icon={<IconEdges size={14} />} text={`${totalEdges} 关系`} />
           </div>
         </section>
 

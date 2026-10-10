@@ -27,6 +27,7 @@ import {
 } from './icons';
 import Pill from './ui/Pill';
 import { buttonClass, iconButtonClass } from './ui/styles';
+import { SHEET_HEIGHT, SHEET_PEEK_HEIGHT, SHEET_SHELL } from './ui/drawer';
 import { cn } from '../lib/cn';
 
 export interface PathDrawerContext {
@@ -52,14 +53,20 @@ interface Props {
 
 type DrawerTab = 'detail' | 'notes' | 'related';
 
-const DRAWER_CLASS =
-  'flex flex-col overflow-auto border-l border-line bg-surface px-2.5 pt-2 pb-3 max-[860px]:absolute max-[860px]:inset-x-0 max-[860px]:bottom-0 max-[860px]:z-10 max-[860px]:h-[min(36vh,300px)] max-[860px]:max-h-[36vh] max-[860px]:w-full max-[860px]:rounded-t-[16px] max-[860px]:border-t max-[860px]:border-t-line max-[860px]:border-l-0 max-[860px]:shadow-[0_-8px_28px_var(--shadow-color)]';
-const PEEK_CLASS =
-  'min-[861px]:w-[76px] min-[861px]:max-w-[76px] min-[861px]:items-stretch min-[861px]:gap-2 min-[861px]:overflow-hidden min-[861px]:px-2 min-[861px]:py-2.5 max-[860px]:h-[88px] max-[860px]:max-h-[88px] max-[860px]:overflow-hidden';
+const DRAWER_CLASS = cn(
+  'flex flex-col overflow-auto border-l border-line bg-surface px-2.5 pt-2 pb-3',
+  SHEET_SHELL,
+  SHEET_HEIGHT,
+);
+const PEEK_CLASS = cn(
+  'min-[861px]:w-[76px] min-[861px]:max-w-[76px] min-[861px]:items-stretch min-[861px]:gap-2 min-[861px]:overflow-hidden min-[861px]:px-2 min-[861px]:py-2.5',
+  SHEET_PEEK_HEIGHT,
+  'max-[860px]:overflow-hidden',
+);
 
 const HEADER_CLASS = 'mb-1 flex items-start justify-between gap-3';
 const PEEK_HEADER_CLASS =
-  'min-[861px]:m-0 min-[861px]:flex-col min-[861px]:items-stretch min-[861px]:gap-2';
+  'mb-0 items-center gap-2 min-[861px]:m-0 min-[861px]:flex-col min-[861px]:items-stretch min-[861px]:gap-2';
 
 const SECTION_H3 =
   'mb-1.5 flex items-center gap-1.5 text-[0.88rem] font-semibold tracking-[0.08em] text-muted uppercase';
@@ -67,10 +74,11 @@ const MUTED_P = 'm-0 text-[0.85rem] text-muted';
 
 const GHOST_BTN =
   'inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 py-1.5 text-muted whitespace-nowrap hover:border-accent hover:text-ink';
-const PRIMARY_BTN = buttonClass({
-  variant: 'primary',
-  className: 'min-h-9 w-full px-1.5 py-2 text-[0.78rem]',
-});
+/** 收起态的「展开」按钮：移动端随行紧凑，桌面窄轨里通宽 */
+const PRIMARY_BTN = cn(
+  buttonClass({ variant: 'primary' }),
+  'h-9 shrink-0 px-3 text-[0.78rem] min-[861px]:h-auto min-[861px]:min-h-9 min-[861px]:w-full min-[861px]:px-1.5',
+);
 const COLLAPSE_BTN =
   'inline-flex cursor-pointer items-center justify-center gap-0.5 rounded-[10px] border border-line bg-surface-2 px-2.5 py-1.5 text-[0.8rem] text-muted whitespace-nowrap transition-[border-color,color,background-color] duration-[120ms] hover:border-accent hover:bg-accent/10 hover:text-accent';
 
@@ -160,39 +168,45 @@ export default function DetailDrawer({
       aria-label="节点详情"
       role="dialog"
     >
+      {/* 触控用的拖拽手柄：与「展开」按钮功能重复，故不进入无障碍树与 Tab 顺序 */}
       <button
         type="button"
+        aria-hidden="true"
+        tabIndex={-1}
         className="mx-auto mt-2 mb-1 hidden h-1 w-10 cursor-pointer rounded-full border-0 bg-[color-mix(in_srgb,var(--muted)_55%,transparent)] p-0 max-[860px]:block"
-        aria-label={peek ? '展开详情' : '收起详情'}
         onClick={() => (peek ? onExpand?.() : onCollapse?.())}
       />
       <header className={cn(HEADER_CLASS, peek && PEEK_HEADER_CLASS)}>
-        <div className="min-w-0">
-          <div className={cn('flex flex-wrap items-center gap-1.5', peek && 'min-[861px]:hidden')}>
+        <div
+          className={cn(
+            'min-w-0',
+            peek &&
+              'flex flex-1 items-center gap-2 min-[861px]:flex-col min-[861px]:items-stretch min-[861px]:gap-1',
+          )}
+        >
+          <div
+            className={cn(
+              'flex flex-wrap items-center gap-1.5',
+              peek && 'shrink-0 min-[861px]:hidden',
+            )}
+          >
             <Pill tone={node.type as NodeType}>{typeLabel}</Pill>
-            {tags.slice(0, 2).map((tg) => (
+            {tags.slice(0, peek ? 0 : 2).map((tg) => (
               <Pill key={tg}>{tg}</Pill>
             ))}
           </div>
           <h2
             className={cn(
-              'mt-1 text-[1.08rem] leading-[1.35]',
+              'text-[1.08rem] leading-[1.35]',
+              !peek && 'mt-1',
               peek &&
-                'min-[861px]:mx-auto min-[861px]:my-0 min-[861px]:max-h-[40vh] min-[861px]:overflow-hidden min-[861px]:text-[0.85rem] min-[861px]:leading-[1.25] min-[861px]:[text-orientation:mixed] min-[861px]:[writing-mode:vertical-rl]',
+                'my-0 truncate text-[0.95rem] min-[861px]:mx-auto min-[861px]:my-0 min-[861px]:max-h-[40vh] min-[861px]:overflow-hidden min-[861px]:text-[0.85rem] min-[861px]:leading-[1.25] min-[861px]:whitespace-normal min-[861px]:[text-orientation:mixed] min-[861px]:[writing-mode:vertical-rl]',
             )}
             title={node.label}
           >
             {node.label}
           </h2>
-          {peek ? (
-            <button
-              type="button"
-              className={cn(GHOST_BTN, 'mt-1.5 pl-0 text-[0.85rem] min-[861px]:hidden')}
-              onClick={() => onExpand?.()}
-            >
-              展开详情
-            </button>
-          ) : onBack ? (
+          {!peek && onBack ? (
             <button
               type="button"
               className={cn(GHOST_BTN, 'mt-1.5 pl-0 text-[0.85rem]')}
@@ -204,7 +218,7 @@ export default function DetailDrawer({
         </div>
         <div
           className={cn(
-            'flex items-start gap-1',
+            'flex shrink-0 items-start gap-1',
             peek && 'min-[861px]:flex-col min-[861px]:items-stretch min-[861px]:gap-1.5',
           )}
         >

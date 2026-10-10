@@ -17,6 +17,7 @@ import GraphNode from './GraphNode';
 import MapLegend from './MapLegend';
 import { IconFit, IconFocus, IconZoomIn, IconZoomOut } from './icons';
 import { iconButtonClass } from './ui/styles';
+import { PEEK_DOCK } from './ui/drawer';
 import { cn } from '../lib/cn';
 import { layoutPathSpine, layoutWithDagre } from '../lib/layout';
 import {
@@ -68,8 +69,8 @@ interface Props {
   pathStepIndex?: number | null;
   showStructuralEdges?: boolean;
   onVisibleStats?: (stats: VisibleStats) => void;
-  /** 移动端缩放条的落位：随侧栏展开/收起避让 */
-  dock?: 'default' | 'sheet' | 'peek';
+  /** 移动端缩放条的落位；'hidden' 用于抽屉铺满高度时（地图仅剩一条缝，缩放无意义） */
+  dock?: 'default' | 'peek' | 'hidden';
 }
 
 function MapCanvasInner(
@@ -597,8 +598,8 @@ function MapCanvasInner(
           'absolute left-3.5 z-[6] flex flex-col gap-1',
           'min-[861px]:bottom-[18px]',
           dock === 'default' && 'max-[860px]:bottom-4',
-          dock === 'sheet' && 'max-[860px]:bottom-[calc(36vh+10px)]',
-          dock === 'peek' && 'max-[860px]:bottom-[108px]',
+          dock === 'peek' && PEEK_DOCK,
+          dock === 'hidden' && 'max-[860px]:hidden',
         )}
         role="group"
         aria-label="缩放"

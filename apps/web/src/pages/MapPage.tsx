@@ -11,12 +11,12 @@ import SearchHits from '../components/SearchHits';
 import PathGuide from '../components/PathGuide';
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate, groupChapters, matchesQuery } from '../lib/graphUtils';
-import { coverOf } from '../lib/covers';
 import { useTheme } from '../hooks/useTheme';
 import {
   IconChapter,
   IconStructure,
   IconClaim,
+  IconChevronLeft,
   IconConcept,
   IconClose,
   IconMap,
@@ -752,33 +752,21 @@ export default function MapPage() {
   const qTrim = query.trim();
   const zeroSearch = Boolean(qTrim && visibleStats && visibleStats.hitCount === 0);
   const presentTypes = new Set(graph.nodes.map((n) => n.type));
-  const dockState = !hasDrawer ? 'default' : sheetExpanded ? 'sheet' : 'peek';
+  const dockState = !hasDrawer ? 'default' : sheetExpanded ? 'hidden' : 'peek';
 
   return (
     <div className="page-wash grid h-full grid-rows-[auto_auto_1fr]">
       <header className="topbar-map z-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 px-4 py-3 max-[860px]:gap-x-2 max-[860px]:gap-y-1.5 max-[860px]:px-2.5 max-[860px]:py-1.5">
-        <div className="flex min-w-0 items-start gap-3.5 max-[860px]:items-center max-[860px]:gap-2.5">
-          <div
-            className="h-[52px] w-10 shrink-0 overflow-hidden rounded-lg border border-[#7aa2c7]/35 bg-surface-2 shadow-soft max-[860px]:h-9 max-[860px]:w-7"
-            aria-hidden
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            className={cn(iconButtonClass(), 'shrink-0 rounded-full')}
+            to="/"
+            aria-label="返回图书列表"
+            title="返回图书列表"
           >
-            <img
-              src={coverOf(meta.id)}
-              alt=""
-              width={40}
-              height={52}
-              className="h-full w-full object-cover"
-            />
-          </div>
+            <IconChevronLeft />
+          </Link>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <Link
-              className="w-fit text-[0.85rem] leading-none text-muted opacity-75 hover:text-accent hover:no-underline"
-              to="/"
-              aria-label="返回图书列表"
-              title="返回图书列表"
-            >
-              ←
-            </Link>
             <h1 className="text-[1.18rem] leading-tight font-bold max-[860px]:max-w-[52vw] max-[860px]:truncate max-[860px]:text-[0.92rem]">
               {meta.title}
             </h1>
