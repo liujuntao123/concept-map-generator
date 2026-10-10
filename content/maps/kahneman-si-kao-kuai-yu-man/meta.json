@@ -5,13 +5,6 @@
   "author": "丹尼尔·卡尼曼",
   "publisher": "中信出版社",
   "language": "zh-CN",
-  "ima": {
-    "kb_id": "6WDXdekvUwkewNAd4rwd_i48cdQXkHUOGlb-tlXL0V0=",
-    "kb_name": "思考快与慢",
-    "media_id": "epub_2fabf5187bf33404addbb97d852bb3a7_ccb57e9855cc047f9620e72b4b9350f97505191406415359",
-    "media_type": 21,
-    "file_name": "思考快与慢-丹尼尔·卡尼曼.epub"
-  },
   "stats": {
     "nodes": 95,
     "edges": 167,
@@ -29,7 +22,9 @@
     "file": "思考快与慢-丹尼尔·卡尼曼.epub",
     "kind": "epub",
     "imaKb": "思考快与慢",
-    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_ccb57e9855cc047f9620e72b4b9350f97505191406415359"
+    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_ccb57e9855cc047f9620e72b4b9350f97505191406415359",
+    "kbId": "6WDXdekvUwkewNAd4rwd_i48cdQXkHUOGlb-tlXL0V0=",
+    "mediaType": 21
   },
   "featuredPaths": [
     {

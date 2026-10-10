@@ -105,4 +105,4 @@
 
 - Live: https://concept-map-generator.pages.dev/
 - Repo: https://github.com/liujuntao123/concept-map-generator
-- 本地：`/workspace/concept-map-generator`
+- 本地：`/workspace`

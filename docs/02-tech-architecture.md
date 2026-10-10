@@ -102,94 +102,85 @@ flowchart TB
 
 ## 4. Cloudflare 部署拓扑
 
-### 4.1 推荐：Workers + Static Assets（SPA）
+### 4.1 采用：Cloudflare Pages（纯静态 SPA）
 
-```jsonc
-// wrangler.jsonc（示意）
-{
-  "name": "concept-map",
-  "compatibility_date": "2026-10-09",
-  "assets": {
-    "directory": "./apps/web/dist",
-    "not_found_handling": "single-page-application"
-  }
-}
+实际使用 **Pages**，配置在同仓 `apps/web/wrangler.toml`：
+
+```toml
+name = "concept-map-generator"
+compatibility_date = "2026-10-09"
+pages_build_output_dir = "./dist"
+```
+
+部署命令（见根 `package.json` 的 `deploy`）：
+
+```bash
+npm run build
+npx --prefix apps/web wrangler pages deploy apps/web/dist --project-name concept-map-generator
 ```
 
 行为：
 
-- `/assets/*`、`/maps/*/graph.json` 等静态文件直接命中 Assets；  
-- 客户端路由（如 `/maps/foo`）回退 `index.html`；  
-- 日后加 `/api/*` 时，可配置 `main` Worker + `run_worker_first`。
+- `/assets/*`、`/maps/*/graph.json` 等静态文件直出；
+- 客户端路由（如 `/maps/foo`）回退 `index.html`（SPA）。
 
-文档：https://developers.cloudflare.com/workers/static-assets/
+### 4.2 与 Workers + Static Assets 的取舍
 
-### 4.2 与 Pages 的取舍
+| | Pages（当前采用） | Workers + Static Assets |
+|--|------------------|-------------------------|
+| 纯静态 SPA | 直接支持 `pages_build_output_dir` | 亦支持 |
+| 未来 API / Cron | 需 Pages Functions 或迁 Workers | 同项目扩展 |
+| 迁移成本 | — | 拓扑等价，可后续再迁 |
 
-| | Workers + Assets | Pages |
-|--|------------------|-------|
-| 新项目方向 | Cloudflare 主推 | 仍可用，非强制迁移 |
-| Vite 插件 | 官方支持 | 较弱 |
-| 纯静态成本 | 静态不计费（脚本不跑则近似免费） | 同样适合纯静态 |
-| 未来 API / Cron | 同项目扩展 | 需 Pages Functions 或迁 Workers |
+**结论**：当前用 **Pages**；若日后需要同项目 `/api`，再评估迁 Workers + Static Assets。
 
-**结论**：新仓用 **Workers + Static Assets**；若你已有 Pages 流水线，用 Pages 部署 Vite `dist` 亦可，拓扑等价于「无 Worker 脚本的静态站」。
-
-### 4.3 部署流水线（建议）
+### 4.3 部署流水线
 
 ```mermaid
 flowchart LR
-  Push[push main] --> GHA[GitHub Actions]
-  GHA --> Build[pnpm build]
-  Build --> Deploy[wrangler deploy]
+  Push[push main] --> Build[npm run build]
+  Build --> Deploy[wrangler pages deploy]
   Deploy --> Edge[Cloudflare Edge]
 ```
 
+> 注意：`npm run build` 的 `prebuild` 会先跑 `build-index` + `sync-maps`，因此 `content/maps` 才是事实源，`apps/web/public/maps` 为生成物（已 gitignore，不入库）。
+
 ---
 
-## 5. 仓库布局建议
+## 5. 仓库布局（实际）
 
 ```
-concept-map/                          # 仓库根（名称待定）
+concept-map-generator/                # 仓库根
 ├── apps/
-│   └── web/                          # Vite + React + TS
+│   └── web/                          # Vite + React + TS（部署产物 apps/web/dist）
 │       ├── src/
-│       │   ├── pages/
-│       │   ├── components/
-│       │   │   ├── MapCanvas.tsx     # React Flow 封装
-│       │   │   ├── NodeDetailDrawer.tsx
-│       │   │   └── SearchFilter.tsx
-│       │   ├── nodes/                # 自定义节点组件
-│       │   ├── lib/
-│       │   │   ├── loadMap.ts
-│       │   │   └── layout.ts         # dagre/elk
-│       │   └── App.tsx
-│       ├── index.html
-│       ├── package.json
+│       │   ├── pages/                # HomePage / BookDetailPage / MapPage
+│       │   ├── components/           # MapCanvas / DetailDrawer / PathGuide …
+│       │   ├── lib/                  # graphUtils / layout(dagre) / fetchJson / covers
+│       │   └── types/graph.ts
+│       ├── public/maps/              # 由 sync-maps 生成，已 gitignore
+│       ├── wrangler.toml             # Cloudflare Pages（pages_build_output_dir=./dist）
 │       └── vite.config.ts
 ├── content/
 │   └── maps/
-│       └── <mapId>/
-│           ├── meta.json
-│           ├── graph.json
-│           └── REVIEW.md
-├── packages/
-│   └── schema/                       # zod / JSON Schema 共享校验
+│       ├── index.json                # 由 build-index.mjs 从各 meta.json 派生
+│       └── <mapId>/                  # meta.json + graph.json
+├── schemas/
+│   └── graph.schema.json             # JSON Schema（Ajv 在 CI 校验）
+├── scripts/
+│   ├── build-index.mjs               # meta.json → index.json
+│   ├── sync-maps.mjs                 # content/maps → apps/web/public/maps
+│   └── validate-graph.mjs            # schema + 结构/质量校验
 ├── skills/
 │   └── book-to-conceptmap/
 │       ├── SKILL.md
-│       ├── scripts/
-│       │   ├── fetch-book.mjs        # 调 ima_api
-│       │   ├── chunk.mjs
-│       │   ├── extract.mjs
-│       │   └── merge-write.mjs
-│       └── prompts/
-├── wrangler.jsonc
-├── package.json                      # pnpm workspace
-└── README.md
+│       └── scripts/fetch_and_extract.cjs   # 调 ima_api 下载 epub 并分章
+├── docs/
+├── .github/workflows/validate-graphs.yml
+└── package.json                      # 脚本编排（build-index/sync-maps/validate/build/deploy）
 ```
 
-与 **ima-skill** 关系：`book-to-conceptmap` **调用**已安装的 ima-skill（`ima_api.cjs` + wiki API），不复制凭证逻辑。
+与 **ima-skill** 关系：`book-to-conceptmap` **调用**已安装的 ima-skill（`~/agent-data/workflows/ima-skill/ima_api.cjs` + wiki API），不复制凭证逻辑。
 
 ---
 
@@ -199,76 +190,95 @@ concept-map/                          # 仓库根（名称待定）
 
 ```json
 {
-  "mapId": "example-book",
+  "id": "example-book",
   "title": "示例书名",
+  "author": "作者",
   "language": "zh-CN",
   "status": "published",
-  "contentVersion": "0.1.0",
+  "version": "1.0.0",
+  "schemaVersion": "1.1",
+  "generatedAt": "2026-10-09T13:00:00+08:00",
   "source": {
-    "provider": "ima",
-    "knowledgeBaseId": "<kb_id>",
-    "knowledgeBaseName": "我的书库",
+    "file": "示例书名.epub",
+    "kind": "epub",
+    "imaKb": "我的书库",
     "mediaId": "<media_id>",
-    "mediaTitle": "示例书名.pdf",
-    "mediaType": 1
+    "kbId": "<kb_id>",
+    "mediaType": 21
   },
-  "updatedAt": "2026-10-09T13:00:00+08:00"
+  "stats": { "nodes": 70, "edges": 108, "chapters": 28, "concepts": 38, "claims": 2, "persons": 1, "works": 1 },
+  "nodeTypeBreakdown": { "chapter": 28, "concept": 38, "claim": 2, "person": 1, "work": 1 },
+  "edgeTypeBreakdown": { "contains": 28, "related": 69, "contrasts": 9, "cites": 2 },
+  "featuredPaths": []
 }
 ```
+
+- `version`：内容版本（每次重生成递增）；`schemaVersion` 固定 `"1.1"`。
+- `source` 为来源信息的**唯一事实源**（不再有顶层 `ima` 字段）。
+- `stats` / `nodeTypeBreakdown` / `edgeTypeBreakdown` 必须与 `graph.json` 实际计数一致（`npm run validate` 强制）。
+- `index.json` 由 `scripts/build-index.mjs` 从各 `meta.json` 派生，禁止手改。
+
 
 ### 6.2 `graph.json`（核心）
 
 ```json
 {
-  "schemaVersion": 1,
   "mapId": "example-book",
+  "schemaVersion": "1.1",
   "nodes": [
     {
-      "id": "c-confirmation-bias",
+      "id": "c-queshi-pianwu",
       "type": "concept",
       "label": "确认偏误",
-      "aliases": ["confirmation bias"],
-      "summary": "人们倾向于寻找支持已有信念的证据……",
-      "chapterIds": ["ch-03"],
-      "citations": [
-        {
-          "mediaId": "<media_id>",
-          "chunkId": "ch03-002",
-          "excerpt": "……原文句子……",
-          "locator": { "chapter": "第三章", "approxPage": 42 }
-        }
-      ],
-      "position": { "x": 120, "y": 340 }
+      "summary": "人们倾向于寻找支持已有信念的证据……（一句话定位）",
+      "content": "基于原文的一段「详述」：展开概念在书中的论述层次，须与 summary、source.excerpt 都不同。",
+      "source": {
+        "chapter": "第三章",
+        "file": "text00007.html",
+        "excerpt": "……原文中逐字摘录的 2–4 句，可核对……",
+        "anchor": "text00007.html"
+      },
+      "tags": ["概念"],
+      "reviewStatus": "draft"
     },
     {
       "id": "ch-03",
       "type": "chapter",
       "label": "第三章",
       "summary": "章节锚点",
-      "citations": []
+      "content": "本章导语（基于原文）。",
+      "source": { "chapter": "第三章", "excerpt": "……本章正文开头 2–3 句……" }
     }
   ],
   "edges": [
     {
       "id": "e1",
-      "source": "c-confirmation-bias",
-      "target": "c-belief-perseverance",
-      "type": "related",
-      "label": "相关",
-      "citations": []
+      "source": "c-queshi-pianwu",
+      "target": "ch-03",
+      "type": "contains",
+      "label": "收录"
     },
     {
       "id": "e2",
-      "source": "c-confirmation-bias",
-      "target": "ch-03",
-      "type": "defined-in",
-      "label": "定义于"
+      "source": "c-queshi-pianwu",
+      "target": "c-baochi-xinnian",
+      "type": "related",
+      "label": "相关",
+      "description": "可选的边说明"
     }
   ]
 }
 ```
 
-校验：`packages/schema` 用 Zod 保证 `edge.source/target` 引用存在的 `node.id`；CI 跑 `validate-graphs`。
+节点/边模型（v1.1，`schemas/graph.schema.json` 为准）：
+
+- 节点类型仅 5 种：`chapter` / `concept` / `claim` / `person` / `work`。
+- 边类型仅 4 种：`related` / `contains` / `contrasts` / `cites`。
+- 节点引用原文统一用 `source.{chapter,file,excerpt,anchor}`（**没有** `citations` / `chapterIds` / `position` / `aliases`）。
+- `reviewStatus`（`draft`/`reviewed`）为作者流水线可选字段，**读者端不渲染**。
+- 布局坐标不落盘，前端按 `dagre`/`ELK` 现算（ADR 5）。
+
+校验：`scripts/validate-graph.mjs` 用 Ajv 保证 schema、`edge.source/target` 引用存在的 `node.id`，并额外检查重复 id、自环、类型枚举、`content==summary`、模板残句、摘录过短、`meta.stats` 与 `index` 一致性；CI 跑 `validate-graphs`。
 
 ### 6.3 前端视图模型映射
 

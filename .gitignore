@@ -6,3 +6,5 @@ dist/
 .env.*
 .wrangler/
 book-extract/
+# generated from content/maps by scripts/sync-maps.mjs
+apps/web/public/maps/

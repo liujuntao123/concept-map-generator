@@ -9,7 +9,7 @@
     "nodes",
     "edges"
   ],
-  "additionalProperties": true,
+  "additionalProperties": false,
   "properties": {
     "mapId": {
       "type": "string",
@@ -17,7 +17,7 @@
     },
     "schemaVersion": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[0-9]+(\\.[0-9]+)*$"
     },
     "nodes": {
       "type": "array",
@@ -44,7 +44,7 @@
         "content",
         "source"
       ],
-      "additionalProperties": true,
+      "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string",
@@ -90,7 +90,7 @@
             "chapter",
             "excerpt"
           ],
-          "additionalProperties": true,
+          "additionalProperties": false,
           "properties": {
             "chapter": {
               "type": "string"
@@ -118,7 +118,7 @@
         "type",
         "label"
       ],
-      "additionalProperties": true,
+      "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string",

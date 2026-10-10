@@ -116,7 +116,6 @@ flowchart LR
 | `person` | 人物图标 + 次色 |
 | `work` | 书本图标 |
 | `claim` | 引用样式边框 |
-| `question` | 虚线边框 |
 | `chapter` | 较大「容器」或分区标签（布局用） |
 
 ---
@@ -131,42 +130,37 @@ flowchart LR
 | `person` | 人物（作者引用的思想家等） | **提议补充** |
 | `work` | 著作、文献、作品 | **提议补充** |
 | `claim` | 重要论断 / 命题 | **提议补充** |
-| `question` | 书中提出的关键问题 | **提议补充** |
 | `chapter` | 章节锚点（便于按章过滤） | **提议补充** |
 
-> **用户明确要求**的是「概念节点 + 基于原文的详情」；上表其余类型为建议扩展，可在第一本书试点时裁剪。
+> **已实现**的是上表 5 类（`chapter` / `concept` / `claim` / `person` / `work`），见 `schemas/graph.schema.json`；早期设想的 `question` 未采用。
 
 ### 6.2 边类型
 
 | 类型 | 含义 | 方向建议 |
 |------|------|----------|
-| `is-a` | 属种 / 分类 | 子 → 父 |
-| `part-of` | 组成 / 隶属 | 部分 → 整体 |
 | `related` | 一般相关 | 无向或双向展示 |
+| `contains` | 包含 / 收录（章节 → 篇目/概念） | 整体 → 部分 |
 | `contrasts` | 对照 / 对立 | 无向 |
 | `cites` | 引用 / 提及 | 引用方 → 被引 |
-| `leads-to` | 推导 / 导致 | 前件 → 后件 |
-| `defined-in` | 概念定义所在章节 | 概念 → chapter |
+
+> 早期设想的 `is-a` / `part-of` / `leads-to` / `defined-in` 未采用；边还可带自由文本 `label`（如「阐发」「转向」）与可选 `description`。
 
 ### 6.3 引用（Citation）— 接地原文
 
-每个节点的详情必须能回溯到 IMA 原文片段：
+每个节点通过 `source` 字段回溯到 IMA 原文片段：
 
 ```json
 {
-  "citations": [
-    {
-      "mediaId": "ima-media-xxx",
-      "mediaTitle": "书名.pdf",
-      "chunkId": "ch03-p12",
-      "excerpt": "……原文摘录……",
-      "locator": { "chapter": "第三章", "approxPage": 12 }
-    }
-  ]
+  "source": {
+    "chapter": "第三章",
+    "file": "text00007.html",
+    "excerpt": "……原文中逐字摘录的 2–4 句……",
+    "anchor": "text00007.html"
+  }
 }
 ```
 
-说明：IMA `get_media_info` 提供可下载/可访问的原文 URL；页码精度取决于文件类型与解析质量，`locator` 允许「近似定位」（**提议补充**）。
+说明：`excerpt` 为原文**逐字摘录**（校验脚本要求是原文的精确子串）；`file`/`anchor` 指向 epub 内 HTML 路径；页码精度取决于文件类型与解析质量，不落盘坐标与页码（**提议补充**已按此收敛）。
 
 ---
 
@@ -193,9 +187,9 @@ sequenceDiagram
 
 阶段约定：
 
-1. **Draft**：Skill 产出，`status: draft`
+1. **Draft**：Skill 产出，节点可标 `reviewStatus: draft`（作者字段，读者端不渲染）
 2. **Review**：人工改标签、删冗余边、补遗漏概念
-3. **Published**：合并 `main`，站点只读展示 `published` 地图
+3. **Published**：合并 `main`，`meta.status = published`，站点只读展示
 
 ---
 
@@ -235,10 +229,9 @@ sequenceDiagram
 
 ```
 content/maps/<mapId>/
-  meta.json          # 书目元数据、IMA media_id、版本
+  meta.json          # 书目元数据、source(imaKb/mediaId/kbId)、version、stats
   graph.json         # nodes + edges
-  REVIEW.md          # 人工审校 checklist
-  excerpts/          # 可选：大段原文缓存索引（勿提交密钥）
+content/maps/index.json   # 由 build-index.mjs 从各 meta.json 派生
 ```
 
 ### 8.5 与 IMA OpenAPI 的耦合边界
@@ -268,7 +261,7 @@ content/maps/<mapId>/
 
 | 项 | 约定 |
 |----|------|
-| 内容版本 | Git commit；`meta.json` 含 `contentVersion` 与 `sourceMediaId` |
+| 内容版本 | Git commit；`meta.json` 含 `version` 与 `source.mediaId` |
 | 应用版本 | 前端 package 版本；与内容解耦 |
 | 发布 | `main` 合并 → Cloudflare 构建 → 生产 URL |
 | 回滚 | Git revert + 重新部署 |
