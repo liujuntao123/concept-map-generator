@@ -931,7 +931,7 @@ export default function MapPage() {
 
         <div className="cm-stats">
           {activePath ? (
-            <span>这条路径 {activePath.nodeIds.length} 步</span>
+            <span>{activePath.nodeIds.length} 步</span>
           ) : qTrim && visibleStats ? (
             <>
               <span>命中 {visibleStats.hitCount}</span>

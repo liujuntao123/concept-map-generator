@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate } from '../lib/graphUtils';
+import { coverOf } from '../lib/covers';
 import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
@@ -85,12 +86,6 @@ export default function BookDetailPage() {
   const edgeBreakdown = meta.edgeTypeBreakdown ?? {};
   const year = meta.generatedAt ? formatGeneratedDate(meta.generatedAt).slice(0, 4) : '';
   const byline = [meta.author, meta.publisher, year].filter(Boolean).join(' · ');
-  // Cover: prefer full title; coverText only as small seal if short
-  const coverTitle = meta.title || '未命名';
-  const coverQuote =
-    meta.subtitle ||
-    (meta.description ? meta.description.slice(0, 36) + (meta.description.length > 36 ? '…' : '') : '');
-
   return (
     <div className="cm-shell">
       <header className="cm-topbar">
@@ -121,16 +116,8 @@ export default function BookDetailPage() {
 
       <main className="cm-book-detail">
         <section className="cm-book-detail__hero">
-          <div
-            className="cm-book-detail__cover cm-book-detail__cover--reader"
-            style={{ background: meta.coverColor || 'var(--bg-elev-2)' }}
-            aria-hidden
-          >
-            {meta.coverText ? (
-              <span className="cm-book-detail__seal">{meta.coverText}</span>
-            ) : null}
-            <span className="cm-book-detail__cover-title">{coverTitle}</span>
-            {coverQuote ? <span className="cm-book-detail__cover-quote">{coverQuote}</span> : null}
+          <div className="cm-book-detail__cover cm-book-detail__cover--photo" aria-hidden>
+            <img src={coverOf(meta.id)} alt="" width={180} height={240} />
           </div>
           <div className="cm-book-detail__intro">
             {byline ? (

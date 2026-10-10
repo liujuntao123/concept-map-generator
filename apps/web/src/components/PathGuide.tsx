@@ -75,13 +75,12 @@ export default function PathGuide({
               </span>
             ) : null}
             <span className="cm-path-guide__pill">
-              <IconPath size={14} /> 第 {stepIndex + 1}/{n} 步
+              <IconPath size={14} /> 第 {stepIndex + 1} 步
             </span>
             {path.arc ? <span className="cm-path-guide__arc">{path.arc}</span> : null}
           </div>
 
           <div className="cm-path-guide__now">
-            <div className="cm-path-guide__now-label">这一步</div>
             <strong className="cm-path-guide__now-title">{currentNode?.label ?? '…'}</strong>
             <p className="cm-path-guide__why">{why}</p>
             {nextNode ? (
@@ -138,18 +137,18 @@ export default function PathGuide({
         ) : null}
         {onToggleTable ? (
           <button type="button" className="cm-btn cm-btn--ghost" onClick={onToggleTable}>
-            <IconList size={14} /> {tableOpen ? '收起步骤' : '步骤表'}
+            <IconList size={14} /> {tableOpen ? '收起' : '步骤'}
           </button>
         ) : null}
-        <button type="button" className="cm-icon-btn" onClick={onExit} aria-label="退出路径" title="退出路径">
+        <button type="button" className="cm-icon-btn" onClick={onExit} aria-label="退出" title="退出">
           <IconExit />
         </button>
         <button
           type="button"
           className={`cm-icon-btn${completed ? ' is-on' : ''}`}
           onClick={onToggleComplete}
-          aria-label={completed ? '取消完成标记' : '标记已完成'}
-          title={completed ? '已完成' : '标记完成'}
+          aria-label={completed ? '取消完成' : '完成'}
+          title={completed ? '已完成' : '完成'}
         >
           <IconCheck />
         </button>

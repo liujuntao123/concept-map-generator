@@ -40,7 +40,7 @@ function GraphNodeComponent({ data, selected }: NodeProps<Node<GraphNodeData>>) 
       </span>
       <span className="cm-node__label">{data.label}</span>
       {data.pathStep != null ? (
-        <span className="cm-node__step" aria-label={`路径第 ${data.pathStep} 步`}>
+        <span className="cm-node__step" aria-label={`第 ${data.pathStep} 步`}>
           {data.pathStep}
         </span>
       ) : null}

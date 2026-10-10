@@ -16,17 +16,7 @@ import {
   IconSun,
   pathThemeIcon,
 } from '../components/icons';
-
-const COVER_SRC: Record<string, string> = {
-  'kahneman-si-kao-kuai-yu-man': '/illustrations/cover-kahneman.svg',
-  'chujia-ying-zou-chu-wei-yi-zhen-li-guan': '/illustrations/cover-chujia.svg',
-};
-
-function coverOf(id: string) {
-  return COVER_SRC[id] || '/illustrations/cover-default.svg';
-}
-
-
+import { coverOf } from '../lib/covers';
 
 function BookCard({ m }: { m: MapIndexEntry }) {
   const [paths, setPaths] = useState<FeaturedPath[]>([]);
@@ -193,12 +183,15 @@ export default function HomePage() {
       </header>
 
       <main className="cm-home cm-home--v5">
-        <section className="cm-home__hero-panel">
+        <section
+          className="cm-home__hero-panel cm-home__hero-panel--photo"
+          style={{ backgroundImage: 'url(/illustrations/bg-mountains-airy.jpg)' }}
+        >
           <div className="cm-home__hero-copy">
             <h1>
-              <IconNetwork size={28} /> 图书与地图
+              <IconNetwork size={22} /> 图书与地图
             </h1>
-            <p>沿推荐路径逐步读，或打开全图自由游走。节点旁有原文摘录。</p>
+            <p>沿路径读，或打开全图逛。节点旁有原文。</p>
             <div className="cm-home__stat-pill" aria-label="馆藏统计">
               <span>
                 <IconBooks size={14} /> {index.maps.length} 本
@@ -210,9 +203,6 @@ export default function HomePage() {
                 <IconEdges size={14} /> {index.maps.reduce((s, m) => s + (m.stats?.edges ?? 0), 0)} 关系
               </span>
             </div>
-          </div>
-          <div className="cm-home__hero-art" aria-hidden>
-            <img src="/illustrations/hero-book-network.svg" alt="" width={420} height={280} />
           </div>
         </section>
 

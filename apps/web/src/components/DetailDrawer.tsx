@@ -199,11 +199,8 @@ export default function DetailDrawer({
         <>
           {pathContext ? (
             <section className="cm-drawer__section cm-drawer__step">
-              <h3>
-                <IconPath size={14} /> 这一步
-              </h3>
               <p className="cm-drawer__step-meta">
-                第 {pathContext.stepIndex + 1}/{pathContext.path.nodeIds.length} 步
+                <IconPath size={14} /> 第 {pathContext.stepIndex + 1} 步
                 {pathContext.path.difficulty ? ` · ${pathContext.path.difficulty}` : ''}
                 {pathContext.path.durationMin ? ` · 约 ${pathContext.path.durationMin} 分钟` : ''}
               </p>
@@ -322,11 +319,11 @@ export default function DetailDrawer({
           <h3>
             <IconNote size={14} /> 我的笔记
           </h3>
-          <p className="cm-muted">仅保存在本机浏览器，不会上传。（草稿占位）</p>
+          <p className="cm-muted">只存在这台设备上，换浏览器就没了。</p>
           <textarea
             className="cm-note-input"
-            rows={10}
-            placeholder="写下你对这个概念的想法…"
+            rows={6}
+            placeholder="随手记一点…"
             value={noteDraft}
             onChange={(e) => saveNote(e.target.value)}
           />
@@ -334,7 +331,7 @@ export default function DetailDrawer({
       ) : null}
 
       {!peek && tab === 'related' ? (
-        <section className="cm-drawer__section">
+        <section className="cm-drawer__section cm-drawer__related-fill">
           <h3>
             <IconList size={14} /> 相关（{related.length}）
           </h3>
