@@ -2952,3 +2952,105 @@ a.cm-btn:hover { text-decoration: none; }
     padding: 12px 12px 12px 0;
   }
 }
+
+/* ========== Ux-10 regression: full 3:4 covers, pill search ========== */
+
+/* Kill stretch: cover column never fills card height */
+.cm-home--v10 .cm-book-card--home {
+  align-items: start !important;
+  grid-template-columns: 6px 120px 1fr !important;
+}
+.cm-home--v10 .cm-book-card--home .cm-book-card__cover-wrap {
+  width: 120px !important;
+  max-width: 120px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 16px 0 16px 2px !important;
+  align-self: start !important;
+  flex: 0 0 120px !important;
+}
+.cm-home--v10 .cm-book-card--home .cm-book-card__cover-glow {
+  inset: 10% -8% -2% -8%;
+  opacity: 0.85;
+}
+/* Single desktop cover size — beats legacy 120/100/84/88 piles */
+.cm-home--v10 .cm-book-card--home .cm-book-card__cover.cm-book-card__cover--art {
+  width: 120px !important;
+  max-width: 120px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 3 / 4 !important;
+  align-self: start !important;
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  background: #eef3f8 !important;
+  /* Ux10-2: fine border + light shadow (glow alone was wiping edge) */
+  border: 1px solid color-mix(in srgb, #7aa2c7 35%, var(--border)) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 70%, transparent),
+    0 6px 16px color-mix(in srgb, #1a2a3d 12%, transparent) !important;
+  box-sizing: border-box;
+}
+.cm-home--v10 .cm-book-card--home .cm-book-card__cover--art img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  display: block !important;
+  /* Full physical book — no crop of「思」title */
+  object-fit: contain !important;
+  object-position: center center !important;
+  background: #eef3f8;
+}
+[data-theme='dark'] .cm-home--v10 .cm-book-card--home .cm-book-card__cover--art {
+  background: #1a2433 !important;
+  border-color: color-mix(in srgb, #7aa2c7 40%, var(--border)) !important;
+}
+[data-theme='dark'] .cm-home--v10 .cm-book-card--home .cm-book-card__cover--art img {
+  background: #1a2433;
+  filter: none;
+}
+
+/* Ux10-3: search as pill */
+.cm-home--v10 .cm-search.cm-search--wide,
+.cm-home--v10 .cm-library-search .cm-search {
+  border-radius: 999px !important;
+}
+
+/* Ux10-5: ensure hero stats are discrete pills (not one fused bar) */
+.cm-home--v10 .cm-home__stat-pill {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 8px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+.cm-home--v10 .cm-home__stat-pill > span {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--border) !important;
+  background: color-mix(in srgb, #eef4fb 85%, #fff) !important;
+}
+
+@media (max-width: 860px) {
+  .cm-home--v10 .cm-book-card--home {
+    grid-template-columns: 5px 96px 1fr !important;
+  }
+  .cm-home--v10 .cm-book-card--home .cm-book-card__cover-wrap {
+    width: 96px !important;
+    max-width: 96px !important;
+    flex-basis: 96px !important;
+    margin: 12px 0 !important;
+  }
+  .cm-home--v10 .cm-book-card--home .cm-book-card__cover.cm-book-card__cover--art {
+    width: 96px !important;
+    max-width: 96px !important;
+  }
+}

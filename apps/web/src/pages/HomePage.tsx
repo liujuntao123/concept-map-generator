@@ -52,7 +52,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
       <div className="cm-book-card__cover-wrap" aria-hidden>
         <div className="cm-book-card__cover-glow" />
         <div className="cm-book-card__cover cm-book-card__cover--art">
-          <img src={coverOf(m.id)} alt="" width={135} height={180} />
+          <img src={coverOf(m.id)} alt="" width={120} height={160} decoding="async" />
         </div>
       </div>
       <div className="cm-book-card__body">
@@ -198,13 +198,13 @@ export default function HomePage() {
             </h1>
             <p>沿路径阅读，或打开全景图。节点旁有原文。</p>
             <div className="cm-home__stat-pill" aria-label="馆藏统计">
-              <span>
+              <span className="cm-home__stat">
                 <IconBooks size={14} /> {index.maps.length} 本
               </span>
-              <span>
+              <span className="cm-home__stat">
                 <IconNodes size={14} /> {totalNodes} 节点
               </span>
-              <span>
+              <span className="cm-home__stat">
                 <IconEdges size={14} /> {totalEdges} 关系
               </span>
             </div>
