@@ -79,7 +79,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
         className="pointer-events-none absolute inset-0 z-0 bg-linear-to-t from-surface from-0% via-surface/78 via-26% to-transparent to-52%"
       />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5">
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 border-t border-line/40 bg-surface/80 p-5 backdrop-blur-sm">
         {badge ? (
           <div className="flex flex-wrap gap-1.5">
             <span className="inline-flex items-center rounded-full border border-line bg-surface/60 px-2 py-0.5 text-[0.72rem] leading-[1.5] text-ink/75">
