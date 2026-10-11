@@ -64,22 +64,18 @@ function BookCard({ m }: { m: MapIndexEntry }) {
     >
       {/* 封面铺满整卡作为底图（封面来自内容 meta.cover）：
           ① 用混合模式把封面「白底」吃掉、只让图画与字迹透出（浅色 multiply，深色 invert + screen）；
-          ② 仅轻度模糊保留构图比例，但不过度，保证封面清晰可见；
-          ③ 蒙层只压住底部信息条，让封面主体尽量透出来 */}
+          ② 几乎不做模糊，尽量保留封面清晰度；
+          ③ 底部信息区用一层「向上渐变到透明」的蒙板隔离文字，与封面平滑过渡。 */}
       <img
         src={coverUrl(m.id, m.cover)}
         alt=""
         aria-hidden
         decoding="async"
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-85 mix-blend-multiply blur-[2px] dark:opacity-65 dark:invert dark:mix-blend-screen"
-      />
-      {/* 蒙层：底部信息条压到实色保证对比度，更快让出上方封面 */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-t from-surface from-0% via-surface/78 via-26% to-transparent to-52%"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-95 mix-blend-multiply blur-[1px] dark:opacity-75 dark:invert dark:mix-blend-screen"
       />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-2 border-t border-line/40 bg-surface/80 p-5 backdrop-blur-sm">
+      {/* 信息区蒙板：底部实色、向上渐变到透明；顶部留出渐变过渡带，避免硬边 */}
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 bg-linear-to-t from-surface via-surface via-80% to-transparent px-5 pt-14 pb-5">
         {badge ? (
           <div className="flex flex-wrap gap-1.5">
             <span className="inline-flex items-center rounded-full border border-line bg-surface/60 px-2 py-0.5 text-[0.72rem] leading-[1.5] text-ink/75">
