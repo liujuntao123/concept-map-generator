@@ -246,7 +246,7 @@
     }
   ],
   "coverColor": "#3d5a80",
-  "coverText": "走出",
+  "cover": "cover.jpg",
   "status": "published",
   "schemaVersion": "1.1",
   "nodeTypeBreakdown": {

@@ -61,6 +61,15 @@ raw.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(epub) as z:
     z.extractall(raw)
 
+# 抽取封面：优先文件名含 cover 的图片，否则取第一张；写到 <out>/cover.<ext>
+cov_imgs = [p for p in raw.rglob('*') if p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.gif')]
+cover = next((p for p in sorted(cov_imgs) if 'cover' in p.name.lower()), None) or (sorted(cov_imgs)[0] if cov_imgs else None)
+cover_name = None
+if cover is not None:
+    import shutil
+    cover_name = 'cover' + cover.suffix.lower()
+    shutil.copy(cover, out / cover_name)
+
 oebps = raw / 'OEBPS'
 if not oebps.exists():
     # find any html
@@ -87,7 +96,7 @@ for i, p in enumerate(htmls):
 
 (out / 'essays.json').write_text(json.dumps(essays, ensure_ascii=False, indent=2), encoding='utf-8')
 (out / 'full.txt').write_text('\\n\\n===== FILE SEP =====\\n\\n'.join(e['text'] for e in essays), encoding='utf-8')
-print(json.dumps({'essays': len(essays), 'total_chars': sum(e['chars'] for e in essays)}, ensure_ascii=False))
+print(json.dumps({'essays': len(essays), 'total_chars': sum(e['chars'] for e in essays), 'cover': cover_name}, ensure_ascii=False))
 `;
   const r = spawnSync('python3', ['-c', py], { encoding: 'utf8' });
   if (r.status !== 0) {

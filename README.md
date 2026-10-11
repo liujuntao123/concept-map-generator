@@ -17,6 +17,20 @@
 - 设计文档：`docs/`
 - 功能 backlog：`docs/BACKLOG.md`
 
+## 内容目录
+
+每本书的**全部内容自持**于 `content/maps/<mapId>/`，与前端代码解耦：
+
+```
+content/maps/<mapId>/
+  meta.json     # 书目元数据（含 cover 封面文件名、coverColor 主色）
+  graph.json    # 概念图（节点 + 边）
+  cover.jpg     # 书籍封面
+```
+
+- `content/maps/index.json` 由 `build-index.mjs` 从各 `meta.json` 派生；
+- 构建时 `sync-maps.mjs` 把 `content/maps` 整体拷到 `apps/web/public/maps`，页面以 `/maps/<mapId>/…` 读取；
+- 前端不含「mapId → 封面/配色」硬编码，**新增一本书只加内容、不改代码**。
 
 ## 路由
 

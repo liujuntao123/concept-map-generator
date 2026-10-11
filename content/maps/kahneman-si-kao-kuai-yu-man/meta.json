@@ -353,7 +353,7 @@
     }
   ],
   "coverColor": "#1d3557",
-  "coverText": "快慢",
+  "cover": "cover.jpg",
   "status": "published",
   "schemaVersion": "1.1",
   "nodeTypeBreakdown": {

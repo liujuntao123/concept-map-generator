@@ -41,7 +41,7 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
   --out /tmp/book-extract
 ```
 
-产出：`essays.json` / `chapters/*.txt` / `full.txt`。
+产出：`essays.json` / `chapters/*.txt` / `full.txt` / `cover.<ext>`（书籍封面，用于 `meta.cover`）。
 
 ### 3. 按章/篇分块
 
@@ -77,8 +77,9 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
 
 ```
 content/maps/<mapId>/
-  meta.json    # version, generatedAt, source, stats, featuredPaths?
+  meta.json    # version, generatedAt, source, stats, featuredPaths?, cover, coverColor
   graph.json   # nodes + edges
+  cover.jpg    # 书籍封面（第 2 步由脚本从 EPUB 提取；meta.cover = "cover.jpg"）
 content/maps/index.json   # 更新 maps 列表
 ```
 

@@ -114,6 +114,14 @@ for (const d of dirs) {
     const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
     if (meta.id && meta.id !== id) fail(id, `meta.id "${meta.id}" != directory name`);
     if (graph.mapId !== id) fail(id, `graph.mapId "${graph.mapId}" != directory name`);
+    // 内容完整性：meta.cover 指向的封面图必须与内容同目录存在
+    if (meta.cover) {
+      if (!existsSync(join(mapsDir, id, meta.cover))) {
+        fail(id, `meta.cover "${meta.cover}" not found in content/maps/${id}/`);
+      }
+    } else {
+      warn(id, 'no cover image (meta.cover missing) — falls back to default placeholder');
+    }
     const nodeCounts = counts(graph.nodes, 'type');
     const edgeCounts = counts(graph.edges, 'type');
     const actual = {

@@ -167,21 +167,25 @@ concept-map-generator/                # 仓库根
 ├── content/
 │   └── maps/
 │       ├── index.json                # 由 build-index.mjs 从各 meta.json 派生
-│       └── <mapId>/                  # meta.json + graph.json
+│       └── <mapId>/                  # 内容自持：meta.json + graph.json + cover.jpg
 ├── schemas/
 │   └── graph.schema.json             # JSON Schema（Ajv 在 CI 校验）
 ├── scripts/
 │   ├── build-index.mjs               # meta.json → index.json
 │   ├── sync-maps.mjs                 # content/maps → apps/web/public/maps
-│   └── validate-graph.mjs            # schema + 结构/质量校验
+│   └── validate-graph.mjs            # schema + 结构/质量校验（含封面完整性）
 ├── skills/
 │   └── book-to-conceptmap/
 │       ├── SKILL.md
-│       └── scripts/fetch_and_extract.cjs   # 调 ima_api 下载 epub 并分章
+│       └── scripts/fetch_and_extract.cjs   # 调 ima_api 下载 epub、分章并导出封面
 ├── docs/
 ├── .github/workflows/validate-graphs.yml
 └── package.json                      # 脚本编排（build-index/sync-maps/validate/build/deploy）
 ```
+
+> **内容解耦约定**：每本书的全部素材（`meta.json` / `graph.json` / `cover.jpg`）自持于 `content/maps/<mapId>/`；
+> 前端不含任何「mapId → 封面/配色」的硬编码——`covers.ts` 只提供由 `meta.cover` 解析 URL 的通用函数，
+> `BookDetailPage` 的封面底板颜色来自 `meta.coverColor`。**新增一本书只需加内容目录、无需改动代码。**
 
 与 **ima-skill** 关系：`book-to-conceptmap` **调用**已安装的 ima-skill（`~/agent-data/workflows/ima-skill/ima_api.cjs` + wiki API），不复制凭证逻辑。
 

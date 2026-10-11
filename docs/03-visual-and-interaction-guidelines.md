@@ -33,7 +33,7 @@ token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（
 | `chapter` `concept` `claim` `person` `work` `excerpt` | 同名变量 | 5 类节点/边 + 原文摘录的语义色 |
 
 规则：
-- **颜色一律走 token，不写十六进制**。唯一例外是「每本书的强调色 / 封面底板 / 路径 chip 三色轮转」这类装饰性映射，集中在组件顶部的映射函数里（如 [HomePage.tsx](file:///workspace/apps/web/src/pages/HomePage.tsx#L30-L51)）。
+- **颜色一律走 token，不写十六进制**。仅有的例外是纯装饰性的「路径 chip 三色轮转」（集中在 [HomePage.tsx](file:///workspace/apps/web/src/pages/HomePage.tsx#L30-L51) 顶部）。**每本书的强调色不再写死在代码里**：封面与主色由内容自带（`meta.cover` / `meta.coverColor`），`BookDetailPage` 用内联样式按 `coverColor` 着色。
 - 半透明叠加统一用 Tailwind 的透明度修饰符（`bg-chapter/15`、`border-accent/40`），不要在 CSS 里手写 `color-mix`。
 - `--accent-strong` 与 `--accent` 是两个用途：**accent 只用于线与文字**，accent-strong 只用于**需要白字的实心按钮**。深色下 accent 偏亮（#7eb8ff），直接配白字只有 1.9:1，禁止这样用。
 

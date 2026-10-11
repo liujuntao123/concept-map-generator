@@ -14,7 +14,7 @@ import {
   IconSun,
   pathThemeIcon,
 } from '../components/icons';
-import { coverOf } from '../lib/covers';
+import { coverUrl } from '../lib/covers';
 import { buttonClass, cardSurface, fieldClass, iconButtonClass } from '../components/ui/styles';
 import { cn } from '../lib/cn';
 
@@ -68,7 +68,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
           ② 只做轻微模糊，保留封面的构图与比例，不糊成一团灰；
           ③ 蒙层只压住底部信息条，让封面正中的内容能透出来 */}
       <img
-        src={coverOf(m.id)}
+        src={coverUrl(m.id, m.cover)}
         alt=""
         aria-hidden
         decoding="async"

@@ -31,7 +31,7 @@ for (const d of readdirSync(mapsDir, { withFileTypes: true })) {
     generatedAt: meta.generatedAt,
     sourceFile: meta.source?.file,
     coverColor: meta.coverColor,
-    coverText: meta.coverText,
+    cover: meta.cover,
     status: meta.status,
     schemaVersion: meta.schemaVersion,
     stats: meta.stats,

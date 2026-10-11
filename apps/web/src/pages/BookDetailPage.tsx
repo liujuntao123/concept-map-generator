@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { fetchJson } from '../lib/fetchJson';
 import { formatGeneratedDate } from '../lib/graphUtils';
-import { coverOf } from '../lib/covers';
+import { coverUrl } from '../lib/covers';
 import {
   EDGE_TYPE_LABEL,
   NODE_TYPE_LABEL,
@@ -17,18 +17,23 @@ import Pill from '../components/ui/Pill';
 import { buttonClass, iconButtonClass, panelSurface } from '../components/ui/styles';
 import { cn } from '../lib/cn';
 
-/* 封面底板配色（沿用原设计的每本书配色映射） */
-function plateTone(id: string): string {
-  if (id.includes('kahneman')) {
-    return 'bg-linear-to-b from-[#e7f0fb] to-[#f5f9fe] dark:from-[#182433] dark:to-[#151d2a]';
-  }
-  if (id.includes('chujia')) {
-    return 'bg-linear-to-b from-[#f0ebf8] to-[#f8f5fc] dark:from-[#221d30] dark:to-[#1a1626]';
-  }
-  if (id.includes('kandao')) {
-    return 'bg-linear-to-b from-[#fbf3d8] to-[#faf8ef] dark:from-[#2a2414] dark:to-[#1d1a11]';
-  }
-  return 'bg-linear-to-b from-[#edf3fa] to-[#f7fafc] dark:from-[#182230] dark:to-[#151d29]';
+/* 十六进制色 → 带透明度的 rgba */
+function tint(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const n = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const r = parseInt(n.slice(0, 2), 16);
+  const g = parseInt(n.slice(2, 4), 16);
+  const b = parseInt(n.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/* 封面底板：颜色来自该书 meta.coverColor（内容自带），缺省不着色 */
+function plateStyle(color?: string) {
+  if (!color) return undefined;
+  return {
+    backgroundImage: `linear-gradient(180deg, ${tint(color, 0.18)} 0%, ${tint(color, 0.05)} 100%)`,
+    borderColor: tint(color, 0.28),
+  };
 }
 
 export default function BookDetailPage() {
@@ -144,14 +149,12 @@ export default function BookDetailPage() {
           data-book={meta.id}
         >
           <div
-            className={cn(
-              'flex w-44 items-center justify-center self-stretch rounded-panel border border-[#7aa2c7]/25 p-4 max-[860px]:w-28 max-[860px]:p-2.5 max-[480px]:mx-auto max-[480px]:w-32',
-              plateTone(meta.id),
-            )}
+            className="flex w-44 items-center justify-center self-stretch rounded-panel border p-4 max-[860px]:w-28 max-[860px]:p-2.5 max-[480px]:mx-auto max-[480px]:w-32"
+            style={plateStyle(meta.coverColor)}
             aria-hidden
           >
             <img
-              src={coverOf(meta.id)}
+              src={coverUrl(meta.id, meta.cover)}
               alt=""
               width={180}
               height={240}

@@ -88,8 +88,10 @@ export interface MapMeta {
   publisher?: string;
   isbn?: string;
   language?: string;
+  /** 书籍主色（内容自带，用于详情页封面底板着色） */
   coverColor?: string;
-  coverText?: string;
+  /** 封面文件名，相对本书目录（如 "cover.jpg"）；缺省回退通用占位图 */
+  cover?: string;
   status?: MapPublishStatus;
   schemaVersion?: string;
   source?: {
@@ -119,7 +121,7 @@ export interface MapIndexEntry {
   generatedAt?: string;
   sourceFile?: string;
   coverColor?: string;
-  coverText?: string;
+  cover?: string;
   status?: MapPublishStatus;
   schemaVersion?: string;
   stats?: MapStats;
