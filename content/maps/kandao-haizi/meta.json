@@ -1,0 +1,391 @@
+{
+  "id": "kandao-haizi",
+  "title": "看见孩子",
+  "subtitle": "贝姬·肯尼迪的善意养育：看见行为背后的孩子",
+  "author": "[美] 贝姬·肯尼迪",
+  "publisher": "中信出版社",
+  "isbn": "9787521755459",
+  "language": "zh-CN",
+  "stats": {
+    "nodes": 171,
+    "edges": 271,
+    "chapters": 33,
+    "concepts": 95,
+    "claims": 27,
+    "persons": 12,
+    "works": 4
+  },
+  "createdAt": "2026-10-11T13:10:37+08:00",
+  "version": "1.0.0",
+  "description": "把《看见孩子》拆成可交互概念地图：从「善意养育」「真相不唯一」「行为是一扇窗」等 10 条育儿准则，到不发脾气、说谎、手足之争、恐惧焦虑、高敏感等 19 个实战场景，逐条挂回原文。",
+  "generatedAt": "2026-10-11T13:10:37+08:00",
+  "source": {
+    "file": "看见孩子-贝姬·肯尼迪.epub",
+    "kind": "epub",
+    "imaKb": "看见孩子",
+    "mediaId": "epub_2fabf5187bf33404addbb97d852bb3a7_5e8ca8c5ac3fb20d167acdc2094d91317507361828701596",
+    "kbId": "Bj-8PIqz_JA1rJYZqMFAJ1i2m7zRYAF3BwdsL_ruIUg=",
+    "mediaType": 21
+  },
+  "featuredPaths": [
+    {
+      "id": "path-xingwei",
+      "title": "从行为看需要",
+      "theme": "行为是一扇窗",
+      "description": "从「行为是线索」出发，看穿打人、说谎、抱怨、哭泣背后的真实需要。",
+      "arc": "线索 → 需要 → 回应",
+      "difficulty": "入门",
+      "durationMin": 12,
+      "nodeIds": [
+        "ch-qianyan",
+        "c-xingwei-xiansuo",
+        "ch-zhunze7",
+        "c-xingwei-shi-chuang",
+        "ch-shizhan8",
+        "c-shuohuang-shi-ziwo-baohu",
+        "ch-shizhan7",
+        "c-baoyuan-gongshi",
+        "ch-shizhan14",
+        "c-kuqi-yilian-xinhao"
+      ],
+      "steps": [
+        {
+          "nodeId": "ch-qianyan",
+          "rationale": "前言给出全书出发点：看见孩子，而不是急着纠正行为。"
+        },
+        {
+          "nodeId": "c-xingwei-xiansuo",
+          "rationale": "抓住核心：行为是了解孩子内心困境的线索。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-zhunze7",
+          "rationale": "进入「行为是一扇窗」这一准则。",
+          "edgeLabel": "展开"
+        },
+        {
+          "nodeId": "c-xingwei-shi-chuang",
+          "rationale": "行为只是表象，要透过它看见底层的情绪与需要。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan8",
+          "rationale": "落到实战：孩子说谎时，这扇窗后是什么。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-shuohuang-shi-ziwo-baohu",
+          "rationale": "说谎往往是一种自我保护，而非道德问题。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan7",
+          "rationale": "再看抱怨：同样是未被看见的需要的信号。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-baoyuan-gongshi",
+          "rationale": "抱怨=强烈的愿望+无力感。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan14",
+          "rationale": "最后看哭泣，情绪最直接的出口。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-kuqi-yilian-xinhao",
+          "rationale": "哭泣是依恋信号，回应它就是在建立安全。",
+          "edgeLabel": "蕴含"
+        }
+      ]
+    },
+    {
+      "id": "path-zhenxiang",
+      "title": "真相不唯一：接纳与设限并行",
+      "theme": "真相不唯一",
+      "description": "同一件事可以有两种真相；在理解与接纳的同时，坚定地设限。",
+      "arc": "多重真相 → 理解而非说服 → 接纳 + 设限",
+      "difficulty": "入门",
+      "durationMin": 13,
+      "nodeIds": [
+        "ch-zhunze2",
+        "c-zhenxiang-bu-weiyi",
+        "cl-ershe-jianke",
+        "c-lijie-shuofu",
+        "c-baituo-kongzhi",
+        "ch-zhunze3",
+        "c-jiena-gongqing",
+        "c-shezhi-guize",
+        "ch-shizhan3",
+        "c-shuochu-yuanwang"
+      ],
+      "steps": [
+        {
+          "nodeId": "ch-zhunze2",
+          "rationale": "从「真相不唯一」这条准则进入。"
+        },
+        {
+          "nodeId": "c-zhenxiang-bu-weiyi",
+          "rationale": "同一件事可以有两种真相，父母与孩子都能被看见。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "cl-ershe-jianke",
+          "rationale": "由此推出：既有趣又严格，两者可以兼得。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-lijie-shuofu",
+          "rationale": "目标是理解而非说服；安全感来自被理解。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-baituo-kongzhi",
+          "rationale": "从而摆脱非赢即输的控制权之争。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "ch-zhunze3",
+          "rationale": "转到职责划分：父母守安全与规则，孩子负责感受与表达。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-jiena-gongqing",
+          "rationale": "接纳与共情是回应的底色。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-shezhi-guize",
+          "rationale": "同时坚定地设置行为规则，二者并行不悖。",
+          "edgeLabel": "互补"
+        },
+        {
+          "nodeId": "ch-shizhan3",
+          "rationale": "落到发脾气场景，示范如何既接纳又设限。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-shuochu-yuanwang",
+          "rationale": "说出孩子的愿望与情绪体量，让他被看见。",
+          "edgeLabel": "蕴含"
+        }
+      ]
+    },
+    {
+      "id": "path-renxing",
+      "title": "培育心理韧性",
+      "theme": "心理韧性",
+      "description": "目标不是快乐，而是承受与复原的能力——从情绪调节到挫折耐受与成长心态。",
+      "arc": "韧性优先 → 情绪调节 → 挫折与焦虑 → 完美主义",
+      "difficulty": "进阶",
+      "durationMin": 15,
+      "nodeIds": [
+        "ch-zhunze6",
+        "c-xinli-renxing",
+        "cl-kuaile-renxing",
+        "c-qingxu-tiaojie",
+        "ch-shizhan11",
+        "c-cuozhe-naishou",
+        "c-chengzhang-xintai",
+        "ch-shizhan9",
+        "c-tigao-jiaolv-rongrendu",
+        "ch-shizhan16",
+        "c-wanmei-qingxu-tiaojie"
+      ],
+      "steps": [
+        {
+          "nodeId": "ch-zhunze6",
+          "rationale": "准则6 把「心理韧性>快乐」立为目标。"
+        },
+        {
+          "nodeId": "c-xinli-renxing",
+          "rationale": "真正的目标不是快乐，而是能承受与复原的韧性。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "cl-kuaile-renxing",
+          "rationale": "快乐远没有心理韧性重要。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-qingxu-tiaojie",
+          "rationale": "前提是先帮孩子学会情绪调节。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan11",
+          "rationale": "落到「无法忍受挫折」的场景。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-cuozhe-naishou",
+          "rationale": "培养的是挫折耐受力，而非一味追求成功。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-chengzhang-xintai",
+          "rationale": "用成长心态看待失败。",
+          "edgeLabel": "支撑"
+        },
+        {
+          "nodeId": "ch-shizhan9",
+          "rationale": "再看恐惧焦虑的处理。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-tigao-jiaolv-rongrendu",
+          "rationale": "提升对焦虑的容忍度，而不是消灭它。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan16",
+          "rationale": "完美主义同样源于情绪调节问题。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-wanmei-qingxu-tiaojie",
+          "rationale": "帮孩子看见完美主义，而不是粗暴地摆脱它。",
+          "edgeLabel": "蕴含"
+        }
+      ]
+    },
+    {
+      "id": "path-xiuchi",
+      "title": "羞耻感与亲密关系",
+      "theme": "羞耻感",
+      "description": "羞耻让孩子退缩与隐藏；亲密是它的解毒剂，尤其对高敏感的孩子。",
+      "arc": "认识羞耻 → 亲密解毒 → 哭泣 → 高敏感",
+      "difficulty": "进阶",
+      "durationMin": 12,
+      "nodeIds": [
+        "ch-zhunze8",
+        "c-xiuchi-gan",
+        "c-qinmi-jieduji",
+        "ch-shizhan14",
+        "c-xiuchi-daijixunhuan",
+        "ch-shizhan19",
+        "c-xiuchi-fangyu",
+        "c-gaomingan-wenti"
+      ],
+      "steps": [
+        {
+          "nodeId": "ch-zhunze8",
+          "rationale": "准则8 指出羞耻感如何破坏关系。"
+        },
+        {
+          "nodeId": "c-xiuchi-gan",
+          "rationale": "先认识羞耻感：它逼人隐藏、退缩。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-qinmi-jieduji",
+          "rationale": "亲密是羞耻的解毒剂。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan14",
+          "rationale": "看它如何影响我们对孩子哭泣的反应。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-xiuchi-daijixunhuan",
+          "rationale": "对哭泣的羞耻感会代代相传。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan19",
+          "rationale": "再看高敏感孩子更容易被羞耻击中。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-xiuchi-fangyu",
+          "rationale": "脆弱与羞耻感相连，需格外呵护。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-gaomingan-wenti",
+          "rationale": "高敏感不等于缺陷，只是感受更强烈。",
+          "edgeLabel": "相关"
+        }
+      ]
+    },
+    {
+      "id": "path-xiufu",
+      "title": "关系修复与自我关照",
+      "theme": "永远都不晚",
+      "description": "与孩子的关系随时可以修复；而修复的前提，是父母先照顾好自己。",
+      "arc": "永远都不晚 → 修复关系 → 自我关照 → 重建亲密",
+      "difficulty": "进阶",
+      "durationMin": 13,
+      "nodeIds": [
+        "ch-zhunze5",
+        "c-xiufu-guanxi",
+        "c-yongyuan-buwan",
+        "ch-zhunze10",
+        "c-ziwo-guanzhao",
+        "c-reqiaoli-huxi",
+        "ch-shizhan6",
+        "c-chongjian-qinmi-yu-guize"
+      ],
+      "steps": [
+        {
+          "nodeId": "ch-zhunze5",
+          "rationale": "准则5 给出希望：永远都不晚。"
+        },
+        {
+          "nodeId": "c-xiufu-guanxi",
+          "rationale": "与孩子的关系随时可以修复。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-yongyuan-buwan",
+          "rationale": "大脑可塑性意味着改变随时可能。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-zhunze10",
+          "rationale": "但修复的前提，是父母先照顾好自己。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-ziwo-guanzhao",
+          "rationale": "自我关照不是自私，而是关系的基础。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "c-reqiaoli-huxi",
+          "rationale": "从「热巧克力呼吸法」这类具体做法开始。",
+          "edgeLabel": "蕴含"
+        },
+        {
+          "nodeId": "ch-shizhan6",
+          "rationale": "落到对抗场景中如何重建亲密与规则。",
+          "edgeLabel": "相关"
+        },
+        {
+          "nodeId": "c-chongjian-qinmi-yu-guize",
+          "rationale": "先修复关系，再重申规则。",
+          "edgeLabel": "蕴含"
+        }
+      ]
+    }
+  ],
+  "coverColor": "#b4543a",
+  "coverText": "看见",
+  "status": "published",
+  "schemaVersion": "1.1",
+  "nodeTypeBreakdown": {
+    "chapter": 33,
+    "concept": 95,
+    "claim": 27,
+    "person": 12,
+    "work": 4
+  },
+  "edgeTypeBreakdown": {
+    "contains": 157,
+    "related": 97,
+    "cites": 12,
+    "contrasts": 5
+  }
+}

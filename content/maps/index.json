@@ -1,6 +1,30 @@
 {
-  "generatedAt": "2026-10-10T19:39:50+08:00",
+  "generatedAt": "2026-10-11T14:09:27+08:00",
   "maps": [
+    {
+      "id": "kandao-haizi",
+      "title": "看见孩子",
+      "subtitle": "贝姬·肯尼迪的善意养育：看见行为背后的孩子",
+      "author": "[美] 贝姬·肯尼迪",
+      "description": "把《看见孩子》拆成可交互概念地图：从「善意养育」「真相不唯一」「行为是一扇窗」等 10 条育儿准则，到不发脾气、说谎、手足之争、恐惧焦虑、高敏感等 19 个实战场景，逐条挂回原文。",
+      "version": "1.0.0",
+      "generatedAt": "2026-10-11T13:10:37+08:00",
+      "sourceFile": "看见孩子-贝姬·肯尼迪.epub",
+      "coverColor": "#b4543a",
+      "coverText": "看见",
+      "status": "published",
+      "schemaVersion": "1.1",
+      "stats": {
+        "nodes": 171,
+        "edges": 271,
+        "chapters": 33,
+        "concepts": 95,
+        "claims": 27,
+        "persons": 12,
+        "works": 4
+      },
+      "path": "/maps/kandao-haizi"
+    },
     {
       "id": "kahneman-si-kao-kuai-yu-man",
       "title": "思考快与慢",
