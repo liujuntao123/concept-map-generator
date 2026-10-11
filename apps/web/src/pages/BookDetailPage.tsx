@@ -25,6 +25,9 @@ function plateTone(id: string): string {
   if (id.includes('chujia')) {
     return 'bg-linear-to-b from-[#f0ebf8] to-[#f8f5fc] dark:from-[#221d30] dark:to-[#1a1626]';
   }
+  if (id.includes('kandao')) {
+    return 'bg-linear-to-b from-[#fbf3d8] to-[#faf8ef] dark:from-[#2a2414] dark:to-[#1d1a11]';
+  }
   return 'bg-linear-to-b from-[#edf3fa] to-[#f7fafc] dark:from-[#182230] dark:to-[#151d29]';
 }
 

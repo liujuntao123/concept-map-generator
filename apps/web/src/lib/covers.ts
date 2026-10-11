@@ -2,6 +2,7 @@
 export const COVER_SRC: Record<string, string> = {
   'kahneman-si-kao-kuai-yu-man': '/illustrations/cover-kahneman.jpg',
   'chujia-ying-zou-chu-wei-yi-zhen-li-guan': '/illustrations/cover-chujia.jpg',
+  'kandao-haizi': '/illustrations/cover-kandao.jpg',
 };
 
 export function coverOf(id: string): string {
