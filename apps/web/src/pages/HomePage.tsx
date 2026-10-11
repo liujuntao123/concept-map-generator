@@ -62,22 +62,21 @@ function BookCard({ m }: { m: MapIndexEntry }) {
       )}
       data-book={m.id}
     >
-      {/* 封面铺满整卡作为底图。这两本书的封面都是白底大黑字、且图文集中在正中，
-          所以：① 用混合模式把「白底」吃掉，只让封面上的图画与字迹透出
-          （浅色 multiply，深色 invert + screen，同一批元素反过来发亮）；
-          ② 只做轻微模糊，保留封面的构图与比例，不糊成一团灰；
-          ③ 蒙层只压住底部信息条，让封面正中的内容能透出来 */}
+      {/* 封面铺满整卡作为底图（封面来自内容 meta.cover）：
+          ① 用混合模式把封面「白底」吃掉、只让图画与字迹透出（浅色 multiply，深色 invert + screen）；
+          ② 仅轻度模糊保留构图比例，但不过度，保证封面清晰可见；
+          ③ 蒙层只压住底部信息条，让封面主体尽量透出来 */}
       <img
         src={coverUrl(m.id, m.cover)}
         alt=""
         aria-hidden
         decoding="async"
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-60 mix-blend-multiply blur-[4px] dark:opacity-45 dark:invert dark:mix-blend-screen"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-85 mix-blend-multiply blur-[2px] dark:opacity-65 dark:invert dark:mix-blend-screen"
       />
-      {/* 蒙层：底部信息条压到实色保证对比度，向上快速让出整张封面 */}
+      {/* 蒙层：底部信息条压到实色保证对比度，更快让出上方封面 */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-t from-surface from-0% via-surface/88 via-34% to-transparent to-62%"
+        className="pointer-events-none absolute inset-0 z-0 bg-linear-to-t from-surface from-0% via-surface/78 via-26% to-transparent to-52%"
       />
 
       <div className="relative z-10 flex min-w-0 flex-col gap-2 p-5">
