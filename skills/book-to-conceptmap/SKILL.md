@@ -10,7 +10,10 @@ description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本
 
 ## 前置依赖
 
-- 已安装 **ima-skill**（`ima_api.cjs`），凭证在 `~/.config/ima/client_id` 与 `api_key`
+- 已安装 **ima-skill**（`ima_api.cjs`）与 IMA 凭证。解析优先级：
+  - 脚本路径：`$IMA_API_CJS` → `/data/user/skills/ima-skill/ima_api.cjs`（持久目录）→ `~/agent-data/workflows/ima-skill/ima_api.cjs`
+  - 凭证：环境变量 `IMA_CLIENT_ID` / `IMA_API_KEY`（或 `IMA_OPENAPI_CLIENTID` / `IMA_OPENAPI_APIKEY`）→ `/data/user/ima/{client_id,api_key}`（持久目录，`$IMA_CRED_DIR` 可覆盖）→ `~/.config/ima/`
+  - 说明：沙箱每次会话会重置 `$HOME` 与 `/tmp`，因此把 skill 与凭证放在 `/data/user/` 下可跨会话保留；`fetch_and_extract.cjs` 已内置上述回退。
 - Node.js 18+、Python 3（`beautifulsoup4`、`lxml`；可选 `ebooklib`）
 - 目标仓库中有 `content/maps/` 目录约定
 - Schema：`schemas/graph.schema.json`（`npm run validate`）
@@ -20,7 +23,7 @@ description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本
 ### 1. 定位知识库与书目媒体
 
 ```bash
-node ~/agent-data/workflows/ima-skill/ima_api.cjs \
+node /data/user/skills/ima-skill/ima_api.cjs \
   openapi/wiki/v1/search_knowledge_base '{"query":"<书名>","cursor":"","limit":20}'
 
 node .../ima_api.cjs openapi/wiki/v1/get_knowledge_list \

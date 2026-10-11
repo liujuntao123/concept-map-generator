@@ -10,9 +10,37 @@ const path = require('path');
 const os = require('os');
 const { spawnSync } = require('child_process');
 
+// Resolve ima_api.cjs: explicit env → persistent store → legacy per-user path.
+const IMA_API_CANDIDATES = [
+  process.env.IMA_API_CJS,
+  '/data/user/skills/ima-skill/ima_api.cjs',
+  path.join(os.homedir(), 'agent-data/workflows/ima-skill/ima_api.cjs'),
+].filter(Boolean);
 const IMA_API =
-  process.env.IMA_API_CJS ||
-  path.join(os.homedir(), 'agent-data/workflows/ima-skill/ima_api.cjs');
+  IMA_API_CANDIDATES.find((p) => fs.existsSync(p)) ||
+  IMA_API_CANDIDATES[IMA_API_CANDIDATES.length - 1];
+
+// Credentials: env vars take priority, then the persistent store (survives sandbox resets).
+const IMA_CRED_DIR = process.env.IMA_CRED_DIR || '/data/user/ima';
+function readSafe(p) {
+  try {
+    return fs.readFileSync(p, 'utf8').trim();
+  } catch {
+    return '';
+  }
+}
+function loadCreds() {
+  return {
+    clientId:
+      process.env.IMA_CLIENT_ID ||
+      process.env.IMA_OPENAPI_CLIENTID ||
+      readSafe(path.join(IMA_CRED_DIR, 'client_id')),
+    apiKey:
+      process.env.IMA_API_KEY ||
+      process.env.IMA_OPENAPI_APIKEY ||
+      readSafe(path.join(IMA_CRED_DIR, 'api_key')),
+  };
+}
 
 function parseArgs(argv) {
   const out = { out: path.join(process.cwd(), 'book-extract') };
@@ -27,11 +55,13 @@ function parseArgs(argv) {
 }
 
 function runIma(apiPath, body) {
-  const r = spawnSync(
-    process.execPath,
-    [IMA_API, apiPath, JSON.stringify(body)],
-    { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 },
-  );
+  const creds = loadCreds();
+  const args = [IMA_API, apiPath, JSON.stringify(body)];
+  if (creds.clientId && creds.apiKey) args.push(JSON.stringify(creds));
+  const r = spawnSync(process.execPath, args, {
+    encoding: 'utf8',
+    maxBuffer: 20 * 1024 * 1024,
+  });
   if (r.status !== 0) {
     const err = (r.stderr || r.stdout || '').trim();
     throw new Error(`ima_api failed (${apiPath}): ${err || r.status}`);
