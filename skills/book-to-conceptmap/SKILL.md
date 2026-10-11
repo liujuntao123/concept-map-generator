@@ -1,7 +1,7 @@
 ---
 name: book-to-conceptmap
-version: 1.1.0
-description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本，结构化为概念地图 graph.json（章节+概念等节点与边），写入仓库 content/maps/<mapId>/。
+version: 1.2.0
+description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本，结构化为概念地图 graph.json（章节+概念等节点与边）与 meta.json（含封面信息），写入仓库 content/maps/<mapId>/。
 ---
 
 # book-to-conceptmap
@@ -41,7 +41,8 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
   --out /tmp/book-extract
 ```
 
-产出：`essays.json` / `chapters/*.txt` / `full.txt`。
+产出：`essays.json` / `chapters/*.txt` / `full.txt`；**同时尽量提取真实封面**（见「封面规范」）：
+epub 的 OPF `<meta name="cover" content="…">` 指向的图片，或 `cover.xhtml` / `cover-image`。
 
 ### 3. 按章/篇分块
 
@@ -77,15 +78,16 @@ node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
 
 ```
 content/maps/<mapId>/
-  meta.json    # version, generatedAt, source, stats, featuredPaths?
+  meta.json    # version, generatedAt, source, stats, featuredPaths?, coverColor?, coverText?
   graph.json   # nodes + edges
 content/maps/index.json   # 更新 maps 列表
+apps/web/public/illustrations/cover-<mapId>.jpg   # 真实封面（若提取到，见「封面规范」）
 ```
 
 然后：
 
 ```bash
-npm run sync-maps    # → apps/web/public/maps
+npm run sync-maps    # → 两个应用的 public/maps 与 illustrations
 npm run validate
 ```
 
@@ -95,10 +97,32 @@ npm run validate
 - （可选）将确认过的节点 `reviewStatus` 改为 `reviewed`；读者 Web 不展示该字段
 - 以 PR 修改 JSON
 
+## 封面规范
+
+**真实封面优先，禁止用通用占位图。**
+
+1. **用源文件里的真实封面**（首选）：
+   - epub：OPF 中 `<meta name="cover" content="…">` 指向的图片，或 `cover.xhtml` / manifest 里的 `cover-image`；
+   - PDF：渲染第 1 页；纯笔记类媒体通常没有封面（跳过，走第 2 条）。
+2. 封面图存到 **`apps/web/public/illustrations/cover-<mapId>.jpg`**（或 `.png`；竖版 3:4、宽度 ≥600px 为佳）。
+   移动端的 `public/illustrations` 由 `npm run sync-maps` 从桌面端目录同步，不用手抄两份。
+3. 在 `packages/core/src/lib/covers.ts` 的 **`COVER_SRC`** 里登记：`'<mapId>': '/illustrations/cover-<mapId>.jpg'`。
+
+**没有真实封面时：用「字型封面」**（书名 1–2 字放大 + 底板色），而不是占位插画：
+
+- `meta.json` 填 `coverColor`（封面主色的十六进制，如 `#b4543a`）与 `coverText`（书名 1–2 字，如「看见」「快慢」「走出」）；
+- 两端阅读器（`apps/web` / `apps/web-mobile`）通过 `coverInfoOf()` 判定：已登记 `COVER_SRC` → 渲染真实封面；否则渲染字型封面 `TypeCover`（`coverText` 缺省取书名首字，`coverColor` 缺省用主题强调色）；
+- `content/maps/index.json` 由 `scripts/build-index.mjs` 从 `meta.json` 派生，`coverColor` / `coverText` 会自动带上，无需手写。
+
+> 示例：《看见孩子》暂无真实封面图，`coverColor: "#b4543a"` + `coverText: "看见"` → 阅读器渲染字型封面。
+> 后续若从 epub 提取到真实封面，应补录封面图并登记 `COVER_SRC`。
+
 ## 相关路径
 
 | 项 | 路径 |
 |----|------|
 | 本 skill（仓库） | `skills/book-to-conceptmap/` |
 | Schema | `schemas/graph.schema.json` |
+| 封面登记 | `packages/core/src/lib/covers.ts` |
+| 封面图目录 | `apps/web/public/illustrations/` |
 | 试点 | `content/maps/chujia-ying-zou-chu-wei-yi-zhen-li-guan/` |

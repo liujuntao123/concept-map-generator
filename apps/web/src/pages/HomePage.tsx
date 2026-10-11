@@ -4,7 +4,7 @@ import {
   buttonClass,
   cardSurface,
   cn,
-  coverOf,
+  coverInfoOf,
   fetchJson,
   fieldClass,
   formatGeneratedDate,
@@ -18,6 +18,7 @@ import {
   IconSun,
   PATH_CHIP_TONES,
   pathThemeIcon,
+  TypeCover,
   useTheme,
   type FeaturedPath,
   type MapIndexEntry,
@@ -53,6 +54,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
   const badge = [m.author, year].filter(Boolean).join(' · ');
   const chips = paths.slice(0, 3);
   const desc = shortDesc(m);
+  const cover = coverInfoOf(m.id, m.title, m.coverText, m.coverColor);
 
   return (
     <article
@@ -67,13 +69,22 @@ function BookCard({ m }: { m: MapIndexEntry }) {
           （浅色 multiply，深色 invert + screen，同一批元素反过来发亮）；
           ② 只做轻微模糊，保留封面的构图与比例，不糊成一团灰；
           ③ 蒙层只压住底部信息条，让封面正中的内容能透出来 */}
-      <img
-        src={coverOf(m.id)}
-        alt=""
-        aria-hidden
-        decoding="async"
-        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-60 mix-blend-multiply blur-[4px] dark:opacity-45 dark:invert dark:mix-blend-screen"
-      />
+      {cover.kind === 'image' ? (
+        <img
+          src={cover.src}
+          alt=""
+          aria-hidden
+          decoding="async"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center opacity-60 mix-blend-multiply blur-[4px] dark:opacity-45 dark:invert dark:mix-blend-screen"
+        />
+      ) : (
+        <TypeCover
+          text={cover.text}
+          color={cover.color}
+          className="pointer-events-none absolute inset-0 z-0 opacity-70 dark:opacity-45"
+          markClassName="text-[5rem]"
+        />
+      )}
       {/* 蒙层：底部信息条压到实色保证对比度，向上快速让出整张封面 */}
       <span
         aria-hidden

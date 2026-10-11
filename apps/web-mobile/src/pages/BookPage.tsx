@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import {
   buttonClass,
   cn,
-  coverOf,
+  coverInfoOf,
   EDGE_TYPE_LABEL,
   fetchJson,
   formatGeneratedDate,
@@ -16,6 +16,7 @@ import {
   NODE_TYPE_LABEL,
   Pill,
   plateOf,
+  TypeCover,
   useTheme,
   type ConceptGraph,
   type MapMeta,
@@ -102,6 +103,7 @@ export default function BookPage() {
   const year = meta.generatedAt ? formatGeneratedDate(meta.generatedAt).slice(0, 4) : '';
   const byline = [meta.author, meta.publisher, year].filter(Boolean).join(' · ');
   const firstPath = meta.featuredPaths?.[0];
+  const cover = coverInfoOf(meta.id, meta.title, meta.coverText, meta.coverColor);
 
   return (
     <div className="mobile-wash min-h-dvh">
@@ -141,13 +143,22 @@ export default function BookPage() {
             )}
             aria-hidden
           >
-            <img
-              src={coverOf(meta.id)}
-              alt=""
-              width={160}
-              height={213}
-              className="aspect-3/4 w-full rounded-lg object-contain shadow-[0_6px_18px_rgba(26,42,61,0.14)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
-            />
+            {cover.kind === 'image' ? (
+              <img
+                src={cover.src}
+                alt=""
+                width={160}
+                height={213}
+                className="aspect-3/4 w-full rounded-lg object-contain shadow-[0_6px_18px_rgba(26,42,61,0.14)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
+              />
+            ) : (
+              <TypeCover
+                text={cover.text}
+                color={cover.color}
+                className="aspect-3/4 w-full rounded-lg shadow-[0_6px_18px_rgba(26,42,61,0.14)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
+                markClassName="text-[2.6rem]"
+              />
+            )}
           </div>
 
           {byline ? (

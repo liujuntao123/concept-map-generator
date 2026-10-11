@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   buttonClass,
   cn,
-  coverOf,
+  coverInfoOf,
   fetchJson,
   fieldClass,
   formatGeneratedDate,
@@ -18,6 +18,7 @@ import {
   IconSun,
   pathThemeIcon,
   PATH_CHIP_TONES,
+  TypeCover,
   useTheme,
   type FeaturedPath,
   type MapIndexEntry,
@@ -54,17 +55,27 @@ function BookCard({ m }: { m: MapIndexEntry }) {
   const badge = [m.author, year].filter(Boolean).join(' · ');
   const desc = shortDesc(m);
   const chips = paths.slice(0, 3);
+  const cover = coverInfoOf(m.id, m.title, m.coverText, m.coverColor);
 
   return (
     <article className="rounded-card border border-line bg-surface p-3.5 shadow-card" data-book={m.id}>
       <Link to={`/books/${m.id}`} className="flex gap-3">
-        <img
-          src={coverOf(m.id)}
-          alt=""
-          aria-hidden
-          decoding="async"
-          className="h-[104px] w-[78px] shrink-0 rounded-lg border border-line object-cover"
-        />
+        {cover.kind === 'image' ? (
+          <img
+            src={cover.src}
+            alt=""
+            aria-hidden
+            decoding="async"
+            className="h-[104px] w-[78px] shrink-0 rounded-lg border border-line object-cover"
+          />
+        ) : (
+          <TypeCover
+            text={cover.text}
+            color={cover.color}
+            className="h-[104px] w-[78px] shrink-0 rounded-lg border border-line"
+            markClassName="text-[1.75rem]"
+          />
+        )}
         <div className="min-w-0 flex-1">
           {badge ? (
             <span className="mb-1 inline-flex rounded-full border border-line bg-surface-2 px-2 py-0.5 text-[0.7rem] text-muted">

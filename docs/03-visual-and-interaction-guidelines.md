@@ -36,7 +36,7 @@ token 定义在 [theme.css](file:///workspace/packages/core/src/styles/theme.css
 | `chapter` `concept` `claim` `person` `work` `excerpt` | 同名变量 | 5 类节点/边 + 原文摘录的语义色 |
 
 规则：
-- **颜色一律走 token，不写十六进制**。唯一例外是「每本书的强调色 / 封面底板 / 路径 chip 三色轮转」这类装饰性映射，统一收敛在 [decor.ts](file:///workspace/packages/core/src/lib/decor.ts)（`PATH_CHIP_TONES` / `plateOf`），两端共用。
+- **颜色一律走 token，不写十六进制**。唯一例外是「每本书的强调色 / 封面底板 / 路径 chip 三色轮转」这类装饰性映射，统一收敛在 [decor.ts](file:///workspace/packages/core/src/lib/decor.ts)（`PATH_CHIP_TONES` / `plateOf`），两端共用；封面底板色另来自内容字段 `coverColor`（数据驱动，经 [covers.ts](file:///workspace/packages/core/src/lib/covers.ts) 的 `coverInfoOf` / `TypeCover` 渲染，规则见 [SKILL.md](file:///workspace/skills/book-to-conceptmap/SKILL.md)「封面规范」）。
 - 半透明叠加统一用 Tailwind 的透明度修饰符（`bg-chapter/15`、`border-accent/40`），不要在 CSS 里手写 `color-mix`。
 - `--accent-strong` 与 `--accent` 是两个用途：**accent 只用于线与文字**，accent-strong 只用于**需要白字的实心按钮**。深色下 accent 偏亮（#7eb8ff），直接配白字只有 1.9:1，禁止这样用。
 

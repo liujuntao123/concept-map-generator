@@ -32,3 +32,4 @@ export { default as MapLegend } from './components/MapLegend';
 export { MapLegendContent } from './components/MapLegend';
 export { default as GraphNode } from './components/GraphNode';
 export type { GraphNodeData } from './components/GraphNode';
+export { default as TypeCover } from './components/TypeCover';

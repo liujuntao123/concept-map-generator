@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
- * Copy content/maps → 各 Web 应用的 public/maps，供 Vite 以静态 JSON 提供。
- * 目前有两个应用：apps/web（桌面）与 apps/web-mobile（移动端）。
+ * 静态资源同步（两个 Web 应用：apps/web 桌面 / apps/web-mobile 移动端）：
+ * 1. content/maps → 各应用 public/maps（Vite 以静态 JSON 提供）
+ * 2. apps/web/public/illustrations → 移动端 public/illustrations
+ *    （封面 / 插画在 Git 里只存一份，源在桌面端 public）
  */
 import { cpSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -24,4 +26,13 @@ for (const dest of targets) {
   mkdirSync(dirname(dest), { recursive: true });
   cpSync(src, dest, { recursive: true });
   console.log(`Synced ${src} → ${dest}`);
+}
+
+// 插画 / 封面：apps/web/public/illustrations 为源，同步到移动端
+const illSrc = join(root, 'apps', 'web', 'public', 'illustrations');
+const illDest = join(root, 'apps', 'web-mobile', 'public', 'illustrations');
+if (existsSync(illSrc) && existsSync(join(root, 'apps', 'web-mobile', 'public'))) {
+  rmSync(illDest, { recursive: true, force: true });
+  cpSync(illSrc, illDest, { recursive: true });
+  console.log(`Synced ${illSrc} → ${illDest}`);
 }
