@@ -1,6 +1,6 @@
 ---
 name: book-to-conceptmap
-version: 1.2.0
+version: 1.2.1
 description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本，结构化为概念地图 graph.json（章节+概念等节点与边）与 meta.json（含封面信息），写入仓库 content/maps/<mapId>/。
 ---
 
@@ -38,11 +38,16 @@ node .../ima_api.cjs openapi/wiki/v1/get_media_info \
 node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
   --kb-id '<kb_id>' \
   --media-id '<media_id>' \
-  --out /tmp/book-extract
+  --out /tmp/book-extract \
+  --cover-out apps/web/public/illustrations/cover-<mapId>.jpg
 ```
 
-产出：`essays.json` / `chapters/*.txt` / `full.txt`；**同时尽量提取真实封面**（见「封面规范」）：
-epub 的 OPF `<meta name="cover" content="…">` 指向的图片，或 `cover.xhtml` / `cover-image`。
+（已拿到 epub、或不想走 IMA 时：加 `--epub <file.epub>` 跳过下载；只要封面加 `--cover-only`。）
+
+产出：`essays.json` / `chapters/*.txt` / `full.txt`，**并自动提取真实封面**：
+脚本按 `OPF <meta name="cover">` → `manifest properties="cover-image"` → id/href 含 cover 的图片 →
+`cover.xhtml` 内首个图片 的顺序定位，导出到 `--cover-out`（缺省 `<out>/cover.<ext>`），
+并打印建议的 `COVER_SRC` 登记行；**找不到封面只提示、不阻塞正文抽取**（走「封面规范」的字型封面）。
 
 ### 3. 按章/篇分块
 
@@ -101,12 +106,14 @@ npm run validate
 
 **真实封面优先，禁止用通用占位图。**
 
-1. **用源文件里的真实封面**（首选）：
-   - epub：OPF 中 `<meta name="cover" content="…">` 指向的图片，或 `cover.xhtml` / manifest 里的 `cover-image`；
+1. **用源文件里的真实封面**（首选，`fetch_and_extract.cjs` 已自动提取，见步骤 2）：
+   - epub：OPF `<meta name="cover">` / `cover-image` / `cover.xhtml` 内的图片（脚本会自动定位）；
    - PDF：渲染第 1 页；纯笔记类媒体通常没有封面（跳过，走第 2 条）。
 2. 封面图存到 **`apps/web/public/illustrations/cover-<mapId>.jpg`**（或 `.png`；竖版 3:4、宽度 ≥600px 为佳）。
+   用 `--cover-out apps/web/public/illustrations/cover-<mapId>.jpg` 一步到位；
    移动端的 `public/illustrations` 由 `npm run sync-maps` 从桌面端目录同步，不用手抄两份。
-3. 在 `packages/core/src/lib/covers.ts` 的 **`COVER_SRC`** 里登记：`'<mapId>': '/illustrations/cover-<mapId>.jpg'`。
+3. 在 `packages/core/src/lib/covers.ts` 的 **`COVER_SRC`** 里登记：`'<mapId>': '/illustrations/cover-<mapId>.jpg'`
+   （脚本收尾会打印这一行的建议写法）。
 
 **没有真实封面时：用「字型封面」**（书名 1–2 字放大 + 底板色），而不是占位插画：
 
@@ -114,8 +121,8 @@ npm run validate
 - 两端阅读器（`apps/web` / `apps/web-mobile`）通过 `coverInfoOf()` 判定：已登记 `COVER_SRC` → 渲染真实封面；否则渲染字型封面 `TypeCover`（`coverText` 缺省取书名首字，`coverColor` 缺省用主题强调色）；
 - `content/maps/index.json` 由 `scripts/build-index.mjs` 从 `meta.json` 派生，`coverColor` / `coverText` 会自动带上，无需手写。
 
-> 示例：《看见孩子》暂无真实封面图，`coverColor: "#b4543a"` + `coverText: "看见"` → 阅读器渲染字型封面。
-> 后续若从 epub 提取到真实封面，应补录封面图并登记 `COVER_SRC`。
+> 现状示例：《看见孩子》尚无真实封面图，`coverColor: "#b4543a"` + `coverText: "看见"` → 阅读器渲染字型封面。
+> 它的源 epub 里的真实封面可用步骤 2 的命令提取补录（`--media-id` / `--kb-id` 见 `content/maps/kandao-haizi/meta.json` 的 `source`）。
 
 ## 相关路径
 
