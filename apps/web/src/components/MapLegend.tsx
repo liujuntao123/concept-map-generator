@@ -47,7 +47,7 @@ export default function MapLegend() {
 
   return (
     <aside
-      className="absolute top-3 right-3 z-[7] max-w-[200px] text-[0.75rem] text-muted max-[860px]:top-2 max-[860px]:right-2"
+      className="absolute top-3 right-3 z-[7] max-w-[200px] text-[0.75rem] text-muted max-[861px]:top-2 max-[861px]:right-2"
       aria-label="图例"
     >
       <button

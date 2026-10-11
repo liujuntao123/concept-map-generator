@@ -89,7 +89,8 @@
   z-index: 5 !important;
 }
 
-@media (max-width: 860px) {
+/* 断点与 Tailwind 的 min-[861px] / max-[861px] 严格互补：width < 861px（含 860.x 小数宽度） */
+@media (width < 861px) {
   .react-flow__minimap {
     display: none !important;
   }

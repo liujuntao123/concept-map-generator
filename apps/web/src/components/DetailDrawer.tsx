@@ -63,7 +63,7 @@ const DRAWER_CLASS = cn(
 const PEEK_CLASS = cn(
   'min-[861px]:w-[76px] min-[861px]:max-w-[76px] min-[861px]:items-stretch min-[861px]:gap-2 min-[861px]:overflow-hidden min-[861px]:px-2 min-[861px]:py-2.5',
   SHEET_PEEK_HEIGHT,
-  'max-[860px]:overflow-hidden',
+  'max-[861px]:overflow-hidden',
 );
 
 const HEADER_CLASS = 'mb-1 flex items-start justify-between gap-3';
@@ -175,7 +175,7 @@ export default function DetailDrawer({
         type="button"
         aria-hidden="true"
         tabIndex={-1}
-        className="mx-auto mt-2 mb-1 hidden h-1 w-10 cursor-pointer rounded-full border-0 bg-[color-mix(in_srgb,var(--muted)_55%,transparent)] p-0 max-[860px]:block"
+        className="mx-auto mt-2 mb-1 hidden h-1 w-10 cursor-pointer rounded-full border-0 bg-[color-mix(in_srgb,var(--muted)_55%,transparent)] p-0 max-[861px]:block"
         onClick={() => (peek ? onExpand?.() : onCollapse?.())}
       />
       <header className={cn(HEADER_CLASS, peek && PEEK_HEADER_CLASS)}>

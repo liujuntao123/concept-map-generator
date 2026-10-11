@@ -62,7 +62,7 @@ const ALLOWED_TYPES = new Set(['chapter', 'concept', 'claim', 'person', 'work'])
 
 const SELECT_CLASS = cn(
   fieldClass,
-  'max-w-[min(180px,40vw)] rounded-[10px] px-2.5 py-1.5 max-[860px]:w-auto',
+  'max-w-[min(180px,40vw)] rounded-[10px] px-2.5 py-1.5 max-[861px]:w-auto',
 );
 
 const MORE_ITEM =
@@ -115,9 +115,16 @@ export default function MapPage() {
   const [pathTableOpen, setPathTableOpen] = useState(false);
   const [pathCompleted, setPathCompleted] = useState(false);
 
+  /**
+   * 窄屏（移动端布局）判定：必须与 CSS 断点严格同一条件。
+   * Tailwind 里桌面样式是 min-[861px]（width >= 861px）、移动样式是
+   * max-[861px]（width < 861px），因此 JS 用其互补查询取反——
+   * 不能写 (max-width: 860px)：在恰好 860px（及 860.x 小数宽度）时
+   * JS 会判成「移动」，而两类断点 CSS 都不命中，抽屉会掉出布局。
+   */
   const isNarrow = useCallback(() => {
     try {
-      return window.matchMedia('(max-width: 860px)').matches;
+      return !window.matchMedia('(min-width: 861px)').matches;
     } catch {
       return false;
     }
@@ -187,7 +194,7 @@ export default function MapPage() {
       setSelected(n);
       // Ux3-3: cold path on phone → peek sheet, keep map readable
       try {
-        if (window.matchMedia('(max-width: 860px)').matches) setSheetExpanded(false);
+        if (!window.matchMedia('(min-width: 861px)').matches) setSheetExpanded(false);
       } catch {
         /* ignore */
       }
@@ -242,7 +249,7 @@ export default function MapPage() {
     if (!searchParams.get('path')) return;
     pathPeekOnce.current = true;
     try {
-      if (window.matchMedia('(max-width: 860px)').matches) setSheetExpanded(false);
+      if (!window.matchMedia('(min-width: 861px)').matches) setSheetExpanded(false);
     } catch {
       /* ignore */
     }
@@ -756,7 +763,7 @@ export default function MapPage() {
 
   return (
     <div className="page-wash grid h-full grid-rows-[auto_auto_1fr]">
-      <header className="topbar-map z-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 px-4 py-3 max-[860px]:gap-x-2 max-[860px]:gap-y-1.5 max-[860px]:px-2.5 max-[860px]:py-1.5">
+      <header className="topbar-map z-5 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 px-4 py-3 max-[861px]:gap-x-2 max-[861px]:gap-y-1.5 max-[861px]:px-2.5 max-[861px]:py-1.5">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             className={cn(iconButtonClass(), 'shrink-0 rounded-full')}
@@ -767,17 +774,17 @@ export default function MapPage() {
             <IconChevronLeft />
           </Link>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <h1 className="text-[1.18rem] leading-tight font-bold max-[860px]:max-w-[52vw] max-[860px]:truncate max-[860px]:text-[0.92rem]">
+            <h1 className="text-[1.18rem] leading-tight font-bold max-[861px]:max-w-[52vw] max-[861px]:truncate max-[861px]:text-[0.92rem]">
               {meta.title}
             </h1>
-            <p className="text-[0.8rem] text-muted max-[860px]:hidden">
+            <p className="text-[0.8rem] text-muted max-[861px]:hidden">
               {meta.author ? meta.author : '概念地图'}
               {meta.generatedAt ? ` · ${formatGeneratedDate(meta.generatedAt)}` : ''}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 max-[860px]:w-full max-[860px]:justify-start max-[860px]:gap-1.5">
+        <div className="flex flex-wrap items-center justify-end gap-2 max-[861px]:w-full max-[861px]:justify-start max-[861px]:gap-1.5">
           <div className="relative">
             <span
               className="pointer-events-none absolute top-1/2 left-2.5 flex -translate-y-1/2 text-muted"
@@ -789,7 +796,7 @@ export default function MapPage() {
               ref={searchRef}
               className={cn(
                 fieldClass,
-                'w-[min(240px,48vw)] rounded-[10px] py-2 pr-3 pl-7.5 text-[0.95rem] max-[860px]:w-[min(140px,36vw)] max-[860px]:py-1.5 max-[860px]:pl-7 max-[860px]:text-[0.85rem]',
+                'w-[min(240px,48vw)] rounded-[10px] py-2 pr-3 pl-7.5 text-[0.95rem] max-[861px]:w-[min(140px,36vw)] max-[861px]:py-1.5 max-[861px]:pl-7 max-[861px]:text-[0.85rem]',
               )}
               type="search"
               placeholder="搜索…"
@@ -829,7 +836,7 @@ export default function MapPage() {
           </div>
 
           <div
-            className="flex flex-wrap items-center gap-1.5 max-[860px]:hidden"
+            className="flex flex-wrap items-center gap-1.5 max-[861px]:hidden"
             role="group"
             aria-label="节点类型筛选"
           >
@@ -855,7 +862,7 @@ export default function MapPage() {
           </div>
 
           <select
-            className={cn(SELECT_CLASS, 'hidden max-[860px]:inline-block max-[860px]:min-w-[7.5rem]')}
+            className={cn(SELECT_CLASS, 'hidden max-[861px]:inline-block max-[861px]:min-w-[7.5rem]')}
             aria-label="节点类型"
             value={filter}
             onChange={(e) => setFilterAndUrl(e.target.value as TypeFilter)}
@@ -869,7 +876,7 @@ export default function MapPage() {
             ))}
           </select>
 
-          <div className="max-[860px]:hidden">
+          <div className="max-[861px]:hidden">
             <select
               className={SELECT_CLASS}
               aria-label="按章节筛选"
@@ -891,7 +898,7 @@ export default function MapPage() {
 
           <button
             type="button"
-            className={iconButtonClass({ className: 'max-[860px]:hidden' })}
+            className={iconButtonClass({ className: 'max-[861px]:hidden' })}
             onClick={() => void copyShareLink()}
             title="分享链接"
             aria-label="分享链接"
@@ -932,7 +939,7 @@ export default function MapPage() {
                 </label>
                 <button
                   type="button"
-                  className={cn(MORE_ITEM, 'hidden max-[860px]:flex')}
+                  className={cn(MORE_ITEM, 'hidden max-[861px]:flex')}
                   onClick={() => {
                     void copyShareLink();
                     setMoreOpen(false);
@@ -952,7 +959,7 @@ export default function MapPage() {
         </div>
       </header>
 
-      <div className="z-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line bg-surface px-3 py-1.5 max-[860px]:gap-x-1.5 max-[860px]:px-2.5 max-[860px]:py-1">
+      <div className="z-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line bg-surface px-3 py-1.5 max-[861px]:gap-x-1.5 max-[861px]:px-2.5 max-[861px]:py-1">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5" role="tablist" aria-label="推荐路径">
           {featured.map((p) => (
             <button
@@ -980,7 +987,7 @@ export default function MapPage() {
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-2 text-[0.78rem] text-muted max-[860px]:hidden">
+        <div className="flex flex-wrap gap-2 text-[0.78rem] text-muted max-[861px]:hidden">
           {activePath ? (
             <span className="rounded-lg border border-line bg-surface px-2 py-1">
               {activePath.nodeIds.length} 步
@@ -1064,7 +1071,7 @@ export default function MapPage() {
 
           {activePath ? (
             <div
-              className="pointer-events-none absolute top-3 left-3 z-7 w-[min(420px,calc(100%-24px))] max-w-[420px] max-[860px]:top-2 max-[860px]:left-2 max-[860px]:max-h-[42vh] max-[860px]:w-[min(360px,calc(100%-16px))] max-[860px]:overflow-auto"
+              className="pointer-events-none absolute top-3 left-3 z-7 w-[min(420px,calc(100%-24px))] max-w-[420px] max-[861px]:top-2 max-[861px]:left-2 max-[861px]:max-h-[42vh] max-[861px]:w-[min(360px,calc(100%-16px))] max-[861px]:overflow-auto"
               role="region"
               aria-label="路径进度"
             >

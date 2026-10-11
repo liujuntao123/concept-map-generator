@@ -41,7 +41,7 @@ export default function SearchHits({
 
   if (collapsed) {
     return (
-      <div className="absolute top-14 left-3 z-[6] max-h-none w-auto max-w-[calc(100%-1.5rem)] overflow-auto rounded-inner border border-line bg-surface shadow-float max-[860px]:top-12">
+      <div className="absolute top-14 left-3 z-[6] max-h-none w-auto max-w-[calc(100%-1.5rem)] overflow-auto rounded-inner border border-line bg-surface shadow-float max-[861px]:top-12">
         <button
           type="button"
           className="cursor-pointer border-0 bg-transparent px-3 py-2 text-accent"
@@ -55,7 +55,7 @@ export default function SearchHits({
 
   return (
     <div
-      className="absolute top-14 left-3 z-[6] w-[min(320px,42vw)] max-h-[min(420px,55vh)] max-w-[calc(100%-1.5rem)] overflow-auto rounded-inner border border-line bg-surface shadow-float max-[860px]:top-12 max-[860px]:w-[min(280px,70vw)]"
+      className="absolute top-14 left-3 z-[6] w-[min(320px,42vw)] max-h-[min(420px,55vh)] max-w-[calc(100%-1.5rem)] overflow-auto rounded-inner border border-line bg-surface shadow-float max-[861px]:top-12 max-[861px]:w-[min(280px,70vw)]"
       role="listbox"
       aria-label="搜索结果"
     >

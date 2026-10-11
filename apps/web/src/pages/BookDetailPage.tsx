@@ -115,7 +115,7 @@ export default function BookDetailPage() {
 
   return (
     <div className={cn('page-wash grid min-h-screen grid-rows-[auto_1fr]')}>
-      <header className="z-5 flex flex-wrap items-center justify-between gap-2 px-5 py-3 max-[860px]:px-3.5">
+      <header className="z-5 flex flex-wrap items-center justify-between gap-2 px-5 py-3 max-[861px]:px-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-line bg-surface px-3 py-1.5 text-[0.8rem] text-muted transition-colors ease-soft hover:border-accent hover:text-accent hover:no-underline"
@@ -126,12 +126,12 @@ export default function BookDetailPage() {
           <div className="brand-mark h-9 w-9 shrink-0 rounded-inner" aria-hidden />
           <div className="min-w-0">
             <h1 className="text-[1.05rem] font-semibold">图书简介</h1>
-            <p className="truncate text-[0.78rem] text-muted max-[860px]:max-w-[48vw]">
+            <p className="truncate text-[0.78rem] text-muted max-[861px]:max-w-[48vw]">
               {meta.title}
             </p>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2 max-[860px]:w-auto">
+        <div className="ml-auto flex items-center gap-2 max-[861px]:w-auto">
           <button
             type="button"
             className={iconButtonClass()}
@@ -143,13 +143,13 @@ export default function BookDetailPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-[1040px] flex-col gap-4.5 px-5 pt-6 pb-14 max-[860px]:gap-4 max-[860px]:px-3.5 max-[860px]:pt-4.5 max-[860px]:pb-10">
+      <main className="mx-auto flex w-full max-w-[1040px] flex-col gap-4.5 px-5 pt-6 pb-14 max-[861px]:gap-4 max-[861px]:px-3.5 max-[861px]:pt-4.5 max-[861px]:pb-10">
         <section
-          className="grid grid-cols-[176px_1fr] items-stretch gap-7 rounded-card border border-line bg-surface p-7 shadow-card max-[860px]:grid-cols-[112px_1fr] max-[860px]:gap-4.5 max-[860px]:p-4.5 max-[480px]:grid-cols-1 max-[480px]:gap-3.5"
+          className="grid grid-cols-[176px_1fr] items-stretch gap-7 rounded-card border border-line bg-surface p-7 shadow-card max-[861px]:grid-cols-[112px_1fr] max-[861px]:gap-4.5 max-[861px]:p-4.5 max-[480px]:grid-cols-1 max-[480px]:gap-3.5"
           data-book={meta.id}
         >
           <div
-            className="flex w-44 items-center justify-center self-stretch rounded-panel border p-4 max-[860px]:w-28 max-[860px]:p-2.5 max-[480px]:mx-auto max-[480px]:w-32"
+            className="flex w-44 items-center justify-center self-stretch rounded-panel border p-4 max-[861px]:w-28 max-[861px]:p-2.5 max-[480px]:mx-auto max-[480px]:w-32"
             style={plateStyle(meta.coverColor)}
             aria-hidden
           >
@@ -168,7 +168,7 @@ export default function BookDetailPage() {
                 <Pill>{byline}</Pill>
               </div>
             ) : null}
-            <h1 className="mt-3 mb-0.5 text-[1.75rem] leading-tight font-bold max-[860px]:text-[1.4rem]">
+            <h1 className="mt-3 mb-0.5 text-[1.75rem] leading-tight font-bold max-[861px]:text-[1.4rem]">
               {meta.title}
             </h1>
             {meta.subtitle && meta.subtitle !== meta.title ? (
@@ -178,7 +178,7 @@ export default function BookDetailPage() {
               {meta.description ||
                 '这本书被整理成可交互的概念地图：可从章节走进概念与主张，边旁有原文摘录。'}
             </p>
-            <div className="mt-auto flex flex-wrap items-center gap-2.5 pt-5 max-[860px]:pt-3.5 max-[480px]:flex-col max-[480px]:items-stretch">
+            <div className="mt-auto flex flex-wrap items-center gap-2.5 pt-5 max-[861px]:pt-3.5 max-[480px]:flex-col max-[480px]:items-stretch">
               <Link
                 className={buttonClass({
                   variant: 'primary',

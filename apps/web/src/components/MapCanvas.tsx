@@ -597,9 +597,9 @@ function MapCanvasInner(
         className={cn(
           'absolute left-3.5 z-[6] flex flex-col gap-1',
           'min-[861px]:bottom-[18px]',
-          dock === 'default' && 'max-[860px]:bottom-4',
+          dock === 'default' && 'max-[861px]:bottom-4',
           dock === 'peek' && PEEK_DOCK,
-          dock === 'hidden' && 'max-[860px]:hidden',
+          dock === 'hidden' && 'max-[861px]:hidden',
         )}
         role="group"
         aria-label="缩放"
