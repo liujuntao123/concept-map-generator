@@ -71,6 +71,14 @@ const MORE_ITEM =
 const KBD =
   'inline-block min-w-[1.4em] rounded-md border border-line bg-surface-2 px-1.5 py-0.5 text-[0.8rem] text-ink';
 
+/**
+ * 桌面断点：与 Tailwind 断点对严格同一边界——
+ * 桌面样式 min-[861px]（width >= 861px）、移动样式 max-[861px]（width < 861px），
+ * JS 一律以本查询为准（窄屏 = 不匹配）。不能写 (max-width: 860px)：
+ * 恰好 860px（及 860.x 小数宽度）时 JS 判「移动」而两类 CSS 都不命中，抽屉会掉出布局。
+ */
+const DESKTOP_MQ = '(min-width: 861px)';
+
 export default function MapPage() {
   const { mapId = '' } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -115,19 +123,25 @@ export default function MapPage() {
   const [pathTableOpen, setPathTableOpen] = useState(false);
   const [pathCompleted, setPathCompleted] = useState(false);
 
-  /**
-   * 窄屏（移动端布局）判定：必须与 CSS 断点严格同一条件。
-   * Tailwind 里桌面样式是 min-[861px]（width >= 861px）、移动样式是
-   * max-[861px]（width < 861px），因此 JS 用其互补查询取反——
-   * 不能写 (max-width: 860px)：在恰好 860px（及 860.x 小数宽度）时
-   * JS 会判成「移动」，而两类断点 CSS 都不命中，抽屉会掉出布局。
-   */
   const isNarrow = useCallback(() => {
     try {
-      return !window.matchMedia('(min-width: 861px)').matches;
+      return !window.matchMedia(DESKTOP_MQ).matches;
     } catch {
       return false;
     }
+  }, []);
+
+  /**
+   * 断点跨越时重估抽屉态（窗口缩放 / 手机旋转）：变宽恢复展开侧栏，
+   * 变窄收起为 peek（地图保持可读，同 Ux3-3 的移动端默认），
+   * 避免 sheetExpanded 与 CSS 断点在跨越后错位。仅在变化时触发，不影响首帧。
+   */
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(DESKTOP_MQ);
+    const onChange = (e: MediaQueryListEvent) => setSheetExpanded(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, []);
 
   useEffect(() => {
@@ -194,7 +208,7 @@ export default function MapPage() {
       setSelected(n);
       // Ux3-3: cold path on phone → peek sheet, keep map readable
       try {
-        if (!window.matchMedia('(min-width: 861px)').matches) setSheetExpanded(false);
+        if (!window.matchMedia(DESKTOP_MQ).matches) setSheetExpanded(false);
       } catch {
         /* ignore */
       }
@@ -249,7 +263,7 @@ export default function MapPage() {
     if (!searchParams.get('path')) return;
     pathPeekOnce.current = true;
     try {
-      if (!window.matchMedia('(min-width: 861px)').matches) setSheetExpanded(false);
+      if (!window.matchMedia(DESKTOP_MQ).matches) setSheetExpanded(false);
     } catch {
       /* ignore */
     }
