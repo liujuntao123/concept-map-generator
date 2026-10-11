@@ -75,10 +75,10 @@ function BookCard({ m }: { m: MapIndexEntry }) {
       />
 
       {/* 信息区蒙板：底部实色、向上渐变到透明；顶部留出渐变过渡带，避免硬边 */}
-      <div className="relative z-10 flex min-w-0 flex-col gap-2 bg-linear-to-t from-surface via-surface via-80% to-transparent px-5 pt-14 pb-5">
+      <div className="relative z-10 flex min-w-0 flex-col gap-2 bg-linear-to-t from-surface via-surface via-86% to-transparent px-5 pt-14 pb-5">
         {badge ? (
           <div className="flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center rounded-full border border-line bg-surface/60 px-2 py-0.5 text-[0.72rem] leading-[1.5] text-ink/75">
+            <span className="inline-flex items-center rounded-full border border-line bg-surface/75 px-2 py-0.5 text-[0.72rem] leading-[1.5] font-medium text-ink/85">
               {badge}
             </span>
           </div>
@@ -86,7 +86,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
 
         <h2 className="text-[1.2rem] leading-tight font-bold">{m.title}</h2>
         {desc ? (
-          <p className="line-clamp-2 text-[0.88rem] leading-snug text-ink/85">{desc}</p>
+          <p className="line-clamp-2 text-[0.88rem] leading-snug font-medium text-ink/90">{desc}</p>
         ) : null}
 
         {m.stats ? (
@@ -103,7 +103,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
               <Link
                 key={p.id}
                 className={cn(
-                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-[5px] text-[0.78rem] text-ink transition-colors ease-soft hover:text-accent',
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-[5px] text-[0.78rem] font-medium text-ink transition-colors ease-soft hover:text-accent',
                   PATH_CHIP_TONES[i % PATH_CHIP_TONES.length],
                 )}
                 to={`/maps/${m.id}?path=${encodeURIComponent(p.id)}&step=0&node=${encodeURIComponent(p.nodeIds[0] || '')}`}
@@ -146,7 +146,7 @@ function BookCard({ m }: { m: MapIndexEntry }) {
 
 function StatPill({ icon, text }: { icon: ReactNode; text: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[#5b8fd9]/25 bg-[#5b8fd9]/10 px-2.5 py-1 text-[0.75rem] text-[#2a5f9e] dark:bg-[#5b8fd9]/16 dark:text-ink">
+    <span className="inline-flex items-center gap-1 rounded-full border border-[#5b8fd9]/25 bg-[#5b8fd9]/10 px-2.5 py-1 text-[0.75rem] font-medium text-[#2a5f9e] dark:bg-[#5b8fd9]/16 dark:text-ink">
       {icon} {text}
     </span>
   );
