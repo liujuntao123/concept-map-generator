@@ -17,6 +17,19 @@
 - 设计文档：`docs/`
 - 功能 backlog：`docs/BACKLOG.md`
 
+## 目录结构
+
+| 路径 | 说明 |
+|------|------|
+| `apps/web` | 桌面端 Web（Vite + React + Tailwind，现有桌面体验） |
+| `apps/web-mobile` | 移动端 Web（独立入口：全屏 / 卡片 / 收起折叠 / 底部抽屉优先） |
+| `packages/core` | 两端共享层：内容模型、图谱算法、画布引擎、图标、设计 token、基础 UI 原语 |
+| `content/maps` | 概念地图内容（JSON，Git 版本化） |
+| `scripts/` | 同步 / 校验 / 建索引脚本 |
+| `schemas/` | graph.json 的 JSON Schema |
+
+共享边界：只有与屏幕尺寸 / 端交互无关的代码进 `packages/core`（见
+[docs/04-mobile-plan.md](docs/04-mobile-plan.md)）；页面布局与抽屉/面板等交互壳留在各端应用内。
 
 ## 路由
 
@@ -30,16 +43,24 @@
 ## 本地预览
 
 ```bash
-npm run sync-maps   # content/maps → apps/web/public/maps
+npm run sync-maps        # content/maps → 各 Web 应用的 public/maps
 cd apps/web && npm install
-npm run dev         # 根目录也可 npm run dev（会先 sync）
+npm run dev              # 桌面端，默认 http://localhost:5173（会先 sync）
+
+cd apps/web-mobile && npm install
+npm run dev:mobile       # 移动端（建议用 390×844 视口预览）
 ```
+
+> 两个应用各自安装依赖；`packages/core` 以 `file:` 软链方式被引用（core 需先
+> `npm install` 一次）。
 
 生产构建：
 
 ```bash
-npm run build
+npm run build            # 桌面端 → apps/web/dist
+npm run build:mobile     # 移动端 → apps/web-mobile/dist
 npm run preview
+npm run preview:mobile
 ```
 
 校验图谱 schema：
@@ -61,14 +82,23 @@ npm run validate
 
 ## 技术栈
 
-- Vite + React + TypeScript + React Router
-- `@xyflow/react` + `dagre` 自动布局
+- Vite + React + TypeScript + React Router（桌面端 / 移动端各一个入口）
+- `@xyflow/react` + `dagre` 自动布局（画布引擎在 `packages/core`，两端复用）
+- Tailwind CSS v4；设计 token 唯一定义在 `packages/core/src/styles/theme.css`
 - 内容为 Git 中的 JSON；CI 用 Ajv 校验 graph schema
-- Cloudflare Pages（`apps/web/wrangler.toml`）
+- Cloudflare Pages（`apps/web/wrangler.toml` / `apps/web-mobile/wrangler.toml`）
 
 ## 部署
+
+桌面端（生产站）：
 
 ```bash
 npm run build
 cd apps/web && npx wrangler pages deploy dist --project-name concept-map-generator
+```
+
+移动端（独立 Pages 项目，首次需在 Cloudflare 建 `concept-map-mobile` 项目）：
+
+```bash
+npm run deploy:mobile
 ```

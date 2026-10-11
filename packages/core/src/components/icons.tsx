@@ -20,6 +20,7 @@ import {
   Compass,
   Ellipsis,
   FileText,
+  Filter,
   Focus,
   Hexagon,
   Home,
@@ -103,6 +104,7 @@ export const IconWork = icon(FileText);
 /* 其他 */
 export const IconBack = icon(ArrowLeft);
 export const IconStructure = icon(Workflow);
+export const IconFilter = icon(Filter);
 export const IconBrain = icon(Brain);
 export const IconLightbulb = icon(Lightbulb);
 export const IconTrend = icon(TrendingUp);

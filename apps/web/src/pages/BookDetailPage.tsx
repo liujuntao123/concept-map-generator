@@ -1,32 +1,28 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedDate } from '../lib/graphUtils';
-import { coverOf } from '../lib/covers';
 import {
+  buttonClass,
+  cn,
+  coverOf,
   EDGE_TYPE_LABEL,
+  fetchJson,
+  formatGeneratedDate,
+  iconButtonClass,
+  IconChevronLeft,
+  IconMap,
+  IconMoon,
+  IconPath,
+  IconSun,
   NODE_TYPE_LABEL,
+  panelSurface,
+  Pill,
+  plateOf,
+  useTheme,
+  type ConceptGraph,
   type MapMeta,
   type NodeType,
-} from '../types/graph';
-import { useTheme } from '../hooks/useTheme';
-import { IconChevronLeft, IconMap, IconMoon, IconPath, IconSun } from '../components/icons';
-import type { ConceptGraph } from '../types/graph';
-import Pill from '../components/ui/Pill';
-import { buttonClass, iconButtonClass, panelSurface } from '../components/ui/styles';
-import { cn } from '../lib/cn';
-
-/* 封面底板配色（沿用原设计的每本书配色映射） */
-function plateTone(id: string): string {
-  if (id.includes('kahneman')) {
-    return 'bg-linear-to-b from-[#e7f0fb] to-[#f5f9fe] dark:from-[#182433] dark:to-[#151d2a]';
-  }
-  if (id.includes('chujia')) {
-    return 'bg-linear-to-b from-[#f0ebf8] to-[#f8f5fc] dark:from-[#221d30] dark:to-[#1a1626]';
-  }
-  return 'bg-linear-to-b from-[#edf3fa] to-[#f7fafc] dark:from-[#182230] dark:to-[#151d29]';
-}
+} from '@concept-map/core';
 
 export default function BookDetailPage() {
   const params = useParams();
@@ -143,7 +139,7 @@ export default function BookDetailPage() {
           <div
             className={cn(
               'flex w-44 items-center justify-center self-stretch rounded-panel border border-[#7aa2c7]/25 p-4 max-[860px]:w-28 max-[860px]:p-2.5 max-[480px]:mx-auto max-[480px]:w-32',
-              plateTone(meta.id),
+              plateOf(meta.id),
             )}
             aria-hidden
           >

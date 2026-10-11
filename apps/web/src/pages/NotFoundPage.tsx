@@ -1,7 +1,5 @@
 import { Link } from 'react-router-dom';
-import { IconMap } from '../components/icons';
-import { buttonClass, cardSurface } from '../components/ui/styles';
-import { cn } from '../lib/cn';
+import { buttonClass, cardSurface, cn, IconMap } from '@concept-map/core';
 
 export default function NotFoundPage() {
   return (

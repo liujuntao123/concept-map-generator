@@ -1,10 +1,20 @@
-import { edgeRelationSentence } from '../lib/graphUtils';
-import { EDGE_TYPE_LABEL, NODE_TYPE_LABEL, type MapEdge, type MapNode, type NodeType } from '../types/graph';
-import { IconChevronRight, IconClose } from './icons';
-import Pill from './ui/Pill';
-import { buttonClass, iconButtonClass } from './ui/styles';
-import { SHEET_HEIGHT, SHEET_PEEK_HEIGHT, SHEET_SHELL } from './ui/drawer';
-import { cn } from '../lib/cn';
+import {
+  buttonClass,
+  cn,
+  edgeRelationSentence,
+  EDGE_TYPE_LABEL,
+  iconButtonClass,
+  IconChevronRight,
+  IconClose,
+  NODE_TYPE_LABEL,
+  Pill,
+  SHEET_HEIGHT,
+  SHEET_PEEK_HEIGHT,
+  SHEET_SHELL,
+  type MapEdge,
+  type MapNode,
+  type NodeType,
+} from '@concept-map/core';
 
 interface Props {
   edge: MapEdge;

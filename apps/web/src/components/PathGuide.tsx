@@ -1,4 +1,7 @@
 import {
+  buttonClass,
+  cn,
+  iconButtonClass,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
@@ -9,10 +12,9 @@ import {
   IconSignal,
   IconSkip,
   pathThemeIcon,
-} from './icons';
-import { buttonClass, iconButtonClass } from './ui/styles';
-import { cn } from '../lib/cn';
-import type { FeaturedPath, MapNode } from '../types/graph';
+  type FeaturedPath,
+  type MapNode,
+} from '@concept-map/core';
 
 /** Natural Chinese tip — never concatenate edgeLabel + node label chips. */
 function formatNextTip(label: string, rationale?: string | null): string {

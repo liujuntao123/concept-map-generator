@@ -1,44 +1,45 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import MapCanvas, {
-  type MapCanvasHandle,
-  type TypeFilter,
-  type VisibleStats,
-} from '../components/MapCanvas';
-import DetailDrawer from '../components/DetailDrawer';
-import EdgePanel from '../components/EdgePanel';
-import SearchHits from '../components/SearchHits';
-import PathGuide from '../components/PathGuide';
-import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedDate, groupChapters, matchesQuery } from '../lib/graphUtils';
-import { useTheme } from '../hooks/useTheme';
 import {
+  MapCanvas,
+  buttonClass,
+  cn,
+  fetchJson,
+  fieldClass,
+  formatGeneratedDate,
+  groupChapters,
+  iconButtonClass,
   IconChapter,
-  IconStructure,
   IconClaim,
   IconChevronLeft,
-  IconConcept,
   IconClose,
+  IconConcept,
   IconMap,
   IconMore,
   IconMoon,
   IconPerson,
   IconSearch,
   IconShare,
+  IconStructure,
   IconSun,
   IconWork,
+  matchesQuery,
   pathThemeIcon,
-} from '../components/icons';
-import {
+  useTheme,
   type ConceptGraph,
   type FeaturedPath,
+  type MapCanvasHandle,
   type MapEdge,
   type MapMeta,
   type MapNode,
   type NodeType,
-} from '../types/graph';
-import { buttonClass, fieldClass, iconButtonClass } from '../components/ui/styles';
-import { cn } from '../lib/cn';
+  type TypeFilter,
+  type VisibleStats,
+} from '@concept-map/core';
+import DetailDrawer from '../components/DetailDrawer';
+import EdgePanel from '../components/EdgePanel';
+import SearchHits from '../components/SearchHits';
+import PathGuide from '../components/PathGuide';
 
 const TYPE_FILTERS: Array<{ key: TypeFilter; label: string; short: string }> = [
   { key: 'all', label: '全部', short: '全部' },
