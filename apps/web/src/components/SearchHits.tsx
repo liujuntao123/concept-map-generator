@@ -1,7 +1,11 @@
-import { snippetForQuery } from '../lib/graphUtils';
-import { NODE_TYPE_LABEL, type MapNode, type NodeType } from '../types/graph';
-import Pill from './ui/Pill';
-import { cn } from '../lib/cn';
+import {
+  cn,
+  NODE_TYPE_LABEL,
+  Pill,
+  snippetForQuery,
+  type MapNode,
+  type NodeType,
+} from '@concept-map/core';
 
 interface Props {
   hits: MapNode[];

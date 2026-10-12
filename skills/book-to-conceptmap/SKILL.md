@@ -1,7 +1,7 @@
 ---
 name: book-to-conceptmap
-version: 1.1.0
-description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本，结构化为概念地图 graph.json（章节+概念等节点与边），写入仓库 content/maps/<mapId>/。
+version: 1.2.1
+description: 从 IMA 知识库拉取一本书（如 epub），分章抽取文本，结构化为概念地图 graph.json（章节+概念等节点与边）与 meta.json（含封面信息），写入仓库 content/maps/<mapId>/。
 ---
 
 # book-to-conceptmap
@@ -38,10 +38,18 @@ node .../ima_api.cjs openapi/wiki/v1/get_media_info \
 node skills/book-to-conceptmap/scripts/fetch_and_extract.cjs \
   --kb-id '<kb_id>' \
   --media-id '<media_id>' \
-  --out /tmp/book-extract
+  --out /tmp/book-extract \
+  --cover-out content/maps/<mapId>/cover.jpg
 ```
 
-产出：`essays.json` / `chapters/*.txt` / `full.txt` / `cover.<ext>`（书籍封面，用于 `meta.cover`）。
+（已拿到 epub、或不想走 IMA 时：加 `--epub <file.epub>` 跳过下载；只要封面加 `--cover-only`。）
+
+产出：`essays.json` / `chapters/*.txt` / `full.txt`，**并自动提取真实封面**：
+脚本按 `OPF <meta name="cover">` → `manifest properties="cover-image"` → id/href 含 cover 的图片 →
+`cover.xhtml` 内首个图片 的顺序定位，导出到 `--cover-out`（缺省 `<out>/cover.<ext>`），
+并打印建议的 `meta.cover` 登记提示；**找不到封面只提示、不阻塞正文抽取**（走「封面规范」的字型封面）。
+
+产出文件：`essays.json` / `chapters/*.txt` / `full.txt` / `cover.<ext>`（书籍封面，用于 `meta.cover`）。
 
 ### 3. 按章/篇分块
 
@@ -86,7 +94,7 @@ content/maps/index.json   # 更新 maps 列表
 然后：
 
 ```bash
-npm run sync-maps    # → apps/web/public/maps
+npm run sync-maps    # → 两个应用的 public/maps（含各书封面）与移动端 illustrations
 npm run validate
 ```
 
@@ -96,10 +104,33 @@ npm run validate
 - （可选）将确认过的节点 `reviewStatus` 改为 `reviewed`；读者 Web 不展示该字段
 - 以 PR 修改 JSON
 
+## 封面规范
+
+**真实封面优先，禁止用通用占位图。**
+
+1. **用源文件里的真实封面**（首选，`fetch_and_extract.cjs` 已自动提取，见步骤 2）：
+   - epub：OPF `<meta name="cover">` / `cover-image` / `cover.xhtml` 内的图片（脚本会自动定位）；
+   - PDF：渲染第 1 页；纯笔记类媒体通常没有封面（跳过，走第 2 条）。
+2. 封面图存到 **`content/maps/<mapId>/cover.jpg`**（或 `.png`；竖版 3:4、宽度 ≥600px 为佳），
+   并在该书 `meta.json` 填 `"cover": "cover.jpg"`。
+   用 `--cover-out content/maps/<mapId>/cover.jpg` 一步到位；
+   两端的 `public/maps/<mapId>/` 副本由 `npm run sync-maps` 生成，不用手抄两份。
+
+**没有真实封面时：用「字型封面」**（书名 1–2 字放大 + 底板色），而不是占位插画：
+
+- `meta.json` 填 `coverColor`（封面主色的十六进制，如 `#b8860b`）；字型文字取书名前两字，无需配置；
+- 两端阅读器（`apps/web` / `apps/web-mobile`）通过 `coverInfoOf()` 判定：`meta.cover` 存在 → 渲染真实封面（`coverUrl` 按 mapId 解析）；否则渲染字型封面 `TypeCover`（底板色缺省用主题强调色）；
+- `content/maps/index.json` 由 `scripts/build-index.mjs` 从 `meta.json` 派生，`cover` / `coverColor` 会自动带上，无需手写。
+
+> 示例：《看见孩子》已有真实封面 `content/maps/kandao-haizi/cover.jpg`（`meta.cover`），两端渲染真实封面；
+> 纯笔记类、拿不到封面的书则只填 `coverColor`，阅读器回退为字型封面。
+
 ## 相关路径
 
 | 项 | 路径 |
 |----|------|
 | 本 skill（仓库） | `skills/book-to-conceptmap/` |
 | Schema | `schemas/graph.schema.json` |
+| 封面登记 | `packages/core/src/lib/covers.ts` |
+| 封面图目录 | `apps/web/public/illustrations/` |
 | 试点 | `content/maps/chujia-ying-zou-chu-wei-yi-zhen-li-guan/` |

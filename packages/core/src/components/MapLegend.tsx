@@ -42,6 +42,41 @@ const LINE_CLASS: Record<(typeof EDGE_ORDER)[number], string> = {
   contains: 'border-t-chapter opacity-35',
 };
 
+/** 图例内容本体：供桌面浮层与移动端抽屉复用。 */
+export function MapLegendContent({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'rounded-inner border border-line bg-surface p-2.5 text-[0.75rem] text-muted shadow-soft',
+        className,
+      )}
+    >
+      <div>
+        <div className="mt-2 mb-1 text-[0.68rem] tracking-[0.04em] uppercase">节点</div>
+        {NODE_ORDER.map((t) => (
+          <div key={t} className="my-[3px] flex items-center gap-2">
+            <span className={THUMB_CLASS[t]} aria-hidden />
+            <span>{NODE_TYPE_LABEL[t]}</span>
+          </div>
+        ))}
+      </div>
+      <div>
+        <div className="mt-2 mb-1 text-[0.68rem] tracking-[0.04em] uppercase">关系</div>
+        {EDGE_ORDER.map((t) => (
+          <div key={t} className="my-[3px] flex items-center gap-2" title={EDGE_TIP[t]}>
+            <span className={cn('h-0 w-[22px] shrink-0 border-t-2', LINE_CLASS[t])} aria-hidden />
+            <span>
+              {t === 'contains' ? '结构线' : (EDGE_TYPE_LABEL[t] ?? t)}
+              <IconInfo size={12} className="ml-1 align-[-1px] opacity-55" />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** 桌面端浮动图例（收起态只剩按钮）。移动端请改用 MapLegendContent。 */
 export default function MapLegend() {
   const [open, setOpen] = useState(false);
 
@@ -65,31 +100,7 @@ export default function MapLegend() {
         <span className="text-[0.78rem] text-muted">图例</span>
         <IconChevronRight size={14} className={cn(open && 'rotate-90')} />
       </button>
-      {open ? (
-        <div className="mt-1.5 max-h-[50vh] overflow-auto rounded-inner border border-line bg-surface p-2.5 shadow-soft">
-          <div>
-            <div className="mt-2 mb-1 text-[0.68rem] tracking-[0.04em] uppercase">节点</div>
-            {NODE_ORDER.map((t) => (
-              <div key={t} className="my-[3px] flex items-center gap-2">
-                <span className={THUMB_CLASS[t]} aria-hidden />
-                <span>{NODE_TYPE_LABEL[t]}</span>
-              </div>
-            ))}
-          </div>
-          <div>
-            <div className="mt-2 mb-1 text-[0.68rem] tracking-[0.04em] uppercase">关系</div>
-            {EDGE_ORDER.map((t) => (
-              <div key={t} className="my-[3px] flex items-center gap-2" title={EDGE_TIP[t]}>
-                <span className={cn('h-0 w-[22px] shrink-0 border-t-2', LINE_CLASS[t])} aria-hidden />
-                <span>
-                  {t === 'contains' ? '结构线' : (EDGE_TYPE_LABEL[t] ?? t)}
-                  <IconInfo size={12} className="ml-1 align-[-1px] opacity-55" />
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {open ? <MapLegendContent className="mt-1.5 max-h-[50vh] overflow-auto" /> : null}
     </aside>
   );
 }

@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+
+/* 共享层（packages/core）：设计 token */
+@import '../../../packages/core/src/styles/theme.css';
+
+/* React Flow 第三方内部类覆盖 + 画布装饰背景 */
+@import '../../../packages/core/src/styles/react-flow.css';
+
+/* core 组件（MapCanvas / Pill / 图标等）中的 Tailwind 类名需要显式扫描 */
+@source '../../../packages/core/src';
+
+/* ============================================================
+   基础层（移动端）
+   ============================================================ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    font-weight: 400;
+    color: var(--color-ink);
+    background: var(--color-canvas);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    /* 移动端：避免整页橡皮筋与抽屉拖动互相干扰 */
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  /* 统一键盘焦点环 */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* 尊重系统的「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* 页面底色：移动端自有装饰（同 page-wash 一族，更轻、更纵向） */
+  .mobile-wash {
+    background:
+      radial-gradient(
+        720px 300px at 12% -6%,
+        color-mix(in srgb, var(--accent) 10%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        560px 260px at 96% 0%,
+        color-mix(in srgb, var(--concept) 9%, transparent),
+        transparent 58%
+      ),
+      var(--bg);
+  }
+}
+
+/* ============================================================
+   移动端画布细节
+   ============================================================ */
+
+/* 缩略图占屏且意义有限：移动端一律隐藏 */
+.react-flow__minimap {
+  display: none !important;
+}
+
+/* 触控：画布上避免长按选中文本 / 弹出系统菜单 */
+.cm-canvas-mist,
+.react-flow {
+  -webkit-touch-callout: none;
+}

@@ -9,9 +9,13 @@
     "validate": "node scripts/validate-graph.mjs",
     "predev": "npm run build-index && npm run sync-maps",
     "dev": "npm --prefix apps/web run dev",
+    "dev:mobile": "npm --prefix apps/web-mobile run dev",
     "prebuild": "npm run build-index && npm run sync-maps",
     "build": "npm --prefix apps/web run build",
+    "build:mobile": "npm run build-index && npm run sync-maps && npm --prefix apps/web-mobile run build",
     "preview": "npm --prefix apps/web run preview",
-    "deploy": "npm run build && npx --prefix apps/web wrangler pages deploy apps/web/dist --project-name concept-map-generator"
+    "preview:mobile": "npm --prefix apps/web-mobile run preview",
+    "deploy": "npm run build && npx --prefix apps/web wrangler pages deploy apps/web/dist --project-name concept-map-generator",
+    "deploy:mobile": "npm run build:mobile && npx wrangler pages deploy apps/web-mobile/dist --project-name concept-map-mobile"
   }
 }

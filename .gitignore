@@ -8,6 +8,7 @@ dist/
 book-extract/
 # generated from content/maps by scripts/sync-maps.mjs
 apps/web/public/maps/
+apps/web-mobile/public/maps/
 
 # 编辑器 / 分享工具残留
 .trae-html-share-packages/

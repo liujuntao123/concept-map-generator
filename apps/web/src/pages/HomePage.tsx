@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedDate } from '../lib/graphUtils';
-import type { FeaturedPath, MapIndexEntry, MapMeta, MapsIndex } from '../types/graph';
-import { useTheme } from '../hooks/useTheme';
 import {
+  buttonClass,
+  cardSurface,
+  cn,
+  coverUrl,
+  fetchJson,
+  fieldClass,
+  formatGeneratedDate,
+  iconButtonClass,
   IconBooks,
   IconEdges,
   IconMap,
@@ -12,11 +16,14 @@ import {
   IconNodes,
   IconSearch,
   IconSun,
+  PATH_CHIP_TONES,
   pathThemeIcon,
-} from '../components/icons';
-import { coverUrl } from '../lib/covers';
-import { buttonClass, cardSurface, fieldClass, iconButtonClass } from '../components/ui/styles';
-import { cn } from '../lib/cn';
+  useTheme,
+  type FeaturedPath,
+  type MapIndexEntry,
+  type MapMeta,
+  type MapsIndex,
+} from '@concept-map/core';
 
 function shortDesc(m: MapIndexEntry): string {
   const raw = (m.subtitle || m.description || '').replace(/\s+/g, ' ').trim();
@@ -24,13 +31,6 @@ function shortDesc(m: MapIndexEntry): string {
   if (raw.length <= 56) return raw;
   return `${raw.slice(0, 54)}…`;
 }
-
-/* 路径 chip 三色轮转 */
-const PATH_CHIP_TONES = [
-  'border-[#4f8fe8]/50 bg-[#4f8fe8]/10 dark:bg-[#4f8fe8]/18',
-  'border-[#7fbf6a]/50 bg-[#7fbf6a]/10 dark:bg-[#7fbf6a]/16',
-  'border-[#c678dd]/50 bg-[#c678dd]/10 dark:bg-[#c678dd]/18',
-];
 
 function BookCard({ m }: { m: MapIndexEntry }) {
   const [paths, setPaths] = useState<FeaturedPath[]>([]);

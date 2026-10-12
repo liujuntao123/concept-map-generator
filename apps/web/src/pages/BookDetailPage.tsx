@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { fetchJson } from '../lib/fetchJson';
-import { formatGeneratedDate } from '../lib/graphUtils';
-import { coverUrl } from '../lib/covers';
 import {
+  buttonClass,
+  cn,
+  coverInfoOf,
   EDGE_TYPE_LABEL,
+  fetchJson,
+  formatGeneratedDate,
+  iconButtonClass,
+  IconChevronLeft,
+  IconMap,
+  IconMoon,
+  IconPath,
+  IconSun,
   NODE_TYPE_LABEL,
+  panelSurface,
+  Pill,
+  TypeCover,
+  useTheme,
+  type ConceptGraph,
   type MapMeta,
   type NodeType,
-} from '../types/graph';
-import { useTheme } from '../hooks/useTheme';
-import { IconChevronLeft, IconMap, IconMoon, IconPath, IconSun } from '../components/icons';
-import type { ConceptGraph } from '../types/graph';
-import Pill from '../components/ui/Pill';
-import { buttonClass, iconButtonClass, panelSurface } from '../components/ui/styles';
-import { cn } from '../lib/cn';
+} from '@concept-map/core';
 
 /* 十六进制色 → 带透明度的 rgba */
 function tint(hex: string, alpha: number): string {
@@ -112,6 +119,7 @@ export default function BookDetailPage() {
   const edgeBreakdown = meta.edgeTypeBreakdown ?? {};
   const year = meta.generatedAt ? formatGeneratedDate(meta.generatedAt).slice(0, 4) : '';
   const byline = [meta.author, meta.publisher, year].filter(Boolean).join(' · ');
+  const cover = coverInfoOf(meta.id, meta.title, meta.cover, meta.coverColor);
 
   return (
     <div className={cn('page-wash grid min-h-screen grid-rows-[auto_1fr]')}>
@@ -153,13 +161,22 @@ export default function BookDetailPage() {
             style={plateStyle(meta.coverColor)}
             aria-hidden
           >
-            <img
-              src={coverUrl(meta.id, meta.cover)}
-              alt=""
-              width={180}
-              height={240}
-              className="aspect-3/4 w-full rounded-lg object-contain shadow-[0_6px_18px_rgba(26,42,61,0.14)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
-            />
+            {cover.kind === 'image' ? (
+              <img
+                src={cover.src}
+                alt=""
+                width={180}
+                height={240}
+                className="aspect-3/4 w-full rounded-lg object-contain shadow-[0_6px_18px_rgba(26,42,61,0.14)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
+              />
+            ) : (
+              <TypeCover
+                text={cover.text}
+                color={cover.color}
+                className="aspect-3/4 w-full rounded-lg shadow-[0_6px_18px_rgba(26,42,61,0.14)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.4)]"
+                markClassName="text-[2.6rem]"
+              />
+            )}
           </div>
 
           <div className="flex min-w-0 flex-col">

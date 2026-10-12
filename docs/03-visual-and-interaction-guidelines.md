@@ -1,7 +1,9 @@
 # 03 · 视觉与交互规范
 
 本文件是概念地图 Web 端的**设计契约**：所有页面样式以本文件为准，实现方式统一为 Tailwind CSS v4 utilities。
-规范依据以下公开标准与业界实践整理，并已落到代码 token（见 `apps/web/src/index.css`）：
+规范依据以下公开标准与业界实践整理，并已落到代码 token（见 `packages/core/src/styles/theme.css`，两端共享）。
+**适用范围**：桌面端 `apps/web` 与移动端 `apps/web-mobile`（移动端布局形态见
+[docs/04-mobile-plan.md](04-mobile-plan.md)，token / 语义色 / 组件原语与本文件一致）。
 
 | 依据 | 采用的部分 |
 | --- | --- |
@@ -14,7 +16,8 @@
 
 ## 1. 设计 token
 
-token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（`:root` 为深色默认，`[data-theme='light']` 覆盖），
+token 定义在 [theme.css](file:///workspace/packages/core/src/styles/theme.css)（`:root` 为深色默认，`[data-theme='light']` 覆盖；
+两端入口 CSS 直接 `@import` 同一份文件），
 通过 `@theme inline` 映射为 Tailwind 类，因此**主题切换即时生效、无需重编译**。
 
 ### 1.1 语义色
@@ -33,7 +36,7 @@ token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（
 | `chapter` `concept` `claim` `person` `work` `excerpt` | 同名变量 | 5 类节点/边 + 原文摘录的语义色 |
 
 规则：
-- **颜色一律走 token，不写十六进制**。仅有的例外是纯装饰性的「路径 chip 三色轮转」（集中在 [HomePage.tsx](file:///workspace/apps/web/src/pages/HomePage.tsx#L30-L51) 顶部）。**每本书的强调色不再写死在代码里**：封面与主色由内容自带（`meta.cover` / `meta.coverColor`），`BookDetailPage` 用内联样式按 `coverColor` 着色。
+- **颜色一律走 token，不写十六进制**。唯一例外是「路径 chip 三色轮转」这类纯装饰性映射，统一收敛在 [decor.ts](file:///workspace/packages/core/src/lib/decor.ts)（`PATH_CHIP_TONES`），两端共用。**每本书的强调色不写死在代码里**：封面与主色由内容自带（`meta.cover` / `meta.coverColor`），`BookDetailPage` 用内联样式按 `coverColor` 着色；无真实封面时经 [covers.ts](file:///workspace/packages/core/src/lib/covers.ts) 的 `coverInfoOf` 回退为 `TypeCover` 字型封面（规则见 [SKILL.md](file:///workspace/skills/book-to-conceptmap/SKILL.md)「封面规范」）。
 - 半透明叠加统一用 Tailwind 的透明度修饰符（`bg-chapter/15`、`border-accent/40`），不要在 CSS 里手写 `color-mix`。
 - `--accent-strong` 与 `--accent` 是两个用途：**accent 只用于线与文字**，accent-strong 只用于**需要白字的实心按钮**。深色下 accent 偏亮（#7eb8ff），直接配白字只有 1.9:1，禁止这样用。
 
@@ -62,7 +65,8 @@ token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（
 
 ## 3. 组件规范
 
-所有组件样式经原语集中管理，见 [ui/styles.ts](file:///workspace/apps/web/src/components/ui/styles.ts)：
+所有组件样式经原语集中管理，见 [styles.ts](file:///workspace/packages/core/src/components/ui/styles.ts)
+（`packages/core`，两端共用；移动端尺寸档在其上覆盖，如 44px 触达）：
 
 | 原语 | 说明 |
 | --- | --- |
@@ -76,19 +80,23 @@ token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（
 约定：
 - **按钮必须来自原语**，不要在页面里手写按钮类。需要覆盖尺寸时通过 `className` 传增量（`cn` 会自动让后者胜出）。
 - 链接按钮统一用 `<Link className={buttonClass(...)}>`，不要给 `<a>` 加自定义下划线。
-- 图标统一来自 [icons.tsx](file:///workspace/apps/web/src/components/icons.tsx)：底层是 **lucide-react**，该文件只做一层薄适配（统一 `strokeWidth=1.75` 与 `inline-block shrink-0 align-[-0.15em]`、默认 `aria-hidden`、保留原有 `Icon*` 导出名）。
+- 图标统一来自 [icons.tsx](file:///workspace/packages/core/src/components/icons.tsx)（`packages/core`，两端共用）：底层是 **lucide-react**，该文件只做一层薄适配（统一 `strokeWidth=1.75` 与 `inline-block shrink-0 align-[-0.15em]`、默认 `aria-hidden`、保留原有 `Icon*` 导出名）。
   **不要手绘 SVG**，需要新图标时从 lucide 导入并在该文件登记导出即可。
 
 ## 4. 交互规范
 
-- **焦点可见**：全局 `:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }`（[index.css](file:///workspace/apps/web/src/index.css#L145-L149)）。不要用 `outline: none` 关闭它，需要自定义时用 `focus-visible:outline-none` 并补等价视觉。
+- **焦点可见**：全局 `:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }`（各端入口 `index.css` 的基础层；桌面端见 [index.css](file:///workspace/apps/web/src/index.css)，移动端见 [index.css](file:///workspace/apps/web-mobile/src/index.css)）。不要用 `outline: none` 关闭它，需要自定义时用 `focus-visible:outline-none` 并补等价视觉。
 - **悬停/激活**：只改颜色、边框与 1–2px 位移，不改布局尺寸（避免抖动）。卡片 hover 用 `hover:-translate-y-0.5`，胶囊/按钮 hover 用 `hover:border-accent hover:text-accent`。
 - **禁用态**：`disabled:opacity-45` + `disabled:cursor-not-allowed`，不改变尺寸。
 - **触达尺寸**：见第 3 节的尺寸表；移动端主操作不小于 38px 高。
-- **动效**：仅过渡 `colors / transform / box-shadow`，时长 120–200ms，曲线 `ease-soft`。全局在 `prefers-reduced-motion: reduce` 下把动画与过渡压到 0.01ms（[index.css](file:///workspace/apps/web/src/index.css#L153-L163)）。
+- **动效**：仅过渡 `colors / transform / box-shadow`，时长 120–200ms，曲线 `ease-soft`。全局在 `prefers-reduced-motion: reduce` 下把动画与过渡压到 0.01ms（各端入口 `index.css`）。
 - **键盘可达**：地图页已有完整快捷键（`/` 搜索、`?` 说明、`Esc` 关闭、`←/→` 步进），新增交互需同步更新快捷键弹窗与 `aria-label`。
 
 ## 5. 断点
+
+> 适用于桌面端 `apps/web`（其内部的窄屏适配）。移动端 `apps/web-mobile` 是独立入口，
+> 不依赖这些断点：采用全屏画布 + 底部抽屉（peek / half / full）+ 折叠分区，
+> 以 `390×844` 为基准实测。
 
 沿用迁移前的断点，避免视觉回归；新增响应式规则请优先复用：
 
@@ -103,10 +111,11 @@ token 定义在 [index.css](file:///workspace/apps/web/src/index.css#L10-L54)（
 
 - 样式一律写在 JSX 的 `className` 上；**不允许新增页面级 CSS 文件**。
 - 需要条件样式时用 `cn()` 组合，不要在 JSX 里拼字符串。
-- 深色模式用 `dark:` 前缀（已绑定到 `[data-theme='dark']`，见 [index.css](file:///workspace/apps/web/src/index.css#L97-L98)），不要用系统 `prefers-color-scheme`。
-- 残留 CSS 只有两处，且都有明确原因：
-  1. [react-flow.css](file:///workspace/apps/web/src/styles/react-flow.css)：React Flow 自渲染 `.react-flow__controls` / `__minimap` / `__edge` / handle 等第三方类名，无法挂 utilities，只能以少量 `!important` 覆盖。
-  2. [index.css](file:///workspace/apps/web/src/index.css#L165-L288) 的「装饰性多层背景」：`.page-wash*` / `.brand-mark*` / `.hero-photo` / `.hero-scrim` / `.topbar-map` / `.canvas-mist`。这些是「多层渐变 + 收尾颜色」或「渐变叠照片」的写法，写成 arbitrary utilities 既冗长又存在类型歧义，因此收敛为组件类。
+- 深色模式用 `dark:` 前缀（已绑定到 `[data-theme='dark']`，见 [theme.css](file:///workspace/packages/core/src/styles/theme.css) 的 `@custom-variant`），不要用系统 `prefers-color-scheme`。
+- 残留 CSS 有明确归属：
+  1. [react-flow.css](file:///workspace/packages/core/src/styles/react-flow.css)（core）：React Flow 自渲染 `.react-flow__controls` / `__minimap` / `__edge` / handle 等第三方类名，无法挂 utilities，只能以少量 `!important` 覆盖；另含画布底图 `.cm-canvas-mist`。
+  2. [theme.css](file:///workspace/packages/core/src/styles/theme.css)（core）的 `.brand-mark*`：品牌标记的多层渐变，两端共享。
+  3. 各端入口 `index.css` 的「装饰性多层背景」：桌面端 `.page-wash*` / `.hero-photo` / `.hero-scrim` / `.topbar-map`，移动端 `.mobile-wash`。这些是「多层渐变 + 收尾颜色」或「渐变叠照片」的写法，写成 arbitrary utilities 既冗长又存在类型歧义，因此收敛为组件类。
 
 ## 7. 已达标与已知偏差（实测）
 

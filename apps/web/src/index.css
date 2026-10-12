@@ -1,106 +1,16 @@
 @import 'tailwindcss';
 
-/* 第三方（React Flow）内部类覆盖 + 画布装饰背景，见 react-flow.css */
-@import './styles/react-flow.css';
+/* 共享层（packages/core）：设计 token */
+@import '../../../packages/core/src/styles/theme.css';
+
+/* React Flow 第三方内部类覆盖 + 画布装饰背景 */
+@import '../../../packages/core/src/styles/react-flow.css';
+
+/* core 组件（MapCanvas / Pill / 图标等）中的 Tailwind 类名需要显式扫描 */
+@source '../../../packages/core/src';
 
 /* ============================================================
-   1. 主题变量
-   默认深色（与应用默认主题一致），[data-theme='light'] 覆盖。
-   ============================================================ */
-:root {
-  color-scheme: dark;
-
-  --bg: #0c1017;
-  --bg-elev: #141b26;
-  --bg-elev-2: #1a2332;
-  --border: #2a3648;
-  --text: #e8eef7;
-  --muted: #8b9bb4;
-  --accent: #7eb8ff;
-  /* 深色下主按钮底色：白字对比度 4.88:1，满足 WCAG AA（旧值 #3d7ad6 仅 4.24:1） */
-  --accent-strong: #3570c8;
-  --chapter: #5b8fd4;
-  --concept: #6fbf86;
-  --claim: #e0a86a;
-  --person: #c59bdb;
-  --work: #6bb8c9;
-  --excerpt: #f0c674;
-  --danger: #e05a5a;
-
-  --shadow-color: rgba(0, 0, 0, 0.35);
-  --dim-opacity: 0.22;
-}
-
-[data-theme='light'] {
-  color-scheme: light;
-
-  --bg: #f4f7fb;
-  --bg-elev: #ffffff;
-  --bg-elev-2: #f0f4fa;
-  --border: #d5deea;
-  --text: #1a2433;
-  --muted: #5c6b82;
-  --accent: #2f6fed;
-  --accent-strong: #2f6fed;
-  --chapter: #3b6fb0;
-  --concept: #2f8f55;
-  --claim: #c47a28;
-  --person: #8b5bb5;
-  --work: #2a8a9c;
-  --excerpt: #a67c1a;
-  --danger: #d14545;
-
-  --shadow-color: rgba(30, 50, 80, 0.12);
-  --dim-opacity: 0.28;
-}
-
-/* ============================================================
-   2. 设计 token → Tailwind 主题
-   inline：utilities 直接引用上面的运行时变量，主题切换即时生效。
-   ============================================================ */
-@theme inline {
-  --font-sans: 'Segoe UI', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-
-  /* 语义色 */
-  --color-canvas: var(--bg);
-  --color-surface: var(--bg-elev);
-  --color-surface-2: var(--bg-elev-2);
-  --color-line: var(--border);
-  --color-ink: var(--text);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  --color-danger: var(--danger);
-  --color-on-accent: #fff;
-
-  /* 节点/边类型色 */
-  --color-chapter: var(--chapter);
-  --color-concept: var(--concept);
-  --color-claim: var(--claim);
-  --color-person: var(--person);
-  --color-work: var(--work);
-  --color-excerpt: var(--excerpt);
-
-  /* 圆角 */
-  --radius-inner: 12px;
-  --radius-panel: 14px;
-  --radius-card: 16px;
-
-  /* 阴影 */
-  --shadow-soft: 0 6px 18px color-mix(in srgb, var(--shadow-color) 70%, transparent);
-  --shadow-card: 0 10px 28px color-mix(in srgb, var(--shadow-color) 85%, transparent);
-  --shadow-float: 0 12px 32px color-mix(in srgb, var(--shadow-color) 90%, transparent);
-  --shadow-accent: 0 4px 14px color-mix(in srgb, var(--accent-strong) 30%, transparent);
-
-  /* 动效 */
-  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-/* dark: 变体绑定到 data-theme 属性而不是系统偏好 */
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
-
-/* ============================================================
-   3. 基础层
+   基础层
    ============================================================ */
 @layer base {
   * {
@@ -164,7 +74,7 @@
 }
 
 /* ============================================================
-   4. 装饰性多层背景
+   装饰性多层背景
    「多层渐变 + 收尾颜色」的写法在 utilities 里既冗长又存在类型歧义，
    统一收在这一层（约 60 行），其余样式一律使用 Tailwind utilities。
    ============================================================ */

@@ -71,6 +71,10 @@ interface Props {
   onVisibleStats?: (stats: VisibleStats) => void;
   /** 移动端缩放条的落位；'hidden' 用于抽屉铺满高度时（地图仅剩一条缝，缩放无意义） */
   dock?: 'default' | 'peek' | 'hidden';
+  /** 是否渲染内置缩放控件（移动端自绘控件时传 false） */
+  showControls?: boolean;
+  /** 是否渲染浮动图例（移动端把图例放进抽屉时传 false） */
+  showLegend?: boolean;
 }
 
 function MapCanvasInner(
@@ -88,6 +92,8 @@ function MapCanvasInner(
     showStructuralEdges = false,
     onVisibleStats,
     dock = 'default',
+    showControls = true,
+    showLegend = true,
   }: Props,
   ref: React.Ref<MapCanvasHandle>,
 ) {
@@ -593,64 +599,66 @@ function MapCanvasInner(
           zoomable
         />
       </ReactFlow>
-      <div
-        className={cn(
-          'absolute left-3.5 z-[6] flex flex-col gap-1',
-          'min-[861px]:bottom-[18px]',
-          dock === 'default' && 'max-[861px]:bottom-4',
-          dock === 'peek' && PEEK_DOCK,
-          dock === 'hidden' && 'max-[861px]:hidden',
-        )}
-        role="group"
-        aria-label="缩放"
-      >
-        <button
-          type="button"
-          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
-          onClick={() => zoomTowardSelection('in')}
-          aria-label="放大"
-          title="放大"
+      {showControls ? (
+        <div
+          className={cn(
+            'absolute left-3.5 z-[6] flex flex-col gap-1',
+            'min-[861px]:bottom-[18px]',
+            dock === 'default' && 'max-[861px]:bottom-4',
+            dock === 'peek' && PEEK_DOCK,
+            dock === 'hidden' && 'max-[861px]:hidden',
+          )}
+          role="group"
+          aria-label="缩放"
         >
-          <IconZoomIn />
-        </button>
-        <button
-          type="button"
-          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
-          onClick={() => zoomTowardSelection('out')}
-          aria-label="缩小"
-          title="缩小"
-        >
-          <IconZoomOut />
-        </button>
-        <button
-          type="button"
-          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
-          onClick={() => fitReadable(300)}
-          aria-label="适配"
-          title="适配可见"
-        >
-          <IconFit />
-        </button>
-        <button
-          type="button"
-          className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
-          aria-label="聚焦"
-          title="聚焦邻域"
-          onClick={() => {
-            if (selectedId) focusNeighborhood([selectedId, ...neighborSet]);
-            else if (highlightPathIds?.length) {
-              const cur =
-                pathStepIndex != null && highlightPathIds[pathStepIndex]
-                  ? highlightPathIds[pathStepIndex]
-                  : highlightPathIds[0];
-              focusNeighborhood([cur]);
-            } else fitReadable(300);
-          }}
-        >
-          <IconFocus />
-        </button>
-      </div>
-      <MapLegend />
+          <button
+            type="button"
+            className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+            onClick={() => zoomTowardSelection('in')}
+            aria-label="放大"
+            title="放大"
+          >
+            <IconZoomIn />
+          </button>
+          <button
+            type="button"
+            className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+            onClick={() => zoomTowardSelection('out')}
+            aria-label="缩小"
+            title="缩小"
+          >
+            <IconZoomOut />
+          </button>
+          <button
+            type="button"
+            className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+            onClick={() => fitReadable(300)}
+            aria-label="适配"
+            title="适配可见"
+          >
+            <IconFit />
+          </button>
+          <button
+            type="button"
+            className={iconButtonClass({ className: 'h-[34px] w-[34px]' })}
+            aria-label="聚焦"
+            title="聚焦邻域"
+            onClick={() => {
+              if (selectedId) focusNeighborhood([selectedId, ...neighborSet]);
+              else if (highlightPathIds?.length) {
+                const cur =
+                  pathStepIndex != null && highlightPathIds[pathStepIndex]
+                    ? highlightPathIds[pathStepIndex]
+                    : highlightPathIds[0];
+                focusNeighborhood([cur]);
+              } else fitReadable(300);
+            }}
+          >
+            <IconFocus />
+          </button>
+        </div>
+      ) : null}
+      {showLegend ? <MapLegend /> : null}
     </>
   );
 }

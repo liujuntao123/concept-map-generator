@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
+  buttonClass,
+  cn,
   dedupeTags,
-  formatGeneratedDate,
-  isStructuralEdge,
-  readerBody,
-  relatedFor,
-} from '../lib/graphUtils';
-import {
   EDGE_TYPE_LABEL,
-  NODE_TYPE_LABEL,
-  type ConceptGraph,
-  type FeaturedPath,
-  type MapEdge,
-  type MapMeta,
-  type MapNode,
-  type NodeType,
-} from '../types/graph';
-import {
+  formatGeneratedDate,
+  iconButtonClass,
   IconBack,
   IconBook,
   IconChevronLeft,
@@ -26,11 +15,21 @@ import {
   IconList,
   IconNote,
   IconPath,
-} from './icons';
-import Pill from './ui/Pill';
-import { buttonClass, iconButtonClass } from './ui/styles';
-import { SHEET_HEIGHT, SHEET_PEEK_HEIGHT, SHEET_SHELL } from './ui/drawer';
-import { cn } from '../lib/cn';
+  isStructuralEdge,
+  NODE_TYPE_LABEL,
+  Pill,
+  readerBody,
+  relatedFor,
+  SHEET_HEIGHT,
+  SHEET_PEEK_HEIGHT,
+  SHEET_SHELL,
+  type ConceptGraph,
+  type FeaturedPath,
+  type MapEdge,
+  type MapMeta,
+  type MapNode,
+  type NodeType,
+} from '@concept-map/core';
 
 export interface PathDrawerContext {
   path: FeaturedPath;
