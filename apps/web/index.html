@@ -5,7 +5,36 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="概念地图 — 从一本书读出可交互的思想结构" />
+    <!-- 手机访问分流的目标（apps/web-mobile 的 Pages 项目） -->
+    <meta name="cm-mobile-origin" content="https://concept-map-mobile.pages.dev" />
     <title>概念地图</title>
+    <script>
+      /*
+       * 手机访问自动跳转移动端应用（apps/web-mobile）。
+       * 两端 URL 契约完全一致（?node= ?path= ?q= …），深链原样保留。
+       * - 仅按 UA 判定手机（Mobi/iPhone/iPod；iPad 桌面 UA 不命中，走桌面响应式）；
+       * - 本地开发（localhost / 127.0.0.1 / [::1]）不跳转；
+       * - 退出跳转：链接加 ?desktop=1。
+       */
+      (function () {
+        try {
+          if (!/Mobi|iPhone|iPod/i.test(navigator.userAgent)) return;
+          if (/[?&]desktop=1/.test(location.search)) return;
+          var h = location.hostname;
+          if (
+            h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1' ||
+            h.indexOf('.localhost') !== -1
+          ) return;
+          var meta = document.querySelector('meta[name="cm-mobile-origin"]');
+          var origin = meta && meta.getAttribute('content');
+          if (!origin) return;
+          var dest = origin.replace(/\/+$/, '') + location.pathname + location.search + location.hash;
+          if (dest !== location.href) location.replace(dest);
+        } catch (e) {
+          /* 分流失败不阻塞站点 */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

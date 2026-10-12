@@ -4,7 +4,8 @@
 
 ## 在线
 
-- 站点：https://concept-map-generator.pages.dev/
+- 桌面端：https://concept-map-generator.pages.dev/
+- 移动端：https://concept-map-mobile.pages.dev/（手机访问桌面端自动跳移动端；桌面设备访问移动端自动跳回。退出自动跳转：`?desktop=1` / `?mobile=1`）
 - 仓库：https://github.com/liujuntao123/concept-map-generator
 
 ## 试点

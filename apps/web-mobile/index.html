@@ -7,7 +7,35 @@
     <meta name="theme-color" content="#0c1017" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- 桌面设备分流的目标（apps/web 的 Pages 项目） -->
+    <meta name="cm-desktop-origin" content="https://concept-map-generator.pages.dev" />
     <title>概念地图</title>
+    <script>
+      /*
+       * 桌面设备访问移动端应用 → 跳回桌面应用（分享链接双向可用，深链原样保留）。
+       * - 仅按 UA 判定：非手机 UA 才跳（与桌面端的分流互为镜像，不会成环）；
+       * - 本地开发（localhost / 127.0.0.1 / [::1]）不跳转；
+       * - 退出跳转：链接加 ?mobile=1。
+       */
+      (function () {
+        try {
+          if (/Mobi|iPhone|iPod/i.test(navigator.userAgent)) return;
+          if (/[?&]mobile=1/.test(location.search)) return;
+          var h = location.hostname;
+          if (
+            h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1' ||
+            h.indexOf('.localhost') !== -1
+          ) return;
+          var meta = document.querySelector('meta[name="cm-desktop-origin"]');
+          var origin = meta && meta.getAttribute('content');
+          if (!origin) return;
+          var dest = origin.replace(/\/+$/, '') + location.pathname + location.search + location.hash;
+          if (dest !== location.href) location.replace(dest);
+        } catch (e) {
+          /* 分流失败不阻塞站点 */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
